@@ -20,18 +20,18 @@ struct FileInfo
 };
 
 /*
-File path API
-Operates on string objects that contain path strings
-Valid formats are windows strings using \'s as directory seperators and X: as drive letters
+	File enumeration functions
 */
 class Files
 {
 public:
 	// Finds files in a given folder
 	// uses the given extension filter if specified
-	static Vector<FileInfo> ScanFiles(const String& folder, String extFilter = String());
+	// Additional interruptible flag can contain a boolean which can interrupt the search when set to true
+	static Vector<FileInfo> ScanFiles(const String& folder, String extFilter = String(), bool* interrupt = nullptr);
 
 	// Finds files in a given folder, recursively
 	// uses the given extension filter if specified
-	static Vector<FileInfo> ScanFilesRecursive(const String& folder, String extFilter = String());
+	// Additional interruptible flag can contain a boolean which can interrupt the search when set to true
+	static Vector<FileInfo> ScanFilesRecursive(const String& folder, String extFilter = String(), bool* interrupt = nullptr);
 };

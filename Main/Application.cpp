@@ -1,20 +1,20 @@
 #include "stdafx.h"
 #include "Application.hpp"
-#include "Beatmap.hpp"
+#include <Beatmap/Beatmap.hpp>
 #include "Game.hpp"
 #include "Test.hpp"
 #include "SongSelect.hpp"
-#include "Audio.hpp"
+#include <Audio/Audio.hpp>
 #include <Graphics/Window.hpp>
 #include <Graphics/ResourceManagers.hpp>
 #include "Shared/Jobs.hpp"
-#include "Profiling.hpp"
+#include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
 #include "GameConfig.hpp"
-#include "GUIRenderer.hpp"
+#include <GUI/GUIRenderer.hpp>
 #include "Input.hpp"
-#include "GUI/Canvas.hpp"
-#include "GUI/CommonGUIStyle.hpp"
+#include <GUI/Canvas.hpp>
+#include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
 
 GameConfig g_gameConfig;
@@ -26,6 +26,7 @@ Input g_input;
 
 GUIRenderer* g_guiRenderer = nullptr;
 Ref<Canvas> g_rootCanvas;
+Ref<class CommonGUIStyle> g_commonGUIStyle;
 
 // Tickable queue
 static Vector<IApplicationTickable*> g_tickables;
@@ -235,7 +236,7 @@ bool Application::m_Init()
 
 		// Init audio
 		new Audio();
-		if(!g_audio->Init(*g_gameWindow))
+		if(!g_audio->Init())
 		{
 			Log("Audio initialization failed", Logger::Error);
 			delete g_audio;
@@ -271,7 +272,7 @@ bool Application::m_Init()
 	}
 
 	// Load GUI style for common elements
-	CommonGUIStyle::instance = Ref<CommonGUIStyle>(new CommonGUIStyle(this));
+	g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl));
 
 	// Create root canvas
 	g_rootCanvas = Ref<Canvas>(new Canvas());
@@ -374,6 +375,7 @@ void Application::m_MainLoop()
 				return;
 
 			m_Tick();
+			timeSinceRender = 0.0f;
 
 			// Garbage collect resources
 			ResourceManagers::TickAll();
@@ -382,6 +384,13 @@ void Application::m_MainLoop()
 		// Tick job sheduler
 		// processed callbacks for finished tasks
 		g_jobSheduler->Update();
+
+		if(timeSinceRender < targetRenderTime)
+		{
+			float timeLeft = (targetRenderTime - timeSinceRender);
+			uint32 sleepMicroSecs = (uint32)(timeLeft*1000000.0f * 0.75f);
+			std::this_thread::sleep_for(std::chrono::microseconds(sleepMicroSecs));
+		}
 	}
 }
 
