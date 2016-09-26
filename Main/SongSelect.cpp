@@ -1,17 +1,16 @@
 #include "stdafx.h"
 #include "SongSelect.hpp"
 #include "Application.hpp"
-#include "Profiling.hpp"
+#include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
-#include "Audio.hpp"
-#include "GUI.hpp"
-#include "GUI/SongSelectItem.hpp"
-#include "MapDatabase.hpp"
+#include <GUI/GUI.hpp>
+#include "SongSelectItem.hpp"
+#include <Beatmap/MapDatabase.hpp>
 #include "Game.hpp"
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
+#include <Audio/Audio.hpp>
 
-#include "Audio.hpp"
 
 /*
 	Song preview player with fade-in/out
@@ -441,7 +440,7 @@ private:
 public:
 	bool Init() override
 	{
-		m_commonGUIStyle = CommonGUIStyle::Get();
+		m_commonGUIStyle = g_commonGUIStyle;
 		m_canvas = Utility::MakeRef(new Canvas());
 
 		// Load textures for song select
@@ -493,6 +492,8 @@ public:
 		m_mapDatabase.OnMapsRemoved.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsRemoved);
 		m_mapDatabase.OnMapsCleared.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsCleared);
 		m_mapDatabase.StartSearching();
+
+		m_selectionWheel->SelectRandom();
 
 		return true;
 	}

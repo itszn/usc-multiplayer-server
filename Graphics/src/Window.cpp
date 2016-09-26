@@ -14,8 +14,12 @@ namespace Graphics
 		SDL()
 		{
 			SDL_SetMainReady();
-			int r = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
-			assert(r == 0);
+			int r = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+			if(r != 0)
+			{
+                Logf("SDL_Init Failed: %s", Logger::Error, SDL_GetError());
+                assert(false);
+			}
 		}
 	public:
 		~SDL()
@@ -234,19 +238,27 @@ namespace Graphics
 				}
 				else if(evt.type == SDL_EventType::SDL_JOYBUTTONDOWN)
 				{
-					m_joystickMap[evt.jbutton.which]->HandleInputEvent(evt.jbutton.button, true);
+					Gamepad_Impl** gp = m_joystickMap.Find(evt.jbutton.which);
+					if(gp)
+						gp[0]->HandleInputEvent(evt.jbutton.button, true);
 				}
 				else if(evt.type == SDL_EventType::SDL_JOYBUTTONUP)
 				{
-					m_joystickMap[evt.jbutton.which]->HandleInputEvent(evt.jbutton.button, false);
+					Gamepad_Impl** gp = m_joystickMap.Find(evt.jbutton.which);
+					if(gp)
+						gp[0]->HandleInputEvent(evt.jbutton.button, false);
 				}
 				else if(evt.type == SDL_EventType::SDL_JOYAXISMOTION)
 				{
-					m_joystickMap[evt.jbutton.which]->HandleAxisEvent(evt.jaxis.axis, evt.jaxis.value);
+					Gamepad_Impl** gp = m_joystickMap.Find(evt.jaxis.which);
+					if(gp)
+						gp[0]->HandleAxisEvent(evt.jaxis.axis, evt.jaxis.value);
 				}
 				else if(evt.type == SDL_EventType::SDL_JOYHATMOTION)
 				{
-					m_joystickMap[evt.jbutton.which]->HandleHatEvent(evt.jhat.hat, evt.jhat.value);
+					Gamepad_Impl** gp = m_joystickMap.Find(evt.jhat.which);
+					if(gp)
+						gp[0]->HandleHatEvent(evt.jhat.hat, evt.jhat.value);
 				}
 				else if(evt.type == SDL_EventType::SDL_MOUSEBUTTONDOWN)
 				{
