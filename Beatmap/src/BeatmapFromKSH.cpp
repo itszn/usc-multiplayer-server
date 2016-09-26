@@ -958,6 +958,5 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 	// Re-sort collection to fix some inconsistencies caused by corrections after laser slams
 	ObjectState::SortArray(m_objectStates);
-
 	return true;
 }
