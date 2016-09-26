@@ -960,4 +960,3 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 	ObjectState::SortArray(m_objectStates);
 
 	return true;
-}
