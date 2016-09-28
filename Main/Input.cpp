@@ -117,9 +117,15 @@ void Input::Update(float deltaTime)
 		{
 			for(uint32 i = 0; i < 2; i++)
 			{
-				m_laserStates[i] = m_gamepad->GetAxis(m_controllerAxisMapping[i]) * m_controllerSensitivity;
-				if(abs(m_laserStates[i]) < m_controllerDeadzone)
+				float axisState = m_gamepad->GetAxis(m_controllerAxisMapping[i]);
+				float delta = axisState - m_prevLaserStates[i];
+				if (abs(delta) < -1.5f)
+					delta += 2 * (Math::Sign(delta) * -1);
+				if (abs(delta) < m_controllerDeadzone)
 					m_laserStates[i] = 0.0f;
+				else
+					m_laserStates[i] = delta * m_controllerSensitivity;
+				m_prevLaserStates[i] = axisState;
 			}
 		}
 	}
@@ -143,6 +149,10 @@ String Input::GetControllerStateString() const
 		for(uint32 i = 0; i < m_gamepad->NumAxes(); i++)
 		{
 			s += Utility::Sprintf("  [%d]%.2f\n", i, m_gamepad->GetAxis(i));
+		}
+		for (uint32 i = 0; i < 2; i++)
+		{
+			s += Utility::Sprintf("Delta for knob %d: %.2f\n", i, m_laserStates[i]);
 		}
 		return s;
 	}

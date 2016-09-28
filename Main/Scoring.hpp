@@ -245,7 +245,8 @@ private:
 	uint32 m_autoLaserTick[2] = { 0,0 };
 	// Max number of ticks to assist
 	uint32 m_assistLevel = 2;
-
+	// Offet to use for calculating judge (ms)
+	uint32 m_inputOffset = 0;
 
 	// used the update the amount of hit ticks for hold/laser notes
 	Map<ObjectState*, HitStat*> m_holdHitStats;

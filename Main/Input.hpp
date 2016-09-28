@@ -70,6 +70,7 @@ private:
 
 	bool m_buttonStates[(size_t)Button::Length];
 	float m_laserStates[2] = { 0.0f };
+	float m_prevLaserStates[2] = { 0.0f };
 
 	// Keyboard bindings
 	Multimap<Key, Button> m_buttonMap;

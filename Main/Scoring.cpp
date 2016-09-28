@@ -2,6 +2,7 @@
 #include "Scoring.hpp"
 #include <Beatmap/BeatmapPlayback.hpp>
 #include <math.h>
+#include "GameConfig.hpp"
 
 const MapTime Scoring::goodHitTime = 75;
 const MapTime Scoring::perfectHitTime = 35;
@@ -69,6 +70,10 @@ void Scoring::Reset()
 	// Clear hit statistics
 	hitStats.clear();
 
+	// Get input offset
+	m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
+	// Get laser assist level
+	m_assistLevel = g_gameConfig.GetInt(GameConfigKeys::LaserAssistLevel);
 	// Recalculate maximum score
 	mapTotals = CalculateMapTotals();
 
@@ -487,7 +492,7 @@ void Scoring::m_UpdateTicks()
 						if (tick->HasFlag(TickFlags::Start))
 						{
 							laserPositions[laserObject->index] = laserTargetPositions[laserObject->index];
-							m_autoLaserTick[laserObject->index] = 2;
+							m_autoLaserTick[laserObject->index] = m_assistLevel;
 						}
 
 						// Check laser input
@@ -533,7 +538,7 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 	for(uint32 i = 0; i < ticks.size(); i++)
 	{
 		ScoreTick* tick = ticks[i];
-		MapTime delta = currentTime - ticks[i]->time;
+		MapTime delta = currentTime - ticks[i]->time + m_inputOffset;
 		if(abs(delta) < tick->GetHitWindow())
 		{
 			ObjectState* hitObject = tick->object;

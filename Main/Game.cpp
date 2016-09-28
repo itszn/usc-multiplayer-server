@@ -84,7 +84,7 @@ private:
 	AudioPlayback m_audioPlayback;
 	// Applied audio offset
 	int32 m_audioOffset = 0;
-
+	int32 m_fpsTarget = 0;
 	// The play field
 	Track* m_track = nullptr;
 
@@ -185,6 +185,9 @@ public:
 		// Load beatmap audio
 		if(!m_audioPlayback.Init(m_playback, m_mapRootPath))
 			return false;
+
+		// Get fps limit
+		m_fpsTarget = g_gameConfig.GetInt(GameConfigKeys::FPSTarget);
 
 		ApplyAudioLeadin();
 
@@ -1028,7 +1031,7 @@ public:
 	{
 		if(!m_audioPlayback.IsPaused())
 		{
-			rate = 0; // Unlimited frames while playing
+			rate = m_fpsTarget;
 			return true;
 		}
 		return false; // Default otherwise
