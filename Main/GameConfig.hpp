@@ -13,6 +13,8 @@ DefineEnum(GameConfigKeys,
 
 	// Game settings
 	HiSpeed,
+    UseMMod,
+    MModSpeed,
 	GlobalOffset,
 	InputOffset,
 	SongFolder,

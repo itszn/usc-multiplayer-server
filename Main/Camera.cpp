@@ -17,7 +17,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 	//Calculate camera roll
 	//Follow the laser track exactly but with a roll speed limit
 	float rollSpeedLimit = (m_rollIntensity / (currentTimingPoint.beatDuration / 1000.0f)) * deltaTime;
-	rollSpeedLimit /= m_lasersActive ? 1.0f : 2.0f;
+	rollSpeedLimit /= m_targetRoll != 0.0f ? 1.0f : 2.0f;
 
 	float rollDelta = m_targetRoll - m_roll;
 	rollSpeedLimit *= Math::Sign(rollDelta);

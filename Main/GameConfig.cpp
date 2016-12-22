@@ -25,6 +25,8 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::InputOffset, 0);
 	Set(GameConfigKeys::FPSTarget, 0);
 	Set(GameConfigKeys::LaserAssistLevel, 2);
+	Set(GameConfigKeys::UseMMod, false);
+	Set(GameConfigKeys::MModSpeed, 300.0f);
 	Set(GameConfigKeys::SongFolder, "songs");
 
 

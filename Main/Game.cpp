@@ -61,6 +61,10 @@ private:
 	// Map object approach speed, scaled by BPM
 	float m_hispeed = 1.0f;
 
+    // Use m-mod and what m-mod speed
+    bool m_usemMod = false;
+    float m_mModSpeed = 400;
+
 	// Game Canvas
 	Ref<Canvas> m_canvas;
 	Ref<HealthGauge> m_scoringGauge;
@@ -129,6 +133,8 @@ public:
 		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
 
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
+        m_usemMod = g_gameConfig.GetBool(GameConfigKeys::UseMMod);
+        m_mModSpeed = g_gameConfig.GetFloat(GameConfigKeys::MModSpeed);
 	}
 	~Game_Impl()
 	{
@@ -177,6 +183,19 @@ public:
 		// Try to load beatmap jacket image
 		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
 		m_jacketImage = ImageRes::Create(jacketPath);
+
+
+        // Move this somewhere else?
+        // Set hi-speed for m-Mod
+        /// TODO: Use actual median instead of just first bpm in chart.
+        if(m_usemMod)
+        {
+            const TimingPoint* firstTimingPoint = m_beatmap->GetLinearTimingPoints().front();
+            int bpmAtStart = firstTimingPoint->GetBPM();
+            float hispedAtStart = m_mModSpeed / bpmAtStart; 
+            m_hispeed = hispedAtStart;
+            Logf("Bpm at start: %08d", Logger::Warning, bpmAtStart);
+        }
 
 		// Initialize input/scoring
 		if(!InitGameplay())
@@ -314,9 +333,7 @@ public:
 		// Get render state from the camera
 		float rollA = m_scoring.GetLaserRollOutput(0);
 		float rollB = m_scoring.GetLaserRollOutput(1);
-		bool laserActive = m_scoring.GetLaserActive();
 		m_camera.SetTargetRoll(rollA + rollB);
-		m_camera.SetLasersActive(laserActive);
 		m_camera.SetRollIntensity(m_rollIntensity);
 
 		// Set track zoom

@@ -122,18 +122,6 @@ float Scoring::GetLaserRollOutput(uint32 index)
 	return 0.0f;
 }
 
-bool Scoring::GetLaserActive()
-{
-	for (int i = 0; i < 2; i++)
-	{
-		if (m_currentLaserSegments[i])
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 static const float laserOutputInterpolationDuration = 0.1f;
 float Scoring::GetLaserOutput()
 {
