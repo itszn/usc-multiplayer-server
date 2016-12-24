@@ -189,12 +189,14 @@ public:
 
         // Move this somewhere else?
         // Set hi-speed for m-Mod
-        /// TODO: Use actual median instead of just first bpm in chart.
+        // Uses the "mode" of BPMs in the chart, should use median?
         if(m_usemMod)
         {
             Map<double, MapTime> bpmDurations;
             const Vector<TimingPoint*>& timingPoints = m_beatmap->GetLinearTimingPoints();
             MapTime lastMT = 0;
+            MapTime largestMT = -1;
+            double useBPM = -1;
             double lastBPM = -1;
             for (TimingPoint* tp : timingPoints)
             {
@@ -205,25 +207,23 @@ public:
                 }
                 MapTime timeSinceLastTP = tp->time - lastMT;
                 bpmDurations[thisBPM] += timeSinceLastTP;
+                if (bpmDurations[thisBPM] > largestMT)
+                {
+                    useBPM = thisBPM;
+                    largestMT = bpmDurations[thisBPM];
+                }
                 lastMT = tp->time;
                 lastBPM = thisBPM;
             }
             MapTime endTime = m_beatmap->GetLinearObjects().back()->time; 
             bpmDurations[lastBPM] += endTime - lastMT;
-            lastMT = -1;
-            lastBPM = -1;
 
-            for (auto const& bpmdur : bpmDurations)
+            if (bpmDurations[lastBPM] > largestMT)
             {
-                if (bpmdur.second > lastMT)
-                {
-                    lastBPM = bpmdur.first;
-                    lastMT = bpmdur.second;
-                }
+                useBPM = lastBPM;
             }
 
-            float hispedAtStart = m_modSpeed / lastBPM; 
-            m_hispeed = hispedAtStart;
+            m_hispeed = m_modSpeed / useBPM; 
         }
 
 		// Initialize input/scoring
@@ -356,7 +356,7 @@ public:
 	}
 	virtual void Render(float deltaTime) override
 	{
-		m_track->SetViewRange((1.0f / m_hispeed) * 4.0f);
+		m_track->SetViewRange(8.0f / m_hispeed);
 		m_track->Tick(m_playback, deltaTime);
 
 		// Get render state from the camera
