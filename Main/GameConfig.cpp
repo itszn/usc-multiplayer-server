@@ -36,6 +36,7 @@ void GameConfig::InitDefaults()
 	SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, InputDevice::Keyboard);
 
 	// Default keyboard bindings
+	SetKeyBinding(GameConfigKeys::Key_BTS, Key::Top1); // Start button on Dao controllers
 	SetKeyBinding(GameConfigKeys::Key_BT0, Key::S);
 	SetKeyBinding(GameConfigKeys::Key_BT1, Key::D);
 	SetKeyBinding(GameConfigKeys::Key_BT2, Key::K);
@@ -55,6 +56,7 @@ void GameConfig::InitDefaults()
 
 	// Default controller settings
 	Set(GameConfigKeys::Controller_DeviceID, 0); // First device
+	Set(GameConfigKeys::Controller_BTS, 8); // TODO: Find good default
 	Set(GameConfigKeys::Controller_BT0, 13); // D-Pad Left
 	Set(GameConfigKeys::Controller_BT1, 12); // D-Pad Down
 	Set(GameConfigKeys::Controller_BT2, 0); // A / X

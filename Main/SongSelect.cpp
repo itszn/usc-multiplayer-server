@@ -3,6 +3,7 @@
 #include "Application.hpp"
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
+#include "Input.hpp"
 #include <GUI/GUI.hpp>
 #include "SongSelectItem.hpp"
 #include <Beatmap/MapDatabase.hpp>
@@ -437,6 +438,11 @@ private:
 	// Select sound
 	Sample m_selectSound;
 
+    // Navigation variables
+    float m_advanceSong = 0.0f;
+    float m_advanveDiff = 0.0f;
+	MouseLockHandle m_lockMouse;
+
 public:
 	bool Init() override
 	{
@@ -455,7 +461,10 @@ public:
 		statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
 		statisticsSlot->SetZOrder(2);
 
-		// Background
+        // Set up input
+		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
+        
+
 		Panel* background = new Panel();
 		background->imageFillMode = FillMode::Fill;
 		background->texture = g_application->LoadTexture("bg.png");
@@ -541,6 +550,36 @@ public:
 			m_selectionWheel->SetFilter(filter);
 		}
 	}
+    
+
+    void m_OnButtonPressed(Input::Button buttonCode)
+    {
+        
+	    if(buttonCode == Input::Button::BT_S)
+        {
+            
+			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
+			MapIndex* map = m_selectionWheel->GetSelection();
+			if(map)
+			{
+				DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
+
+				Game* game = Game::Create(diff->path);
+				if(!game)
+				{
+					Logf("Failed to start game", Logger::Error);
+					return;
+				}
+				game->GetScoring().autoplay = autoplay;
+
+		        g_input.OnButtonPressed.RemoveAll(this);
+
+				// Transition to game
+				TransitionScreen* transistion = TransitionScreen::Create(game);
+				g_application->AddTickable(transistion);
+            }
+        }
+    }
 
 	virtual void OnKeyPressed(Key key)
 	{
@@ -609,6 +648,38 @@ public:
 			m_mapDatabase.Update();
 			m_dbUpdateTimer.Restart();
 		}
+        
+        // Tick navigation
+
+		// Lock mouse to screen when active 
+		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse)
+		{
+			if(!m_lockMouse)
+            {    
+				m_lockMouse = g_input.LockMouse();
+			    g_gameWindow->SetCursorVisible(false);
+            }
+			if(m_lockMouse)
+            {
+				m_lockMouse.Release();
+			    g_gameWindow->SetCursorVisible(true);
+            }
+		}
+        // Song navigation using laser inputs
+        float diff_input = g_input.GetInputLaserDir(0);
+        float song_input = g_input.GetInputLaserDir(1);
+        
+        m_advanveDiff += diff_input;
+        m_advanceSong += song_input;
+
+        m_selectionWheel->AdvanceDifficultySelection((int)m_advanveDiff);
+        m_selectionWheel->AdvanceSelection((int)m_advanceSong);
+        
+        m_advanveDiff -= (int)m_advanveDiff;
+        m_advanceSong -= (int)m_advanceSong; 
+
+
+		// Background
 		m_previewPlayer.Update(deltaTime);
 	}
 

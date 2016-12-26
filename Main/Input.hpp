@@ -15,6 +15,7 @@ class Input : Unique
 {
 public:
 	DefineEnum(Button,
+        BT_S, //Start Button
 		BT_0,
 		BT_1,
 		BT_2,

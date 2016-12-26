@@ -176,6 +176,7 @@ void Input::m_InitKeyboardMapping()
 	if(m_buttonDevice == InputDevice::Keyboard)
 	{
 		// Button mappings
+		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BTS), Button::BT_S);
 		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT0), Button::BT_0);
 		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT1), Button::BT_1);
 		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT2), Button::BT_2);
@@ -207,6 +208,7 @@ void Input::m_InitControllerMapping()
 {
 	if(m_buttonDevice == InputDevice::Controller)
 	{
+		m_controllerMap.Add(g_gameConfig.GetInt(GameConfigKeys::Controller_BTS), Button::BT_S);
 		m_controllerMap.Add(g_gameConfig.GetInt(GameConfigKeys::Controller_BT0), Button::BT_0);
 		m_controllerMap.Add(g_gameConfig.GetInt(GameConfigKeys::Controller_BT1), Button::BT_1);
 		m_controllerMap.Add(g_gameConfig.GetInt(GameConfigKeys::Controller_BT2), Button::BT_2);

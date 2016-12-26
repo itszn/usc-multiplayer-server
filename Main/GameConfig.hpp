@@ -32,6 +32,7 @@ DefineEnum(GameConfigKeys,
 	Mouse_Sensitivity,
 
 	// Key bindings
+	Key_BTS,
 	Key_BT0,
 	Key_BT1,
 	Key_BT2,
@@ -51,6 +52,7 @@ DefineEnum(GameConfigKeys,
 
 	// Controller bindings
 	Controller_DeviceID,
+	Controller_BTS,
 	Controller_BT0,
 	Controller_BT1,
 	Controller_BT2,
