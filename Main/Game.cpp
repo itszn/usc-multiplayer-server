@@ -201,7 +201,7 @@ public:
             for (TimingPoint* tp : timingPoints)
             {
                 double thisBPM = tp->GetBPM();
-                if (not bpmDurations.count(thisBPM))
+                if (!bpmDurations.count(thisBPM))
                 {
                     bpmDurations[thisBPM] = 0;
                 }

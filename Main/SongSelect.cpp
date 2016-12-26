@@ -465,7 +465,7 @@ public:
         // Set up input
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
         m_active = true;
-
+        
 		Panel* background = new Panel();
 		background->imageFillMode = FillMode::Fill;
 		background->texture = g_application->LoadTexture("bg.png");
@@ -573,7 +573,6 @@ public:
 				}
 				game->GetScoring().autoplay = autoplay;
 
-
 				// Transition to game
 				TransitionScreen* transistion = TransitionScreen::Create(game);
 				g_application->AddTickable(transistion);
@@ -652,7 +651,6 @@ public:
         // Tick navigation
         if (m_active)
             TickNavigation(deltaTime);
-
 
 		// Background
 		m_previewPlayer.Update(deltaTime);
