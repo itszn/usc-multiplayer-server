@@ -815,7 +815,7 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 	if(autoplay)
 		return;
 
-	if(buttonCode < Input::Button::LS_0Neg)
+	if(buttonCode < Input::Button::BT_S)
 	{
 		ObjectState* obj = m_ConsumeTick((uint32)buttonCode);
 		if(!obj)
@@ -824,7 +824,7 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 			OnButtonHit.Call(buttonCode, ScoreHitRating::Idle, nullptr);
 		}
 	}
-	else
+	else if (buttonCode > Input::Button::BT_S)
 	{
 		ObjectState* obj = nullptr;
 		if(buttonCode < Input::Button::LS_1Neg)

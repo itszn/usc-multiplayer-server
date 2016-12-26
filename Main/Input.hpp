@@ -21,6 +21,7 @@ public:
 		BT_3,
 		FX_0,
 		FX_1,
+        BT_S, //Start Button
 		LS_0Neg, // Left laser- 
 		LS_0Pos, // Left laser+		(|---->)
 		LS_1Neg, // Right laser-	(<----|)

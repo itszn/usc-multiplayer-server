@@ -63,7 +63,8 @@ private:
 
     // Use m-mod and what m-mod speed
     bool m_usemMod = false;
-    float m_mModSpeed = 400;
+    bool m_usecMod = false;
+    float m_modSpeed = 400;
 
 	// Game Canvas
 	Ref<Canvas> m_canvas;
@@ -134,7 +135,8 @@ public:
 
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
         m_usemMod = g_gameConfig.GetBool(GameConfigKeys::UseMMod);
-        m_mModSpeed = g_gameConfig.GetFloat(GameConfigKeys::MModSpeed);
+        m_usecMod = g_gameConfig.GetBool(GameConfigKeys::UseCMod);
+        m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 	}
 	~Game_Impl()
 	{
@@ -187,14 +189,41 @@ public:
 
         // Move this somewhere else?
         // Set hi-speed for m-Mod
-        /// TODO: Use actual median instead of just first bpm in chart.
+        // Uses the "mode" of BPMs in the chart, should use median?
         if(m_usemMod)
         {
-            const TimingPoint* firstTimingPoint = m_beatmap->GetLinearTimingPoints().front();
-            int bpmAtStart = firstTimingPoint->GetBPM();
-            float hispedAtStart = m_mModSpeed / bpmAtStart; 
-            m_hispeed = hispedAtStart;
-            Logf("Bpm at start: %08d", Logger::Warning, bpmAtStart);
+            Map<double, MapTime> bpmDurations;
+            const Vector<TimingPoint*>& timingPoints = m_beatmap->GetLinearTimingPoints();
+            MapTime lastMT = 0;
+            MapTime largestMT = -1;
+            double useBPM = -1;
+            double lastBPM = -1;
+            for (TimingPoint* tp : timingPoints)
+            {
+                double thisBPM = tp->GetBPM();
+                if (not bpmDurations.count(thisBPM))
+                {
+                    bpmDurations[thisBPM] = 0;
+                }
+                MapTime timeSinceLastTP = tp->time - lastMT;
+                bpmDurations[thisBPM] += timeSinceLastTP;
+                if (bpmDurations[thisBPM] > largestMT)
+                {
+                    useBPM = thisBPM;
+                    largestMT = bpmDurations[thisBPM];
+                }
+                lastMT = tp->time;
+                lastBPM = thisBPM;
+            }
+            MapTime endTime = m_beatmap->GetLinearObjects().back()->time; 
+            bpmDurations[lastBPM] += endTime - lastMT;
+
+            if (bpmDurations[lastBPM] > largestMT)
+            {
+                useBPM = lastBPM;
+            }
+
+            m_hispeed = m_modSpeed / useBPM; 
         }
 
 		// Initialize input/scoring
@@ -327,7 +356,7 @@ public:
 	}
 	virtual void Render(float deltaTime) override
 	{
-		m_track->SetViewRange((1.0f / m_hispeed) * 4.0f);
+		m_track->SetViewRange(8.0f / m_hispeed);
 		m_track->Tick(m_playback, deltaTime);
 
 		// Get render state from the camera
@@ -556,7 +585,7 @@ public:
 		if(firstObjectTime < 1000)
 		{
 			// Set start time
-			m_lastMapTime = firstObjectTime - 1000;
+			m_lastMapTime = firstObjectTime - 5000;
 			m_audioPlayback.SetPosition(m_lastMapTime);
 		}
 
@@ -580,6 +609,11 @@ public:
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
 		m_playback.Reset();
 
+        // If c-mod is used
+        if (m_usecMod)
+        {
+            m_playback.OnTimingPointChanged.Add(this, &Game_Impl::OnTimingPointChanged);
+        }
 		// Register input bindings
 		m_scoring.OnButtonMiss.Add(this, &Game_Impl::OnButtonMiss);
 		m_scoring.OnLaserSlamHit.Add(this, &Game_Impl::OnLaserSlamHit);
@@ -649,6 +683,15 @@ public:
 
 		// Update scoring gauge
 		m_scoringGauge->rate = m_scoring.currentGauge;
+
+        // Update hispeed
+        if (g_input.GetButton(Input::Button::BT_S))
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                m_hispeed += g_input.GetInputLaserDir(i);
+            }
+        }
 
 		// Get the current timing point
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
@@ -927,6 +970,13 @@ public:
 			}
 		}
 	}
+
+
+    void OnTimingPointChanged(TimingPoint* tp)
+    {
+       m_hispeed = m_modSpeed / tp->GetBPM(); 
+    }
+
 
 	void OnEventChanged(EventKey key, EventData data)
 	{
