@@ -23,6 +23,7 @@ public:
 	// Modifyable array of all hittable objects, within -+'hittableObjectTreshold' of current time
 	Set<ObjectState*>& GetHittableObjects();
 	MapTime hittableObjectTreshold = 100;
+	MapTime alertLaserThreshold = 1500;
 
 	// Gets all linear objects that fall within the given time range:
 	//	<curr - keepObjectDuration, curr + range>
@@ -74,6 +75,8 @@ public:
 	/* Playback events */
 	// Called when an object became within the 'hittableObjectTreshold'
 	Delegate<ObjectState*> OnObjectEntered;
+	// Called when a laser became within the 'alertLaserThreshold'
+	Delegate<LaserObjectState*> OnLaserAlertEntered;
 	// Called after an object has passed the duration it can be hit in
 	Delegate<ObjectState*> OnObjectLeaved;
 	// Called when an FX button with effect enters
@@ -107,6 +110,7 @@ private:
 
 	TimingPoint** m_currentTiming = nullptr;
 	ObjectState** m_currentObj = nullptr;
+	ObjectState** m_currentAlertObj = nullptr;
 	ZoomControlPoint** m_currentZoomPoint = nullptr;
 
 	// Used to calculate track zoom

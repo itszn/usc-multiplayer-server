@@ -19,6 +19,7 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	Logf("Reseting BeatmapPlayback with StartTime = %d", Logger::Info, startTime);
 	m_playbackTime = startTime;
 	m_currentObj = &m_objects.front();
+	m_currentAlertObj = &m_objects.front();
 	m_currentTiming = &m_timingPoints.front();
 	m_currentZoomPoint = m_zoomPoints.empty() ? nullptr : &m_zoomPoints.front();
 
@@ -83,6 +84,23 @@ void BeatmapPlayback::Update(MapTime newTime)
 			OnObjectEntered.Call(*it);
 		}
 		m_currentObj = objEnd;
+	}
+
+	// Check for lasers within the alert time
+	objEnd = m_SelectHitObject(m_playbackTime + alertLaserThreshold);
+	if (objEnd != nullptr && objEnd != m_currentAlertObj)
+	{
+		for (auto it = m_currentAlertObj; it < objEnd; it++)
+		{
+			MultiObjectState* obj = **it;
+			if (obj->type == ObjectType::Laser)
+			{
+				LaserObjectState* laser = (LaserObjectState*)obj;
+				if (!laser->prev)
+					OnLaserAlertEntered.Call(laser);
+			}
+		}
+		m_currentAlertObj = objEnd;
 	}
 
 	// Advance zoom points

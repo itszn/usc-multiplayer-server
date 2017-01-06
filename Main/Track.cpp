@@ -81,6 +81,11 @@ bool Track::AsyncLoad()
 	loader->AddTexture(laserTailTextures[0], "laser_entry.png");
 	loader->AddTexture(laserTailTextures[1], "laser_exit.png");
 
+	// Load laser alerts
+	loader->AddTexture(laserAlertTextures[0], "alert_l.png");
+	loader->AddTexture(laserAlertTextures[1], "alert_r.png");
+	
+
 	loader->AddTexture(comboSpriteSheet, "combo.png");
 
 	// Track materials
@@ -260,7 +265,13 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	for(uint32 i = 0; i < 2; i++)
 	{
 		m_laserTrackBuilder[i]->Update(m_lastMapTime);
+
+		laserAlertOpacity[i] = (-pow(m_alertTimer[i], 2.0f) + (1.5f * m_alertTimer[i])) * 5.0f;
+		laserAlertOpacity[i] = Math::Clamp<float>(laserAlertOpacity[i], 0.0f, 1.0f);
+		m_alertTimer[i] += deltaTime;
 	}
+
+
 }
 
 void Track::DrawBase(class RenderQueue& rq)
@@ -405,6 +416,8 @@ void Track::DrawOverlays(class RenderQueue& rq)
 		Vector2 objectSize = Vector2(buttonWidth * 0.7f, 0.0f);
 		objectSize.y = laserPointerTexture->CalculateHeight(objectSize.x);
 		DrawSprite(rq, Vector3(pos - trackWidth * 0.5f, 0.0f, 0.0f), objectSize, laserPointerTexture, laserColors[i].WithAlpha(laserPointerOpacity[i]));
+		/// TODO: Draw alerts on HUD instead of in game world.
+		DrawSprite(rq, Vector3(-trackWidth + trackWidth * i * 2.0f, 0.1f, 0.0f), objectSize * 3, laserAlertTextures[i], laserColors[i].WithAlpha(laserAlertOpacity[i]), 0.0f);
 	}
 }
 void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffset /*= 0.05f*/, float widthScale /*= 1.0f*/)
@@ -488,6 +501,12 @@ void Track::SetViewRange(float newRange)
 		m_laserTrackBuilder[0]->Reset();
 		m_laserTrackBuilder[1]->Reset();
 	}
+}
+
+void Track::SendLaserAlert(uint8 laserIdx)
+{
+	if (m_alertTimer[laserIdx] > 3.0f)
+		m_alertTimer[laserIdx] = 0.0f;
 }
 
 float Track::GetViewRange() const

@@ -148,6 +148,13 @@ public:
 	//	2 = Perfect
 	uint32 categorizedHits[3] = { 0 };
 
+	// Early and Late count:
+	// 0 = Early
+	// 1 = Late
+	uint32 timedHits[2] = { 0 };
+
+	
+
 	// Amount of gauge to gain on a short note
 	float shortGaugeGain = 0.0f;
 

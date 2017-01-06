@@ -607,6 +607,7 @@ public:
 		m_playback.OnEventChanged.Add(this, &Game_Impl::OnEventChanged);
 		m_playback.OnFXBegin.Add(this, &Game_Impl::OnFXBegin);
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
+		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
 		m_playback.Reset();
 
         // If c-mod is used
@@ -1017,6 +1018,13 @@ public:
 		assert(object->index >= 4 && object->index <= 5);
 		uint32 index = object->index - 4;
 		m_audioPlayback.ClearEffect(index, object);
+	}
+	void OnLaserAlertEntered(LaserObjectState* object)
+	{
+		if (m_scoring.timeSinceLaserUsed[object->index] > 3.0f)
+		{
+			m_track->SendLaserAlert(object->index);
+		}
 	}
 
 	virtual void OnKeyPressed(Key key) override

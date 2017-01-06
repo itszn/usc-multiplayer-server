@@ -67,6 +67,7 @@ void Scoring::Reset()
 	timeSinceLaserUsed[1] = 1000.0f;
 
 	memset(categorizedHits, 0, sizeof(categorizedHits));
+	memset(timedHits, 0, sizeof(timedHits));
 	// Clear hit statistics
 	hitStats.clear();
 
@@ -562,12 +563,19 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 		stat->delta = delta;
 		stat->rating = tick->GetHitRatingFromDelta(delta);
 		OnButtonHit.Call((Input::Button)index, stat->rating, tick->object);
+
+
 		if (stat->rating == ScoreHitRating::Perfect)
 		{
 			currentGauge += shortGaugeGain;
 		}
 		else
 		{
+			if (Math::Sign(delta) < 0)
+				timedHits[0]++;
+			else
+				timedHits[1]++;
+			
 			currentGauge += shortGaugeGain / 3.0f;
 		}
 		m_AddScore((uint32)stat->rating);

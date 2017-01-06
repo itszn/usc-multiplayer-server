@@ -56,6 +56,7 @@ public:
 	void ClearEffects();
 
 	void SetViewRange(float newRange);
+	void SendLaserAlert(uint8 laserIdx);
 	float GetViewRange() const;
 
 	// Normal/FX button X-axis placement
@@ -66,6 +67,7 @@ public:
 	// Current lasers are extended
 	bool lasersAreExtend[2] = { false, false };
 	float laserPointerOpacity[2] = { 1.0f };
+	float laserAlertOpacity[2] = { 1.0f };
 
 	// Visible time elements on the playfield track
 	// a single unit is 1 beat in distance
@@ -89,6 +91,7 @@ public:
 	Texture laserTexture;
 	Texture laserTailTextures[2]; // Entry and exit textures
 	Material laserMaterial;
+	Texture laserAlertTextures[2];
 
 	/* Overlay graphics */
 	Material trackOverlay;
@@ -124,6 +127,8 @@ private:
 	float m_viewRange;
 
 	MapTime m_lastMapTime = 0;
+
+	float m_alertTimer[2] = { 10.0f, 10.0f };
 }; 
 
 // Base class for sprite effects on the track
