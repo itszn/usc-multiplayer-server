@@ -10,23 +10,54 @@ uniform ivec2 screenCenter;
 uniform vec2 timing;
 uniform ivec2 viewport;
 uniform float objectGlow;
+uniform sampler2D mainTex;
+uniform float tilt;
 
 #define pi 3.1415926535897932384626433832795
 
+vec2 rotate_point(vec2 cen,float angle,vec2 p)
+{
+  float s = sin(angle);
+  float c = cos(angle);
+
+  // translate point back to origin:
+  p.x -= cen.x;
+  p.y -= cen.y;
+
+  // rotate point
+  float xnew = p.x * c - p.y * s;
+  float ynew = p.x * s + p.y * c;
+
+  // translate point back:
+  p.x = xnew + cen.x;
+  p.y = ynew + cen.y;
+  return p;
+}
+
+
 void main()
 {
-	float d = length(vec2(screenCenter) - texVp);
-	float r = d/float(viewport.y);
-	d *= 1.0f-(r*r);
+    float ar = viewport.x / viewport.y;
+    vec2 center = vec2(screenCenter);
+	vec2 uv = texVp.xy;
+	uv.x *= ar;
+
+    center.x *= ar;
+    uv = rotate_point(center, tilt * 2.0 * pi, uv);
+    float thing = 1.8 / abs(center.x - uv.x);
+    float thing2 = abs(center.x - uv.x) * 2.0;
+    uv.y -= center.y;
+    uv.y *=  thing;
+    uv.y = (uv.y + 1.0) / 2.0;
+    uv.x *= thing / 3.0;
+    uv.x += timing.x * 10.0;
 	
-	float t = cos(-timing.x * pi * 4 + d * 0.02) * 0.5 + 0.5;
-	t = pow(t,1);
-	float t1 = cos(-timing.x * pi * 8 + d * 0.081) * 0.5 + 0.5;
-	t1 = pow(t1,2);
-	target.xyz = t1 * vec3(0.1) * 0.06 + t * vec3(0.1,0.4,0.5) * (0.3 + 0.1 * timing.y);
-	target.xyz += vec3(0.1);
-	
-	// Intensity fade towards bottom
-	target.xyz *= vec3(1.0-0.7 * (texVp.y/viewport.y)) * 0.3;
-	target.a = 1;
+    vec4 col = texture2D(mainTex, uv);
+    if (abs(uv.y) > 1.0 || uv.y < 0.0)
+        col = vec4(0);
+    col.a *= 1.0 - (thing * 70.0);
+    col *= vec4(col.a);
+
+	target = col;
+    
 }

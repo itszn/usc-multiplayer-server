@@ -32,6 +32,7 @@ public:
 	RenderState renderState;
 	Mesh fullscreenMesh;
 	Material fullscreenMaterial;
+	Texture side;
 	MaterialParameterSet fullscreenMaterialParams;
 };
 
@@ -43,6 +44,7 @@ class TestBackground : public FullscreenBackground
 			return false;
 
 		CheckedLoad(fullscreenMaterial = g_application->LoadMaterial("background"));
+		CheckedLoad(side = g_application->LoadTexture("side_1.png"));
 
 		return true;
 	}
@@ -63,6 +65,9 @@ class TestBackground : public FullscreenBackground
 
 		Vector3 trackEndWorld = Vector3(0.0f, 25.0f, 0.0f);
 		Vector2i screenCenter = game->GetCamera().Project(trackEndWorld);
+		float tilt = game->GetCamera().GetRoll();
+		fullscreenMaterialParams.SetParameter("tilt", tilt);
+		fullscreenMaterialParams.SetParameter("mainTex", side);
 		fullscreenMaterialParams.SetParameter("screenCenter", screenCenter);
 		fullscreenMaterialParams.SetParameter("timing", timing);
 
