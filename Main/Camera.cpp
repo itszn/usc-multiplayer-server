@@ -85,23 +85,18 @@ RenderState Camera::CreateRenderState(bool clipped)
 	float viewRangeExtension = clipped ? 0.0f : 5.0f;
 
 	RenderState rs = g_application->GetRenderStateBase();
-
-	// Clamp zoom values and map to [0,1]
-	float zoomTopNormalized = Math::Clamp(zoomTop, -1.0f, 1.0f)*0.5f + 0.5f;
-	float zoomBottomNormalized = Math::Clamp(-zoomBottom, -1.0f, 1.0f)*0.5f + 0.5f;
-
-	// Limit top zoom when bottom is zoomed in
-	zoomTopNormalized *= (1.0f - 0.25f * (1-zoomBottomNormalized));
-
+	
 	// Tilt, Height and Near calculated from zoom values
-	float cameraTilt = zoomTopNormalized * 65.0f;
-	float targetHeight = cameraHeightBase + zoomBottomNormalized * cameraHeightMult;
-	float targetNear = cameraNearBase + zoomBottomNormalized * cameraNearMult;
+	float base_pitch = -33.0f * pow(1.33f, -zoomTop);
+	float base_radius = 4.f * cameraHeightBase * pow(1.1f, -zoomBottom * 3.0f);
+
+	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
+	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
 
 	Transform cameraTransform;
 	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f });
+	cameraTransform *= Transform::Rotation({base_pitch - 40.0f, 0.0f, 0.0f });
 	cameraTransform *= Transform::Translation(m_shakeOffset + Vector3( 0.0f, -targetHeight, -targetNear));
-	cameraTransform *= Transform::Rotation({ -90.0f + cameraTilt, 0.0f, 0.0f });
 
 	// Calculate clipping distances
 	Vector3 cameraPos = cameraTransform.TransformDirection(-Vector3(cameraTransform.GetPosition()));
