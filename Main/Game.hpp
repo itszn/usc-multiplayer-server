@@ -22,6 +22,9 @@ public:
 	virtual class Camera& GetCamera() = 0;
 	virtual class BeatmapPlayback& GetPlayback() = 0;
 	virtual class Scoring& GetScoring() = 0;
+	// Samples of the gauge for the performance graph
+	virtual float* GetGaugeSamples() = 0;
+
 	// Map jacket image
 	virtual Texture GetJacketImage() = 0;
 	// The beatmap
@@ -30,4 +33,6 @@ public:
 	virtual const String& GetMapRootPath() const = 0;
 	// Full path to map
 	virtual const String& GetMapPath() const = 0;
+
+
 };

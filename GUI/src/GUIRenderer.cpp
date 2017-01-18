@@ -42,6 +42,8 @@ bool GUIRenderer::Init(class OpenGL* gl, class Graphics::Window* window)
 	colorMaterial->opaque = false;
 	CheckedLoad(buttonMaterial = LoadMaterial("guiButton"));
 	buttonMaterial->opaque = false;
+	CheckedLoad(graphMaterial = LoadMaterial("guiGraph"));
+	graphMaterial->opaque = false;
 
 	guiQuad = MeshGenerators::Quad(m_gl, Vector2(0, 0), Vector2(1, 1));
 
@@ -301,6 +303,21 @@ void GUIRenderer::RenderRect(const Rect& rect, const Color& color /*= Color(1.0f
 		m_renderQueue->DrawScissored(m_scissorRect, transform, guiQuad, colorMaterial, params);
 	}
 }
+void GUIRenderer::RenderGraph(const Rect& rect, Texture graphTex)
+{
+	if (m_scissorRect.size.x == 0 || m_scissorRect.size.y == 0)
+		return;
+
+	Transform transform;
+	transform *= Transform::Translation(rect.pos);
+	transform *= Transform::Scale(Vector3(rect.size.x, rect.size.y, 1.0f));
+	MaterialParameterSet params;
+	params.SetParameter("graphTex", graphTex);
+	m_renderQueue->DrawScissored(m_scissorRect, transform, guiQuad, graphMaterial, params);
+	
+}
+
+
 void GUIRenderer::RenderButton(const Rect& rect, Texture texture, Margini border, const Color& color /*= Color::White*/)
 {
 	if(m_scissorRect.size.x == 0 || m_scissorRect.size.y == 0)

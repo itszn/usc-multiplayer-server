@@ -107,6 +107,11 @@ private:
 	Vector<ObjectState*> m_currentObjectSet;
 	MapTime m_lastMapTime;
 
+	// Rate to sample gauge;
+	MapTime m_gaugeSampleRate;
+	float m_gaugeSamples[256] = { 0.0f };
+
+
 	// Combo gain animation
 	Timer m_comboAnimation;
 
@@ -187,6 +192,27 @@ public:
 		m_jacketImage = ImageRes::Create(jacketPath);
 
 
+		m_gaugeSamples[256] = { 0.0f };
+		MapTime firstObjectTime = m_beatmap->GetLinearObjects().front()->time;
+		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+		MapTime lastObjectTime = (*lastObj)->time;
+
+		if ((*lastObj)->type == ObjectType::Hold)
+		{
+			HoldObjectState* lastHold = (HoldObjectState*)(*lastObj);
+			lastObjectTime += lastHold->duration;
+		}
+		else if ((*lastObj)->type == ObjectType::Laser)
+		{
+			LaserObjectState* lastHold = (LaserObjectState*)(*lastObj);
+			lastObjectTime += lastHold->duration;
+		}
+		
+
+		m_gaugeSampleRate = lastObjectTime / 256;
+
+
+
         // Move this somewhere else?
         // Set hi-speed for m-Mod
         // Uses the "mode" of BPMs in the chart, should use median?
@@ -215,8 +241,7 @@ public:
                 lastMT = tp->time;
                 lastBPM = thisBPM;
             }
-            MapTime endTime = m_beatmap->GetLinearObjects().back()->time; 
-            bpmDurations[lastBPM] += endTime - lastMT;
+            bpmDurations[lastBPM] += lastObjectTime - lastMT;
 
             if (bpmDurations[lastBPM] > largestMT)
             {
@@ -685,6 +710,12 @@ public:
 		// Update scoring gauge
 		m_scoringGauge->rate = m_scoring.currentGauge;
 
+		int32 gaugeSampleSlot = playbackPositionMs;
+		gaugeSampleSlot /= m_gaugeSampleRate;
+		gaugeSampleSlot = Math::Clamp(gaugeSampleSlot, (int32)0, (int32)255);
+		m_gaugeSamples[gaugeSampleSlot] = m_scoring.currentGauge;
+
+
         // Update hispeed
         if (g_input.GetButton(Input::Button::BT_S))
         {
@@ -698,7 +729,7 @@ public:
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
 
 		m_lastMapTime = playbackPositionMs;
-
+		
 		if(m_audioPlayback.HasEnded())
 		{
 			FinishGame();
@@ -1135,6 +1166,10 @@ public:
 	virtual class Scoring& GetScoring() override
 	{
 		return m_scoring;
+	}
+	virtual float* GetGaugeSamples() override
+	{
+		return m_gaugeSamples;
 	}
 
 	virtual const String& GetMapRootPath() const

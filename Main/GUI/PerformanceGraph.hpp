@@ -10,5 +10,6 @@ public:
 	virtual Vector2 GetDesiredSize(GUIRenderData rd);
 
 	Texture borderTexture;
+	Texture graphTex;
 	Margini border;
 };

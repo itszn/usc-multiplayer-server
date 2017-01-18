@@ -31,12 +31,14 @@ private:
 	uint32 m_maxCombo;
 	uint32 m_categorizedHits[3];
 	float m_finalGaugeValue;
+	float* m_gaugeSamples;
 	String m_jacketPath;
 
 	Ref<SongSelectStyle> m_songSelectStyle;
 
 	BeatmapSettings m_beatmapSettings;
 	Texture m_jacketImage;
+	Texture m_graphTex;
 
 public:
 	ScoreScreen_Impl(class Game* game)
@@ -47,6 +49,7 @@ public:
 		m_grade = scoring.CalculateCurrentGrade();
 		m_maxCombo = scoring.maxComboCounter;
 		m_finalGaugeValue = scoring.currentGauge;
+		m_gaugeSamples = game->GetGaugeSamples();
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 
 		// Used for jacket images
@@ -55,6 +58,17 @@ public:
 		m_beatmapSettings = game->GetBeatmap()->GetMapSettings();
 		m_jacketPath = Path::Normalize(game->GetMapRootPath() + Path::sep + m_beatmapSettings.jacketPath);
 		m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
+
+		// Make texture for performance graph samples
+		m_graphTex = TextureRes::Create(g_gl);
+		m_graphTex->Init(Vector2i(256, 1), Graphics::TextureFormat::RGBA8);
+		Colori graphPixels[256];
+		for (uint32 i = 0; i < 256; i++)
+		{
+			graphPixels[i].x = 255.0f * Math::Clamp(m_gaugeSamples[i], 0.0f, 1.0f);
+		}
+		m_graphTex->SetData(Vector2i(256, 1), graphPixels);
+
 	}
 	~ScoreScreen_Impl()
 	{
@@ -209,6 +223,9 @@ public:
 
 			PerformanceGraph* graphPanel = new PerformanceGraph();
 			loader.AddTexture(graphPanel->borderTexture, "ui/button.png");
+
+			graphPanel->graphTex = m_graphTex;
+
 			graphPanel->border = Margini(5);
 			{
 				LayoutBox::Slot* slot = scoreAndGraph->Add(graphPanel->MakeShared());
