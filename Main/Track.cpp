@@ -246,6 +246,10 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 		m_barTicks.Add(playback.TimeToViewDistance((MapTime)tickTime));
 	}
 
+	// Update track hide status
+	m_trackHide += m_trackHideSpeed * deltaTime;
+	m_trackHide = Math::Clamp(m_trackHide, 0.0f, 1.0f);
+
 	// Set Object glow
 	int32 startBeat = 0;
 	uint32 numBeats = playback.CountBeats(m_lastMapTime, currentTime - m_lastMapTime, startBeat, 4);
@@ -278,8 +282,10 @@ void Track::DrawBase(class RenderQueue& rq)
 {
 	// Base
 	MaterialParameterSet params;
+	Transform transform;
+	transform *= Transform::Translation({ 0.0f, -m_trackHide * trackLength * 1.1f, 0.0f });
 	params.SetParameter("mainTex", trackTexture);
-	rq.Draw(Transform(), trackMesh, trackMaterial, params);
+	rq.Draw(transform, trackMesh, trackMaterial, params);
 
 	// Draw the main beat ticks on the track
 	params.SetParameter("mainTex", trackTickTexture);
@@ -479,6 +485,9 @@ TimedEffect* Track::AddEffect(TimedEffect* effect)
 }
 void Track::ClearEffects()
 {
+	m_trackHide = 0.0f;
+	m_trackHideSpeed = 0.0f;
+
 	for(auto it = m_hitEffects.begin(); it != m_hitEffects.end(); it++)
 	{
 		delete *it;
@@ -507,6 +516,11 @@ void Track::SendLaserAlert(uint8 laserIdx)
 {
 	if (m_alertTimer[laserIdx] > 3.0f)
 		m_alertTimer[laserIdx] = 0.0f;
+}
+
+void Track::SetLaneHide(bool hide, double duration)
+{
+	m_trackHideSpeed = hide ? 1.0f / duration : -1.0f / duration;
 }
 
 float Track::GetViewRange() const

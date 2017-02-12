@@ -19,9 +19,45 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 	float rollSpeedLimit = (m_rollIntensity / (currentTimingPoint.beatDuration / 1000.0f)) * deltaTime;
 	rollSpeedLimit /= m_targetRoll != 0.0f ? 1.0f : 2.0f;
 
-	float rollDelta = m_targetRoll - m_roll;
+	float rollDelta = m_targetRoll - m_laserRoll;
 	rollSpeedLimit *= Math::Sign(rollDelta);
-	m_roll += (abs(rollDelta) < abs(rollSpeedLimit)) ? rollDelta : rollSpeedLimit;
+	m_laserRoll += (abs(rollDelta) < abs(rollSpeedLimit)) ? rollDelta : rollSpeedLimit;
+
+
+	// Calculate camera spin
+	if (m_spinProgress < m_spinDuration * 2.0f)
+	{
+		float relativeProgress = m_spinProgress / m_spinDuration;
+		if (m_spinType == SpinStruct::SpinType::Full)
+		{
+			if(relativeProgress <= 1.0f)
+				m_spinRoll = -m_spinDirection * (1.0 - relativeProgress);
+			else
+			{
+				float amplitude = (15.0f / 360.0f) / (relativeProgress + 1);
+				m_spinRoll = sin(relativeProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
+			}
+		}
+		else if (m_spinType == SpinStruct::SpinType::Quarter)
+		{
+			if (relativeProgress <= 1.0f)
+			{
+				float amplitude = (80.0f / 360.0f) / ((relativeProgress * 2) + 1);
+				m_spinRoll = sin(relativeProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
+			}
+			else
+			{
+				m_spinRoll = 0.0f;
+			}
+		}
+		m_spinProgress += deltaTime;
+	}
+	else
+	{
+		m_spinRoll = 0.0f;
+	}
+
+	m_roll = m_spinRoll + m_laserRoll;
 
 	if(!rollKeep)
 	{
@@ -94,7 +130,7 @@ RenderState Camera::CreateRenderState(bool clipped)
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
 
 	Transform cameraTransform;
-	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f });
+	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f});
 	cameraTransform *= Transform::Rotation({base_pitch - 40.0f, 0.0f, 0.0f });
 	cameraTransform *= Transform::Translation(m_shakeOffset + Vector3( 0.0f, -targetHeight, -targetNear));
 
@@ -105,10 +141,11 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	// Dot products of start and end of track on the viewing direction to get the near and far clipping planes
 	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
-	float d1 = VectorMath::Dot(Vector3(0.0f, track->trackLength, 0.0f), cameraDir) + offset;
+	float d1 = VectorMath::Dot(Vector3(0.0f, track->trackLength, 0.0f), cameraDir) + offset; // Breaks when doing full spins
 
 	rs.cameraTransform = cameraTransform;
-	rs.projectionTransform = ProjectionMatrix::CreatePerspective(90.0f, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), d1 + viewRangeExtension);
+	/// TODO: Fix d1 and use that instead of fixed 7.0f (?)
+	rs.projectionTransform = ProjectionMatrix::CreatePerspective(90.0f, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), 7.0f + viewRangeExtension);
 
 	m_rsLast = rs;
 
@@ -137,6 +174,16 @@ void Camera::SetTargetRoll(float target)
 		}
 		m_targetRollSet = true;
 	}
+}
+
+void Camera::SetSpin(float direction, uint32 duration, uint8 type, class BeatmapPlayback& playback)
+{
+	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
+
+	m_spinDirection = direction;
+	m_spinDuration = (duration / 192.0f) * (currentTimingPoint.beatDuration / 1000.0f) * 4.0f;
+	m_spinProgress = 0;
+	m_spinType = type;
 }
 
 void Camera::SetLasersActive(bool lasersActive)

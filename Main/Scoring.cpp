@@ -601,6 +601,9 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 			// Set laser pointer position after hitting slam
 			laserTargetPositions[object->index] = object->points[1];
 			laserPositions[object->index] = object->points[1];
+
+			
+
 		}
 		if(m_holdObjects[object->index + 6] != *rootObject)
 		{

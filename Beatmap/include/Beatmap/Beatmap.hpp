@@ -71,6 +71,8 @@ public:
 	// Can contain multiple objects at the same time
 	const Vector<ZoomControlPoint*>& GetZoomControlPoints() const;
 
+	const Vector<LaneHideTogglePoint*>& GetLaneTogglePoints() const;
+
 	// Retrieves audio effect settings for a given button id
 	AudioEffect GetEffect(EffectType type) const;
 	// Retrieves audio effect settings for a given filter effect id
@@ -84,6 +86,7 @@ private:
 	Map<EffectType, AudioEffect> m_customFilters;
 
 	Vector<TimingPoint*> m_timingPoints;
+	Vector<LaneHideTogglePoint*> m_laneTogglePoints;
 	Vector<ObjectState*> m_objectStates;
 	Vector<ZoomControlPoint*> m_zoomControlPoints;
 	BeatmapSettings m_settings;

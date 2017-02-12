@@ -33,6 +33,7 @@ public:
 	void SetRollIntensity(float val);
 	void SetLasersActive(bool lasersActive);
 	void SetTargetRoll(float target);
+	void SetSpin(float direction, uint32 duration, uint8 type, class BeatmapPlayback& playback);
 	float GetRoll() const;
 
 	Vector2 Project(const Vector3& pos);
@@ -60,6 +61,7 @@ private:
 	float m_ClampRoll(float in) const;
 	// -1 to 1 roll value
 	float m_roll = 0.0f;
+	float m_laserRoll = 0.0f;
 	// Target to roll towards
 	float m_targetRoll = 0.0f;
 	bool m_targetRollSet = false;
@@ -67,6 +69,14 @@ private:
 	// Roll force
 	float m_rollVelocity = 0.0f;
 	float m_rollIntensity;
+
+	// Spin variables
+	float m_spinDuration;
+	float m_spinProgress;
+	uint8 m_spinType;
+	float m_spinDirection = 0.0f;
+	float m_spinRoll = 0.0f;
+
 
 	RenderState m_rsLast;
 

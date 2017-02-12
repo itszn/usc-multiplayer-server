@@ -57,6 +57,7 @@ public:
 
 	void SetViewRange(float newRange);
 	void SendLaserAlert(uint8 laserIdx);
+	void SetLaneHide(bool hidden, double duration);
 	float GetViewRange() const;
 
 	// Normal/FX button X-axis placement
@@ -129,6 +130,10 @@ private:
 	MapTime m_lastMapTime = 0;
 
 	float m_alertTimer[2] = { 10.0f, 10.0f };
+
+	// How much the track is hidden. 1.0 = fully hidden, 0.0 = fully visible
+	float m_trackHide = 0.0f;
+	float m_trackHideSpeed = 0.0f;
 }; 
 
 // Base class for sprite effects on the track

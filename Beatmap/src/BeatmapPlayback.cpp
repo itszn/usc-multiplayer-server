@@ -11,6 +11,7 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_timingPoints = m_beatmap->GetLinearTimingPoints();
 	m_objects = m_beatmap->GetLinearObjects();
 	m_zoomPoints = m_beatmap->GetZoomControlPoints();
+	m_laneTogglePoints = m_beatmap->GetLaneTogglePoints();
 	if(m_objects.size() == 0)
 		return false;
 	if(m_timingPoints.size() == 0)
@@ -22,6 +23,7 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_currentAlertObj = &m_objects.front();
 	m_currentTiming = &m_timingPoints.front();
 	m_currentZoomPoint = m_zoomPoints.empty() ? nullptr : &m_zoomPoints.front();
+	m_currentLaneTogglePoint = m_laneTogglePoints.empty() ? nullptr : &m_laneTogglePoints.front();
 
 	m_hittableObjects.clear();
 	m_holdObjects.clear();
@@ -67,6 +69,14 @@ void BeatmapPlayback::Update(MapTime newTime)
 	{
 		m_currentTiming = timingEnd;
 		OnTimingPointChanged.Call(*m_currentTiming);
+	}
+
+	// Advance lane toggle
+	LaneHideTogglePoint** laneToggleEnd = m_SelectLaneTogglePoint(m_playbackTime);
+	if (laneToggleEnd != nullptr && laneToggleEnd != m_currentLaneTogglePoint)
+	{
+		m_currentLaneTogglePoint = laneToggleEnd;
+		OnLaneToggleChanged.Call(*m_currentLaneTogglePoint);
 	}
 
 	// Advance objects
@@ -398,6 +408,34 @@ TimingPoint** BeatmapPlayback::m_SelectTimingPoint(MapTime time, bool allowReset
 
 	return objStart;
 }
+
+
+LaneHideTogglePoint** BeatmapPlayback::m_SelectLaneTogglePoint(MapTime time, bool allowReset)
+{
+	LaneHideTogglePoint** objStart = m_currentLaneTogglePoint;
+
+	if (IsEndLaneToggle(objStart))
+		return objStart;
+
+	// Start at front of array if current object lies ahead of given input time
+	if (objStart[0]->time > time && allowReset)
+		objStart = &m_laneTogglePoints.front();
+
+	// Keep advancing the start pointer while the next object's starting time lies before the input time
+	while (true)
+	{
+		if (!IsEndLaneToggle(objStart + 1) && objStart[1]->time <= time)
+		{
+			objStart = objStart + 1;
+		}
+		else
+			break;
+	}
+
+	return objStart;
+}
+
+
 ObjectState** BeatmapPlayback::m_SelectHitObject(MapTime time, bool allowReset)
 {
 	ObjectState** objStart = m_currentObj;
@@ -443,12 +481,18 @@ ZoomControlPoint** BeatmapPlayback::m_SelectZoomObject(MapTime time)
 
 bool BeatmapPlayback::IsEndTiming(TimingPoint** obj)
 {
-	return obj == (&m_timingPoints.back() + 1);;
+	return obj == (&m_timingPoints.back() + 1);
 }
 bool BeatmapPlayback::IsEndObject(ObjectState** obj)
 {
 	return obj == (&m_objects.back() + 1);
 }
+
+bool BeatmapPlayback::IsEndLaneToggle(LaneHideTogglePoint** obj)
+{
+	return obj == (&m_laneTogglePoints.back() + 1);
+}
+
 bool BeatmapPlayback::IsEndZoomPoint(ZoomControlPoint** obj)
 {
 	return obj == (&m_zoomPoints.back() + 1);

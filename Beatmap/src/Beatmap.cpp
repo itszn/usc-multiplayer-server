@@ -11,7 +11,9 @@ Beatmap::~Beatmap()
 		delete tp;
 	for(auto obj : m_objectStates)
 		delete obj;
-	for(auto z : m_zoomControlPoints)
+	for (auto z : m_zoomControlPoints)
+		delete z;
+	for (auto z : m_laneTogglePoints)
 		delete z;
 }
 Beatmap::Beatmap(Beatmap&& other)
@@ -19,6 +21,7 @@ Beatmap::Beatmap(Beatmap&& other)
 	m_timingPoints = std::move(other.m_timingPoints);
 	m_objectStates = std::move(other.m_objectStates);
 	m_zoomControlPoints = std::move(other.m_zoomControlPoints);
+	m_laneTogglePoints = std::move(other.m_laneTogglePoints);
 	m_settings = std::move(other.m_settings);
 }
 Beatmap& Beatmap::operator=(Beatmap&& other)
@@ -33,6 +36,7 @@ Beatmap& Beatmap::operator=(Beatmap&& other)
 	m_timingPoints = std::move(other.m_timingPoints);
 	m_objectStates = std::move(other.m_objectStates);
 	m_zoomControlPoints = std::move(other.m_zoomControlPoints);
+	m_laneTogglePoints = std::move(other.m_laneTogglePoints);
 	m_settings = std::move(other.m_settings);
 	return *this;
 }
@@ -65,6 +69,10 @@ const BeatmapSettings& Beatmap::GetMapSettings() const
 const Vector<TimingPoint*>& Beatmap::GetLinearTimingPoints() const
 {
 	return m_timingPoints;
+}
+const Vector<LaneHideTogglePoint*>& Beatmap::GetLaneTogglePoints() const
+{
+	return m_laneTogglePoints;
 }
 const Vector<ObjectState*>& Beatmap::GetLinearObjects() const
 {

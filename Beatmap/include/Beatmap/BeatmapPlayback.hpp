@@ -87,18 +87,22 @@ public:
 	// Called when a new timing point becomes active
 	Delegate<TimingPoint*> OnTimingPointChanged;
 
+	Delegate<LaneHideTogglePoint*> OnLaneToggleChanged;
+
 	Delegate<EventKey, EventData> OnEventChanged;
 
 private:
 	// Selects an object or timing point based on a given input state
 	// if allowReset is true the search starts from the start of the object list if current point lies beyond given input time
 	TimingPoint** m_SelectTimingPoint(MapTime time, bool allowReset = false);
+	LaneHideTogglePoint** m_SelectLaneTogglePoint(MapTime time, bool allowReset = false);
 	ObjectState** m_SelectHitObject(MapTime time, bool allowReset = false);
 	ZoomControlPoint** m_SelectZoomObject(MapTime time);
 
 	// End object pointer, this is not a valid pointer, but points to the element after the last element
 	bool IsEndTiming(TimingPoint** obj);
 	bool IsEndObject(ObjectState** obj);
+	bool IsEndLaneToggle(LaneHideTogglePoint ** obj);
 	bool IsEndZoomPoint(ZoomControlPoint** obj);
 
 	// Current map position of this playback object
@@ -106,11 +110,13 @@ private:
 	Vector<TimingPoint*> m_timingPoints;
 	Vector<ObjectState*> m_objects;
 	Vector<ZoomControlPoint*> m_zoomPoints;
+	Vector<LaneHideTogglePoint*> m_laneTogglePoints;
 	bool m_initialEffectStateSent = false;
 
 	TimingPoint** m_currentTiming = nullptr;
 	ObjectState** m_currentObj = nullptr;
 	ObjectState** m_currentAlertObj = nullptr;
+	LaneHideTogglePoint** m_currentLaneTogglePoint = nullptr;
 	ZoomControlPoint** m_currentZoomPoint = nullptr;
 
 	// Used to calculate track zoom

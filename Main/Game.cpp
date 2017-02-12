@@ -61,6 +61,9 @@ private:
 	// Map object approach speed, scaled by BPM
 	float m_hispeed = 1.0f;
 
+	// Current lane toggle status
+	bool m_hideLane = false;
+
     // Use m-mod and what m-mod speed
     bool m_usemMod = false;
     bool m_usecMod = false;
@@ -337,6 +340,7 @@ public:
 		m_paused = false;
 		m_started = false;
 		m_ended = false;
+		m_hideLane = false;
 		m_playback.Reset(m_lastMapTime);
 		m_scoring.Reset();
 
@@ -630,6 +634,7 @@ public:
 		// Playback and timing
 		m_playback = BeatmapPlayback(*m_beatmap);
 		m_playback.OnEventChanged.Add(this, &Game_Impl::OnEventChanged);
+		m_playback.OnLaneToggleChanged.Add(this, &Game_Impl::OnLaneToggleChanged);
 		m_playback.OnFXBegin.Add(this, &Game_Impl::OnFXBegin);
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
 		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
@@ -933,6 +938,13 @@ public:
 		m_camera.AddCameraShake(shake);
 		m_slamSample->Play();
 
+
+		if (object->spin.type != 0)
+		{
+			m_camera.SetSpin(object->GetDirection(), object->spin.duration, object->spin.type, m_playback);
+		}
+
+
 		float dir = Math::Sign(object->points[1] - object->points[0]);
 		float laserPos = m_track->trackWidth * object->points[1] - m_track->trackWidth * 0.5f;
 		Ref<ParticleEmitter> ex = CreateExplosionEmitter(m_track->laserColors[object->index], Vector3(dir, 0, 0));
@@ -1009,6 +1021,13 @@ public:
        m_hispeed = m_modSpeed / tp->GetBPM(); 
     }
 
+	void OnLaneToggleChanged(LaneHideTogglePoint* tp)
+	{
+		// Calculate how long the transition should be in seconds
+		double duration = m_currentTiming->beatDuration * 4.0f * (tp->duration / 192.0f) * 0.001f;
+		m_track->SetLaneHide(!m_hideLane, duration);
+		m_hideLane = !m_hideLane;
+	}
 
 	void OnEventChanged(EventKey key, EventData data)
 	{

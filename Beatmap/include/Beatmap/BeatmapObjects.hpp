@@ -123,6 +123,21 @@ struct ObjectTypeData_Hold : public ObjectTypeData_Button
 	static const ObjectType staticType = ObjectType::Hold;
 };
 
+
+struct SpinStruct
+{
+	enum SpinType
+	{
+		None = 0x0,
+		Full = 0x1,
+		Quarter = 0x2
+	};
+	SpinType type = SpinType::None;
+	float direction = 0;
+	uint32 duration = 0;
+};
+
+
 // A laser segment
 struct ObjectTypeData_Laser
 {
@@ -149,12 +164,16 @@ struct ObjectTypeData_Laser
 	TObjectState<ObjectTypeData_Laser>* next = nullptr;
 	TObjectState<ObjectTypeData_Laser>* prev = nullptr;
 
+	SpinStruct spin;
+
 	static const ObjectType staticType = ObjectType::Laser;
 
 	// Indicates that this segment is instant and should generate a laser slam segment
 	static const uint8 flag_Instant = 0x1;
 	// Indicates that the range of this laser is extended from -0.5 to 1.5
 	static const uint8 flag_Extended = 0x2;
+
+
 };
 
 struct EventData
@@ -249,6 +268,15 @@ struct TimingPoint
 	// Lower part of the time signature
 	// the note value (4th, 3th, 8th notes, etc.) for a beat
 	uint8 denominator = 4;
+};
+
+struct LaneHideTogglePoint
+{
+	// Position in ms when to hide or show the lane
+	MapTime time;
+
+	// How long the transition to/from hidden should take in 1/192nd notes
+	uint32 duration = 192;
 };
 
 // Control point for track zoom levels

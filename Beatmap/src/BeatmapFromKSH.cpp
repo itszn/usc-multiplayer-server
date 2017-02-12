@@ -29,6 +29,8 @@ struct TempLaserState
 	MapTime startTime;
 	uint32 numTicks = 0;
 	uint32 effectType = 0;
+	char spinType = 0;
+	uint32 spinDuration = 0;
 	uint8 effectParams = 0;
 	float startPosition; // Entry position
 	// Previous segment
@@ -453,6 +455,12 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 	m_timingPoints.Add(lastTimingPoint);
 	timingPointMap.Add(lastTimingPoint->time, lastTimingPoint);
 
+	// Add First Lane Toggle Point
+	LaneHideTogglePoint* startLaneTogglePoint = new LaneHideTogglePoint();
+	startLaneTogglePoint->time = 0;
+	startLaneTogglePoint->duration = 1;
+	m_laneTogglePoints.Add(startLaneTogglePoint);
+
 	// Stop here if we're only going for metadata
 	if(metadataOnly)
 		return true;
@@ -660,6 +668,13 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				point->index = 1;
 				point->zoom = (float)atol(*p.second) / 100.0f;
 				m_zoomControlPoints.Add(point);
+			}
+			else if (p.first == "lane_toggle")
+			{
+				LaneHideTogglePoint* point = new LaneHideTogglePoint();
+				point->time = mapTime;
+				point->duration = atol(*p.second);
+				m_laneTogglePoints.Add(point);
 			}
 			else if(p.first == "tilt")
 			{
@@ -875,19 +890,55 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				//assert(state->numTicks > 0);
 
 				LaserObjectState* obj = new LaserObjectState();
+				
 				obj->time = state->startTime;
 				obj->duration = mapTime - state->startTime;
 				obj->index = i;
 				obj->points[0] = state->startPosition;
 				obj->points[1] = endPos;
+
+
+
 				if(laserRanges[i] > 1.0f)
 				{
 					obj->flags |= LaserObjectState::flag_Extended;
 				}
 				// Threshold for laser segments to be considered instant
 				MapTime laserSlamThreshold = (MapTime)ceil(state->tpStart->beatDuration / 8.0);
-				if(obj->duration <= laserSlamThreshold && (obj->points[1] != obj->points[0]))
+				if (obj->duration <= laserSlamThreshold && (obj->points[1] != obj->points[0]))
+				{
 					obj->flags |= LaserObjectState::flag_Instant;
+					if (state->spinType != 0)
+					{
+						obj->spin.duration = state->spinDuration;
+						switch (state->spinType)
+						{
+						case '(':
+						case ')':
+							obj->spin.type = SpinStruct::SpinType::Full;
+							break;
+						case '<':
+						case '>':
+							obj->spin.type = SpinStruct::SpinType::Quarter;
+							break;
+						default:
+							break;
+						}
+						switch (state->spinType)
+						{
+						case '<':
+						case '(':
+							obj->spin.direction = -1.0f;
+							break;
+						case ')':
+						case '>':
+							obj->spin.direction = 1.0f;
+							break;
+						default:
+							break;
+						}
+					}
+				}
 
 				// Link segments together
 				if(state->last)
@@ -952,6 +1003,18 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				state = new TempLaserState(startTime, 0, lastTimingPoint);
 				state->last = last; // Link together
 				state->startPosition = pos;
+
+				//@[Type][Speed] = spin
+				//Types
+				//) or ( = full spin
+				//> or < = quarter spin
+				//Speed is number of 192nd notes
+				if (!tick.add.empty() && tick.add[0] == '@')
+				{
+					state->spinType = tick.add[1];
+					state->spinDuration = std::stoi(tick.add.substr(2));
+				}
+				
 			}
 		}
 	}
