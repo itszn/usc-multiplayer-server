@@ -7,11 +7,14 @@ layout(location=0) out vec4 target;
 uniform ivec2 screenCenter;
 // x = bar time
 // y = object glow
-uniform vec2 timing;
+// z = real time since song start
+uniform vec3 timing;
 uniform ivec2 viewport;
 uniform float objectGlow;
+// bg_texture.png
 uniform sampler2D mainTex;
 uniform float tilt;
+uniform float clearTransition;
 
 #define pi 3.1415926535897932384626433832795
 
@@ -34,15 +37,19 @@ vec2 rotate_point(vec2 cen,float angle,vec2 p)
   return p;
 }
 
+vec3 hsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 
 void main()
 {
-    float ar = viewport.x / viewport.y;
+    float ar = float(viewport.x) / viewport.y;
     vec2 center = vec2(screenCenter);
 	vec2 uv = texVp.xy;
-	uv.x *= ar;
 
-    center.x *= ar;
     uv = rotate_point(center, tilt * 2.0 * pi, uv);
     float thing = 1.8 / abs(center.x - uv.x);
     float thing2 = abs(center.x - uv.x) * 2.0;
@@ -53,6 +60,12 @@ void main()
     uv.x += timing.x * 10.0;
 	
     vec4 col = texture2D(mainTex, uv);
+    float hsvVal = (col.x + col.y + col.z) / 3.0;
+    vec3 clear_col = hsv2rgb(vec3(0.3 * uv.x + 0.3, 1.0, hsvVal));
+    
+    col.xyz *= (1.0 - clearTransition);
+    col.xyz += clear_col * clearTransition * 2;
+    
     if (abs(uv.y) > 1.0 || uv.y < 0.0)
         col = vec4(0);
     col.a *= 1.0 - (thing * 70.0);

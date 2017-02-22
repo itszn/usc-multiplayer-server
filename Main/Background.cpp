@@ -32,8 +32,9 @@ public:
 	RenderState renderState;
 	Mesh fullscreenMesh;
 	Material fullscreenMaterial;
-	Texture side;
+	Texture backgroundTexture;
 	MaterialParameterSet fullscreenMaterialParams;
+	float clearTransition = 0.0f;
 };
 
 class TestBackground : public FullscreenBackground
@@ -43,8 +44,24 @@ class TestBackground : public FullscreenBackground
 		if(!FullscreenBackground::Init())
 			return false;
 
-		CheckedLoad(fullscreenMaterial = g_application->LoadMaterial("background"));
-		CheckedLoad(side = g_application->LoadTexture("side_1.png"));
+		/// TODO: Handle invalid background configurations properly
+		/// e.g. missing bg_texture.png and such
+		String matPath = game->GetBeatmap()->GetMapSettings().backgroundPath;
+		String texPath = "textures/bg_texture.png";
+		if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+		{
+			matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
+			texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "bg_texture.png");
+		}
+		else
+		{
+			matPath = "shaders/background.fs";
+		}
+
+
+
+		CheckedLoad(fullscreenMaterial = LoadBackgroundMaterial(matPath));
+		CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
 
 		return true;
 	}
@@ -52,10 +69,10 @@ class TestBackground : public FullscreenBackground
 	{
 		UpdateRenderState(deltaTime);
 
-		Vector2 timing;
+		Vector3 timing;
 		const TimingPoint& tp = game->GetPlayback().GetCurrentTimingPoint();
 		timing.x = game->GetPlayback().GetBarTime();
-
+		timing.z = game->GetPlayback().GetLastTime() / 1000.0f;
 		// every 1/4 tick
 		float tickTime = fmodf(timing.x * (float)tp.numerator, 1.0f);
 		//timing.y = powf(tickTime, 2);
@@ -63,17 +80,56 @@ class TestBackground : public FullscreenBackground
 		//if(tickTime > 0.7f)
 		//	timing.y += ((tickTime - 0.7f) / 0.3f) * 0.8f; // Gradual build up again
 
+		bool cleared = game->GetScoring().currentGauge >= 0.75f;
+		
+			if (cleared)
+			clearTransition += deltaTime / tp.beatDuration * 1000;
+		else
+			clearTransition -= deltaTime / tp.beatDuration * 1000;
+
+		clearTransition = Math::Clamp(clearTransition, 0.0f, 1.0f);
+
+
+
 		Vector3 trackEndWorld = Vector3(0.0f, 25.0f, 0.0f);
 		Vector2i screenCenter = game->GetCamera().Project(trackEndWorld);
 		float tilt = game->GetCamera().GetRoll();
+		fullscreenMaterialParams.SetParameter("clearTransition", clearTransition);
 		fullscreenMaterialParams.SetParameter("tilt", tilt);
-		fullscreenMaterialParams.SetParameter("mainTex", side);
+		fullscreenMaterialParams.SetParameter("mainTex", backgroundTexture);
 		fullscreenMaterialParams.SetParameter("screenCenter", screenCenter);
 		fullscreenMaterialParams.SetParameter("timing", timing);
 
 		FullscreenBackground::Render(deltaTime);
 	}
+
+
+	Material LoadBackgroundMaterial(const String& path)
+	{
+		String pathV = String("shaders/") + "background" + ".vs";
+		String pathF = path;
+		String pathG = String("shaders/") + "background" + ".gs";
+		Material ret = MaterialRes::Create(g_gl, pathV, pathF);
+		// Additionally load geometry shader
+		if (Path::FileExists(pathG))
+		{
+			Shader gshader = ShaderRes::Create(g_gl, ShaderType::Geometry, pathG);
+			assert(gshader);
+			ret->AssignShader(ShaderType::Geometry, gshader);
+		}
+		assert(ret);
+		return ret;
+	}
+
+	Texture LoadBackgroundTexture(const String& path)
+	{
+		Texture ret = TextureRes::Create(g_gl, ImageRes::Create(path));
+		return ret;
+	}
+
 };
+
+
 
 Background* CreateBackground(class Game* game)
 {

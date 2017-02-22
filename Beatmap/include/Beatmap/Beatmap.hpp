@@ -22,6 +22,8 @@ struct BeatmapSettings
 	String audioFX;
 	// Path to the jacket image
 	String jacketPath;
+	// Path to the background shader file
+	String backgroundPath;
 
 	// Level, as indicated by map creator
 	uint8 level;

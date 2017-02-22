@@ -394,6 +394,10 @@ namespace Graphics
 	{
 		Add(name, MaterialParameter::Create(vec2, GL_FLOAT_VEC2));
 	}
+	void MaterialParameterSet::SetParameter(const String& name, const Vector3& vec3)
+	{
+		Add(name, MaterialParameter::Create(vec3, GL_FLOAT_VEC3));
+	}
 	void MaterialParameterSet::SetParameter(const String& name, const Transform& tf)
 	{
 		Add(name, MaterialParameter::Create(tf, GL_FLOAT_MAT4));
