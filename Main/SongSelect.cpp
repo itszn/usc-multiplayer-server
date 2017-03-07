@@ -442,7 +442,6 @@ private:
     float m_advanceSong = 0.0f;
     float m_advanveDiff = 0.0f;
 	MouseLockHandle m_lockMouse;
-    bool m_active = false;
 
 public:
 	bool Init() override
@@ -464,7 +463,6 @@ public:
 
         // Set up input
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
-        m_active = true;
         
 		Panel* background = new Panel();
 		background->imageFillMode = FillMode::Fill;
@@ -556,7 +554,7 @@ public:
     void m_OnButtonPressed(Input::Button buttonCode)
     {
         
-	    if(buttonCode == Input::Button::BT_S && m_active)
+	    if(buttonCode == Input::Button::BT_S && !IsSuspended())
         {
             
 			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
@@ -638,7 +636,7 @@ public:
 	}
 	virtual void OnKeyReleased(Key key)
 	{
-
+		
 	}
 	virtual void Tick(float deltaTime) override
 	{
@@ -649,7 +647,7 @@ public:
 		}
         
         // Tick navigation
-        if (m_active)
+		if (!IsSuspended())
             TickNavigation(deltaTime);
 
 		// Background
@@ -660,11 +658,20 @@ public:
     {
 
 		// Lock mouse to screen when active 
-		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse)
+		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse && g_gameWindow->IsActive())
 		{
 			m_lockMouse = g_input.LockMouse();
 		    g_gameWindow->SetCursorVisible(false);
 		}
+		else
+		{
+			if(m_lockMouse)
+				m_lockMouse.Release();
+			g_gameWindow->SetCursorVisible(true);
+		}
+
+		
+		
         // Song navigation using laser inputs
         float diff_input = g_input.GetInputLaserDir(0);
         float song_input = g_input.GetInputLaserDir(1);
@@ -683,8 +690,8 @@ public:
 	{
 		m_previewPlayer.Pause();
 		m_mapDatabase.StopSearching();
-
-        m_active = false;
+		if (m_lockMouse)
+			m_lockMouse.Release();
 
 		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
@@ -694,9 +701,7 @@ public:
 		m_mapDatabase.StartSearching();
 
 		OnSearchTermChanged(m_searchField->GetText());
-        
-        m_active = true;
-
+		
 		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		slot->anchor = Anchors::Full;
 	}

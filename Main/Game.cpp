@@ -366,7 +366,7 @@ public:
 		// Lock mouse to screen when playing
 		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse)
 		{
-			if(!m_paused)
+			if(!m_paused && g_gameWindow->IsActive())
 			{
 				if(!m_lockMouse)
 					m_lockMouse = g_input.LockMouse();

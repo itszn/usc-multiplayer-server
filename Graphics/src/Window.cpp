@@ -136,6 +136,8 @@ namespace Graphics
 		{
 		}
 
+
+
 		/* input handling */
 		void HandleKeyEvent(SDL_Keycode code, uint8 newState, int32 repeat)
 		{
@@ -466,6 +468,11 @@ namespace Graphics
 	Graphics::ModifierKeys Window::GetModifierKeys() const
 	{
 		return m_impl->m_modKeys;
+	}
+
+	bool Window::IsActive() const
+	{
+		return SDL_GetWindowFlags(m_impl->m_window) & SDL_WindowFlags::SDL_WINDOW_INPUT_FOCUS;
 	}
 
 	void Window::StartTextInput()

@@ -59,6 +59,9 @@ namespace Graphics
 
 		// Window Client area size
 		Vector2i GetWindowSize() const;
+
+		// Window is active
+		bool IsActive() const;
 		// Set window client area size
 		void SetWindowSize(const Vector2i& size);
 		void SwitchFullscreen(uint32 monitorID = -1); 
