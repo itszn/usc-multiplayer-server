@@ -276,8 +276,8 @@ void Scoring::m_CalculateHoldTicks(HoldObjectState* hold, Vector<MapTime>& ticks
 {
 	const TimingPoint* tp = m_playback->GetTimingPointAt(hold->time);
 
-	// Tick at 8th or 16th notes based on BPM
-	const double tickNoteValue = (tp->GetBPM() >= 250) ? 8 : 16;
+	// Tick rate based on BPM
+	const double tickNoteValue = 16 / (pow(2, Math::Max((int)(log2(tp->GetBPM())) - 7, 0)));
 	const double tickInterval = tp->GetWholeNoteLength() / tickNoteValue;
 
 	uint32 numTicks = (uint32)Math::Floor((double)hold->duration / tickInterval);
@@ -294,8 +294,8 @@ void Scoring::m_CalculateLaserTicks(LaserObjectState* laserRoot, Vector<ScoreTic
 	assert(laserRoot->prev == nullptr);
 	const TimingPoint* tp = m_playback->GetTimingPointAt(laserRoot->time);
 
-	// Tick at 8th or 16th notes based on BPM
-	const double tickNoteValue = (tp->GetBPM() >= 250) ? 8 : 16;
+	// Tick rate based on BPM
+	const double tickNoteValue = 16 / (pow(2, Math::Max((int)(log2(tp->GetBPM())) - 7,0)));
 	const double tickInterval = tp->GetWholeNoteLength() / tickNoteValue;
 
 	LaserObjectState* sectionStart = laserRoot;
