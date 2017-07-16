@@ -68,7 +68,7 @@ namespace Graphics
 		bool IsFullscreen() const;
 		
 		// Checks if a key is pressed
-		bool IsKeyPressed(Key key) const;
+		bool IsKeyPressed(int32 key) const;
 
 		ModifierKeys GetModifierKeys() const;
 
@@ -87,8 +87,8 @@ namespace Graphics
 		// Open a gamepad within the range of the number of gamepads
 		Ref<Gamepad> OpenGamepad(int32 deviceIndex);
 
-		Delegate<Key> OnKeyPressed;
-		Delegate<Key> OnKeyReleased;
+		Delegate<int32> OnKeyPressed;
+		Delegate<int32> OnKeyReleased;
 		Delegate<MouseButton> OnMousePressed;
 		Delegate<MouseButton> OnMouseReleased;
 		// Mouse scroll wheel 
@@ -96,7 +96,7 @@ namespace Graphics
 		//	Negative for scroll up
 		Delegate<int32> OnMouseScroll;
 		// Called for the initial an repeating presses of a key
-		Delegate<Key> OnKeyRepeat;
+		Delegate<int32> OnKeyRepeat;
 		Delegate<const WString&> OnTextInput;
 		Delegate<const TextComposition&> OnTextComposition;
 		Delegate<const Vector2i&> OnResized;

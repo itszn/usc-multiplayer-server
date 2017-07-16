@@ -10,6 +10,7 @@
 #include "HealthGauge.hpp"
 #include "SongSelectStyle.hpp"
 #include "PerformanceGraph.hpp"
+#include "SDL_keycode.h"
 
 class ScoreScreen_Impl : public ScoreScreen
 {
@@ -40,6 +41,15 @@ private:
 	Texture m_jacketImage;
 	Texture m_graphTex;
 
+	void m_OnButtonPressed(Input::Button buttonCode)
+	{
+		if (buttonCode == Input::Button::BT_S && !IsSuspended())
+		{
+			g_application->RemoveTickable(this);
+		}
+	}
+
+
 public:
 	ScoreScreen_Impl(class Game* game)
 	{
@@ -58,6 +68,9 @@ public:
 		m_beatmapSettings = game->GetBeatmap()->GetMapSettings();
 		m_jacketPath = Path::Normalize(game->GetMapRootPath() + Path::sep + m_beatmapSettings.jacketPath);
 		m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
+
+		// Set on button press
+		g_input.OnButtonPressed.Add(this, &ScoreScreen_Impl::m_OnButtonPressed);
 
 		// Make texture for performance graph samples
 		m_graphTex = TextureRes::Create(g_gl);
@@ -343,14 +356,15 @@ public:
 		return true;
 	}
 
-	virtual void OnKeyPressed(Key key) override
+
+	virtual void OnKeyPressed(int32 key) override
 	{
-		if(key == Key::Escape || key == Key::Return)
+		if(key == SDLK_ESCAPE || key == SDLK_RETURN)
 		{
 			g_application->RemoveTickable(this);
 		}
 	}
-	virtual void OnKeyReleased(Key key) override
+	virtual void OnKeyReleased(int32 key) override
 	{
 	}
 	virtual void Render(float deltaTime) override
@@ -365,6 +379,17 @@ public:
 	virtual void Tick(float deltaTime) override
 	{
 	}
+
+	virtual void OnSuspend()
+	{
+		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+	}
+	virtual void OnRestore()
+	{
+		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		slot->anchor = Anchors::Full;
+	}
+
 };
 
 ScoreScreen* ScoreScreen::Create(class Game* game)

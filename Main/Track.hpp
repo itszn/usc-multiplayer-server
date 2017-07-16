@@ -70,6 +70,8 @@ public:
 	float laserPointerOpacity[2] = { 1.0f };
 	float laserAlertOpacity[2] = { 1.0f };
 
+	float laserSpeedOffset = 0.90;
+
 	// Visible time elements on the playfield track
 	// a single unit is 1 beat in distance
 	Vector2 trackViewRange;

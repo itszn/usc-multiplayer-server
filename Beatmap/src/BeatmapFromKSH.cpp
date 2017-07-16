@@ -788,8 +788,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				}
 				else
 				{
-					// Hold are always on a high enough snap to make suere they are seperate when needed
-					state->fineSnap = true;
+					// FX object '2' is always individual
+					state->fineSnap = c != '2';
 
 					// Set effect
 					if (c == 'B')

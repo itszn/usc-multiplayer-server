@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SongSelect.hpp"
+#include "TitleScreen.hpp"
 #include "Application.hpp"
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
@@ -11,7 +12,7 @@
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
 #include <Audio/Audio.hpp>
-
+#include "SDL_keycode.h"
 
 /*
 	Song preview player with fade-in/out
@@ -578,33 +579,33 @@ public:
         }
     }
 
-	virtual void OnKeyPressed(Key key)
+	virtual void OnKeyPressed(int32 key)
 	{
-		if(key == Key::ArrowDown)
+		if(key == SDLK_DOWN)
 		{
 			m_selectionWheel->AdvanceSelection(1);
 		}
-		else if(key == Key::ArrowUp)
+		else if(key == SDLK_UP)
 		{
 			m_selectionWheel->AdvanceSelection(-1);
 		}
-		else if(key == Key::PageDown)
+		else if(key == SDLK_PAGEDOWN)
 		{
 			m_selectionWheel->AdvanceSelection(5);
 		}
-		else if(key == Key::PageUp)
+		else if(key == SDLK_PAGEUP)
 		{
 			m_selectionWheel->AdvanceSelection(-5);
 		}
-		else if(key == Key::ArrowLeft)
+		else if(key == SDLK_LEFT)
 		{
 			m_selectionWheel->AdvanceDifficultySelection(-1);
 		}
-		else if(key == Key::ArrowRight)
+		else if(key == SDLK_RIGHT)
 		{
 			m_selectionWheel->AdvanceDifficultySelection(1);
 		}
-		else if(key == Key::Return)
+		else if(key == SDLK_RETURN)
 		{
 			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
 			MapIndex* map = m_selectionWheel->GetSelection();
@@ -625,16 +626,20 @@ public:
 				g_application->AddTickable(transistion);
 			}
 		}
-		else if(key == Key::F5)
+		else if(key == SDLK_F5)
 		{
 			m_mapDatabase.StartSearching();
 		}
-		else if(key == Key::F2)
+		else if(key == SDLK_F2)
 		{
 			m_selectionWheel->SelectRandom();
 		}
+		else if (key == SDLK_ESCAPE)
+		{
+			g_application->RemoveTickable(this);
+		}
 	}
-	virtual void OnKeyReleased(Key key)
+	virtual void OnKeyReleased(int32 key)
 	{
 		
 	}

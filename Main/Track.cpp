@@ -214,7 +214,7 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	double tickTime = (double)currentTime;
 	MapTime rangeEnd = currentTime + playback.ViewDistanceToDuration(m_viewRange);
 	const TimingPoint* tp = playback.GetTimingPointAt((MapTime)tickTime);
-	double stepTime = tp->GetWholeNoteLength() / (double)tp->denominator; // Every xth note based on signature
+	double stepTime = tp->GetBarDuration(); // Every xth note based on signature
 
 	// Overflow on first tick
 	double firstOverflow = fmod((double)tickTime - tp->time, stepTime);
@@ -235,7 +235,7 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 		{
 			tp = tpNext;
 			tickTime = tp->time;
-			stepTime = tp->GetWholeNoteLength() / (double)tp->denominator; // Every xth note based on signature
+			stepTime = tp->GetBarDuration(); // Every xth note based on signature
 		}
 		else
 		{
@@ -353,6 +353,8 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 	}
 	else if(obj->type == ObjectType::Laser) // Draw laser
 	{
+		
+		position = playback.TimeToViewDistance(obj->time)/ (viewRange * laserSpeedOffset);
 		LaserObjectState* laser = (LaserObjectState*)obj;
 
 		// Draw segment function
@@ -502,7 +504,7 @@ void Track::SetViewRange(float newRange)
 		m_viewRange = newRange;
 
 		// Update view range
-		float newLaserLengthScale = trackLength / GetViewRange();
+		float newLaserLengthScale = trackLength / (GetViewRange() * laserSpeedOffset);
 		m_laserTrackBuilder[0]->laserLengthScale = newLaserLengthScale;
 		m_laserTrackBuilder[1]->laserLengthScale = newLaserLengthScale;
 

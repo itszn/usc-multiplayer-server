@@ -10,7 +10,12 @@ uniform float objectGlow;
 
 void main()
 {	
-	vec4 mainColor = texture(mainTex, fsTex.xy);
+    float x = fsTex.x;
+    float laserSize = 0.8; //0.0 to 1.0
+    x -= 0.5;
+    x /= laserSize;
+    x += 0.5;
+	vec4 mainColor = texture(mainTex, vec2(x,fsTex.y));
 	target = mainColor * color;
 	float brightness = (target.x + target.y + target.z) / 3;
 	target.xyz = target.xyz * (0.5 + objectGlow);

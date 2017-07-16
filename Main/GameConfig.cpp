@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GameConfig.hpp"
+#include "SDL_keycode.h"
 
 GameConfig::GameConfig()
 {
@@ -36,23 +37,23 @@ void GameConfig::InitDefaults()
 	SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, InputDevice::Keyboard);
 
 	// Default keyboard bindings
-	SetKeyBinding(GameConfigKeys::Key_BTS, Key::Top1); // Start button on Dao controllers
-	SetKeyBinding(GameConfigKeys::Key_BT0, Key::S);
-	SetKeyBinding(GameConfigKeys::Key_BT1, Key::D);
-	SetKeyBinding(GameConfigKeys::Key_BT2, Key::K);
-	SetKeyBinding(GameConfigKeys::Key_BT3, Key::L);
-	SetKeyBinding(GameConfigKeys::Key_BT0Alt, Key::H);
-	SetKeyBinding(GameConfigKeys::Key_BT1Alt, Key::J);
-	SetKeyBinding(GameConfigKeys::Key_BT2Alt, Key::F);
-	SetKeyBinding(GameConfigKeys::Key_BT3Alt, Key::G);
-	SetKeyBinding(GameConfigKeys::Key_FX0, Key::C);
-	SetKeyBinding(GameConfigKeys::Key_FX1, Key::M);
-	SetKeyBinding(GameConfigKeys::Key_FX0Alt, Key::N);
-	SetKeyBinding(GameConfigKeys::Key_FX1Alt, Key::V);
-	SetKeyBinding(GameConfigKeys::Key_Laser0Neg, Key::W);
-	SetKeyBinding(GameConfigKeys::Key_Laser0Pos, Key::E);
-	SetKeyBinding(GameConfigKeys::Key_Laser1Neg, Key::O);
-	SetKeyBinding(GameConfigKeys::Key_Laser1Pos, Key::P);
+	Set(GameConfigKeys::Key_BTS, SDLK_1); // Start button on Dao controllers
+	Set(GameConfigKeys::Key_BT0, SDLK_s);
+	Set(GameConfigKeys::Key_BT1, SDLK_d);
+	Set(GameConfigKeys::Key_BT2, SDLK_k);
+	Set(GameConfigKeys::Key_BT3, SDLK_l);
+	Set(GameConfigKeys::Key_BT0Alt, SDLK_h);
+	Set(GameConfigKeys::Key_BT1Alt, SDLK_j);
+	Set(GameConfigKeys::Key_BT2Alt, SDLK_f);
+	Set(GameConfigKeys::Key_BT3Alt, SDLK_g);
+	Set(GameConfigKeys::Key_FX0, SDLK_c);
+	Set(GameConfigKeys::Key_FX1, SDLK_m);
+	Set(GameConfigKeys::Key_FX0Alt, SDLK_n);
+	Set(GameConfigKeys::Key_FX1Alt, SDLK_v);
+	Set(GameConfigKeys::Key_Laser0Neg, SDLK_w);
+	Set(GameConfigKeys::Key_Laser0Pos, SDLK_e);
+	Set(GameConfigKeys::Key_Laser1Neg, SDLK_o);
+	Set(GameConfigKeys::Key_Laser1Pos, SDLK_p);
 
 	// Default controller settings
 	Set(GameConfigKeys::Controller_DeviceID, 0); // First device

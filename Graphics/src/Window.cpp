@@ -156,26 +156,25 @@ namespace Graphics
 				(uint8&)m_modKeys |= (uint8)ModifierKeys::Shift;
 			}
 
-			Graphics::Key keyCode = m_keyMapping.Translate(code);
-			if(keyCode == Key::None)
-				return; // Not mapped
+			
+		
 
-			uint8& currentState = m_keyStates[(uint8)keyCode];
+			uint8& currentState = m_keyStates[code];
 			if(currentState != newState)
 			{
 				currentState = newState;
 				if(newState == 1)
 				{
-					outer.OnKeyPressed.Call(keyCode);
+					outer.OnKeyPressed.Call(code);
 				}
 				else
 				{
-					outer.OnKeyReleased.Call(keyCode);
+					outer.OnKeyReleased.Call(code);
 				}
 			}
 			if(currentState == 1)
 			{
-				outer.OnKeyRepeat.Call(keyCode);
+				outer.OnKeyRepeat.Call(code);
 			}
 		}
 
@@ -362,7 +361,7 @@ namespace Graphics
 		SDL_Cursor* currentCursor = nullptr;
 
 		// Window Input State
-		uint8 m_keyStates[256] = { 0 };
+		Map<SDL_Keycode, uint8> m_keyStates;
 		KeyMap m_keyMapping;
 		ModifierKeys m_modKeys = ModifierKeys::None;
 
@@ -460,9 +459,9 @@ namespace Graphics
 		return m_impl->IsFullscreen();
 	}
 
-	bool Window::IsKeyPressed(Key key) const
+	bool Window::IsKeyPressed(SDL_Keycode key) const
 	{
-		return m_impl->m_keyStates[(uint8)key] > 0;
+		return m_impl->m_keyStates[key] > 0;
 	}
 
 	Graphics::ModifierKeys Window::GetModifierKeys() const

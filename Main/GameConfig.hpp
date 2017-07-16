@@ -70,7 +70,7 @@ class GameConfig : public Config<Enum_GameConfigKeys>
 {
 public:
 	GameConfig();
-	void SetKeyBinding(GameConfigKeys key, Graphics::Key value);
+	void SetKeyBinding(GameConfigKeys key, Key value);
 
 protected:
 	virtual void InitDefaults() override;

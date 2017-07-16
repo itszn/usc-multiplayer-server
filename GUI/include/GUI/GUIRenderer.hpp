@@ -97,8 +97,8 @@ public:
 private:
 	void m_OnTextInput(const WString& input);
 	void m_OnTextComposition(const TextComposition& input);
-	void m_OnKeyRepeat(Key key);
-	void m_OnKeyPressed(Key key);
+	void m_OnKeyRepeat(int32 key);
+	void m_OnKeyPressed(int32 key);
 	void m_OnMousePressed(MouseButton btn);
 	void m_OnMouseReleased(MouseButton btn);
 	void m_OnMouseScroll(int32 scroll);

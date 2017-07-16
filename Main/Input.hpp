@@ -45,8 +45,8 @@ public:
 	MouseLockHandle LockMouse();
 
 	// Event handlers
-	virtual void OnKeyPressed(Key key);
-	virtual void OnKeyReleased(Key key);
+	virtual void OnKeyPressed(int32 key);
+	virtual void OnKeyReleased(int32 key);
 
 	// Request laser input state
 	float GetInputLaserDir(uint32 laserIdx);
@@ -74,7 +74,7 @@ private:
 	float m_prevLaserStates[2] = { 0.0f };
 
 	// Keyboard bindings
-	Multimap<Key, Button> m_buttonMap;
+	Multimap<int32, Button> m_buttonMap;
 
 	// Mouse bindings
 	uint32 m_mouseAxisMapping[2] = { 0,1 };

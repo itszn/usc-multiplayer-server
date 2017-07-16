@@ -16,6 +16,8 @@
 #include "AsyncAssetLoader.hpp"
 #include "GameConfig.hpp"
 
+#include"SDL_keycode.h"
+
 #include "GUI/GUI.hpp"
 #include "GUI/HealthGauge.hpp"
 #include "GUI/SettingsBar.hpp"
@@ -1077,36 +1079,36 @@ public:
 		}
 	}
 
-	virtual void OnKeyPressed(Key key) override
+	virtual void OnKeyPressed(int32 key) override
 	{
-		if(key == Key::Pause)
+		if(key == SDLK_PAUSE)
 		{
 			m_audioPlayback.TogglePause();
 			m_paused = m_audioPlayback.IsPaused();
 		}
-		else if(key == Key::Return) // Skip intro
+		else if(key == SDLK_RETURN) // Skip intro
 		{
 			if(!SkipIntro())
 				SkipOutro();
 		}
-		else if(key == Key::PageUp)
+		else if(key == SDLK_PAGEUP)
 		{
 			m_audioPlayback.Advance(5000);
 		}
-		else if(key == Key::Escape)
+		else if(key == SDLK_ESCAPE)
 		{
 			FinishGame();
 		}
-		else if(key == Key::F5) // Restart map
+		else if(key == SDLK_F5) // Restart map
 		{
 			// Restart
 			Restart();
 		}
-		else if(key == Key::F8)
+		else if(key == SDLK_F8)
 		{
 			m_renderDebugHUD = !m_renderDebugHUD;
 		}
-		else if(key == Key::Tab)
+		else if(key == SDLK_TAB)
 		{
 			m_settingsBar->SetShow(!m_settingsBar->IsShown());
 		}

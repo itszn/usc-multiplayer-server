@@ -2,6 +2,7 @@
 #include "GUIRenderer.hpp"
 #include "GUIRenderData.hpp"
 #include "GUI.hpp"
+#include "SDL_keycode.h"
 
 GUIRenderer::~GUIRenderer()
 {
@@ -390,9 +391,9 @@ void GUIRenderer::m_OnTextComposition(const TextComposition& input)
 {
 	m_textInput.composition = input.composition;
 }
-void GUIRenderer::m_OnKeyRepeat(Key key)
+void GUIRenderer::m_OnKeyRepeat(int32 key)
 {
-	if(key == Key::Backspace)
+	if(key == SDLK_BACKSPACE)
 	{
 		if(m_textInput.input.empty())
 			m_textInput.backspaceCount++; // Send backspace
@@ -404,9 +405,9 @@ void GUIRenderer::m_OnKeyRepeat(Key key)
 		}
 	}
 }
-void GUIRenderer::m_OnKeyPressed(Key key)
+void GUIRenderer::m_OnKeyPressed(int32 key)
 {
-	if(key == Key::V)
+	if(key == SDLK_v)
 	{
 		if(m_window->GetModifierKeys() == ModifierKeys::Ctrl)
 		{

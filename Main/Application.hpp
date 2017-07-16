@@ -63,8 +63,8 @@ private:
 	void m_Tick();
 
 	void m_Cleanup();
-	void m_OnKeyPressed(Key key);
-	void m_OnKeyReleased(Key key);
+	void m_OnKeyPressed(int32 key);
+	void m_OnKeyReleased(int32 key);
 	void m_OnWindowResized(const Vector2i& newSize);
 
 	RenderState m_renderStateBase;

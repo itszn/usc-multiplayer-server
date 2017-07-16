@@ -4,6 +4,7 @@
 #include "Game.hpp"
 #include "Test.hpp"
 #include "SongSelect.hpp"
+#include "TitleScreen.hpp"
 #include <Audio/Audio.hpp>
 #include <Graphics/Window.hpp>
 #include <Graphics/ResourceManagers.hpp>
@@ -16,6 +17,7 @@
 #include <GUI/Canvas.hpp>
 #include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
+#include "SDL_keycode.h"
 
 GameConfig g_gameConfig;
 OpenGL* g_gl = nullptr;
@@ -119,7 +121,7 @@ int32 Application::Run()
 		if(!mapLaunched)
 		{
 			// Start regular game, goto song select
-			AddTickable(SongSelect::Create());
+			AddTickable(TitleScreen::Create());
 		}
 	}
 
@@ -550,10 +552,10 @@ Transform Application::GetGUIProjection() const
 {
 	return ProjectionMatrix::CreateOrthographic(0.0f, (float)g_resolution.x, (float)g_resolution.y, 0.0f, 0.0f, 100.0f);
 }
-void Application::m_OnKeyPressed(Key key)
+void Application::m_OnKeyPressed(int32 key)
 {
 	// Fullscreen toggle
-	if(key == Key::Return)
+	if(key == SDLK_RETURN)
 	{
 		if((g_gameWindow->GetModifierKeys() & ModifierKeys::Alt) == ModifierKeys::Alt)
 		{
@@ -570,7 +572,7 @@ void Application::m_OnKeyPressed(Key key)
 		break;
 	}
 }
-void Application::m_OnKeyReleased(Key key)
+void Application::m_OnKeyReleased(int32 key)
 {
 	for(auto it = g_tickables.rbegin(); it != g_tickables.rend();)
 	{

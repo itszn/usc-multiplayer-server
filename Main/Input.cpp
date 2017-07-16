@@ -176,31 +176,31 @@ void Input::m_InitKeyboardMapping()
 	if(m_buttonDevice == InputDevice::Keyboard)
 	{
 		// Button mappings
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BTS), Button::BT_S);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT0), Button::BT_0);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT1), Button::BT_1);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT2), Button::BT_2);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT3), Button::BT_3);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BTS), Button::BT_S);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT0), Button::BT_0);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT1), Button::BT_1);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT2), Button::BT_2);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT3), Button::BT_3);
 		// Alternate button mappings
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT0Alt), Button::BT_0);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT1Alt), Button::BT_1);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT2Alt), Button::BT_2);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_BT3Alt), Button::BT_3);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT0Alt), Button::BT_0);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT1Alt), Button::BT_1);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT2Alt), Button::BT_2);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_BT3Alt), Button::BT_3);
 
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_FX0), Button::FX_0);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_FX1), Button::FX_1);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_FX0), Button::FX_0);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_FX1), Button::FX_1);
 		// Alternate button mappings
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_FX0Alt), Button::FX_0);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_FX1Alt), Button::FX_1);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_FX0Alt), Button::FX_0);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_FX1Alt), Button::FX_1);
 	}
 
 	if(m_laserDevice == InputDevice::Keyboard)
 	{
 		// Laser button mappings
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_Laser0Neg), Button::LS_0Neg);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_Laser0Pos), Button::LS_0Pos);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_Laser1Neg), Button::LS_1Neg);
-		m_buttonMap.Add(g_gameConfig.GetEnum<Enum_Key>(GameConfigKeys::Key_Laser1Pos), Button::LS_1Pos);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_Laser0Neg), Button::LS_0Neg);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_Laser0Pos), Button::LS_0Pos);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_Laser1Neg), Button::LS_1Neg);
+		m_buttonMap.Add(g_gameConfig.GetInt(GameConfigKeys::Key_Laser1Pos), Button::LS_1Pos);
 	}
 }
 
@@ -269,14 +269,14 @@ void Input::m_OnGamepadButtonReleased(uint8 button)
 		m_OnButtonInput(it1->second, false);
 }
 
-void Input::OnKeyPressed(Key key)
+void Input::OnKeyPressed(int32 key)
 {
 	// Handle button mappings
 	auto it = m_buttonMap.equal_range(key);
 	for(auto it1 = it.first; it1 != it.second; it1++)
 		m_OnButtonInput(it1->second, true);
 }
-void Input::OnKeyReleased(Key key)
+void Input::OnKeyReleased(int32 key)
 {
 	// Handle button mappings
 	auto it = m_buttonMap.equal_range(key);

@@ -18,6 +18,7 @@
 #include "Shared/Jobs.hpp"
 #include "ScoreScreen.hpp"
 #include "Shared/Enum.hpp"
+#include "SDL_keycode.h"
 
 class Test_Impl : public Test
 {
@@ -165,14 +166,14 @@ public:
 	~Test_Impl()
 	{
 	}
-	virtual void OnKeyPressed(Key key) override
+	virtual void OnKeyPressed(int32 key) override
 	{
-		if(key == Key::Tab)
+		if(key == SDLK_TAB)
 		{
 			m_settings->SetShow(!m_settings->IsShown());
 		}
 	}
-	virtual void OnKeyReleased(Key key) override
+	virtual void OnKeyReleased(int32 key) override
 	{
 	}
 	virtual void Render(float deltaTime) override

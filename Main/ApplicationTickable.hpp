@@ -12,8 +12,8 @@ public:
 	virtual void Tick(float deltaTime) {};
 	virtual void Render(float deltaTime) {};
 
-	virtual void OnKeyPressed(Key key) {};
-	virtual void OnKeyReleased(Key key) {};
+	virtual void OnKeyPressed(int32 key) {};
+	virtual void OnKeyReleased(int32 key) {};
 	// Called when focus of this item is lost
 	virtual void OnSuspend() {};
 	// Called when focus to this item is restored
