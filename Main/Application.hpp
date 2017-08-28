@@ -45,7 +45,9 @@ public:
 #undef LoadImage
 #endif
 	Image LoadImage(const String& name);
+	Graphics::Image LoadImageExternal(const String & name);
 	Texture LoadTexture(const String& name);
+	Texture LoadTexture(const String & name, const bool external);
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name);
 

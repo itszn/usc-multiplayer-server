@@ -443,6 +443,7 @@ private:
     float m_advanceSong = 0.0f;
     float m_advanveDiff = 0.0f;
 	MouseLockHandle m_lockMouse;
+	bool m_suspended = false;
 
 public:
 	bool Init() override
@@ -554,7 +555,8 @@ public:
 
     void m_OnButtonPressed(Input::Button buttonCode)
     {
-        
+		if (m_suspended)
+			return;
 	    if(buttonCode == Input::Button::BT_S && !IsSuspended())
         {
             
@@ -636,6 +638,7 @@ public:
 		}
 		else if (key == SDLK_ESCAPE)
 		{
+			m_suspended = true;
 			g_application->RemoveTickable(this);
 		}
 	}
@@ -693,6 +696,7 @@ public:
 
 	virtual void OnSuspend()
 	{
+		m_suspended = true;
 		m_previewPlayer.Pause();
 		m_mapDatabase.StopSearching();
 		if (m_lockMouse)
@@ -702,6 +706,7 @@ public:
 	}
 	virtual void OnRestore()
 	{
+		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
 

@@ -27,6 +27,7 @@ private:
 	Texture m_categorizedHitTextures[4];
 
 	bool m_autoplay;
+	bool m_startPressed;
 	uint32 m_score;
 	uint32 m_grade;
 	uint32 m_maxCombo;
@@ -40,14 +41,6 @@ private:
 	BeatmapSettings m_beatmapSettings;
 	Texture m_jacketImage;
 	Texture m_graphTex;
-
-	void m_OnButtonPressed(Input::Button buttonCode)
-	{
-		if (buttonCode == Input::Button::BT_S && !IsSuspended())
-		{
-			g_application->RemoveTickable(this);
-		}
-	}
 
 
 public:
@@ -65,12 +58,11 @@ public:
 		// Used for jacket images
 		m_songSelectStyle = SongSelectStyle::Get(g_application);
 
+		m_startPressed = false;
+
 		m_beatmapSettings = game->GetBeatmap()->GetMapSettings();
 		m_jacketPath = Path::Normalize(game->GetMapRootPath() + Path::sep + m_beatmapSettings.jacketPath);
 		m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
-
-		// Set on button press
-		g_input.OnButtonPressed.Add(this, &ScoreScreen_Impl::m_OnButtonPressed);
 
 		// Make texture for performance graph samples
 		m_graphTex = TextureRes::Create(g_gl);
@@ -378,6 +370,12 @@ public:
 	}
 	virtual void Tick(float deltaTime) override
 	{
+		// Check for button pressed here instead of adding to onbuttonpressed for stability reasons
+		//TODO: Change to onbuttonpressed
+		if(m_startPressed && !g_input.GetButton(Input::Button::BT_S))
+			g_application->RemoveTickable(this);
+
+		m_startPressed = g_input.GetButton(Input::Button::BT_S);
 	}
 
 	virtual void OnSuspend()

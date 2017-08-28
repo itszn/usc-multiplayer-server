@@ -52,16 +52,17 @@ class TestBackground : public FullscreenBackground
 		{
 			matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
 			texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "bg_texture.png");
+			CheckedLoad(backgroundTexture = g_application->LoadTexture(texPath, true));
 		}
 		else
 		{
 			matPath = "shaders/background.fs";
+			CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
 		}
 
 
 
 		CheckedLoad(fullscreenMaterial = LoadBackgroundMaterial(matPath));
-		CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
 
 		return true;
 	}

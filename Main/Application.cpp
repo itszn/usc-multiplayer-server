@@ -514,10 +514,29 @@ Graphics::Image Application::LoadImage(const String& name)
 	String path = String("textures/") + name;
 	return ImageRes::Create(path);
 }
+
+Graphics::Image Application::LoadImageExternal(const String& name)
+{
+	return ImageRes::Create(name);
+}
 Texture Application::LoadTexture(const String& name)
 {
 	Texture ret = TextureRes::Create(g_gl, LoadImage(name));
 	return ret;
+}
+
+Texture Application::LoadTexture(const String& name, const bool external)
+{
+	if (external)
+	{
+		Texture ret = TextureRes::Create(g_gl, LoadImageExternal(name));
+		return ret;
+	}
+	else
+	{
+		Texture ret = TextureRes::Create(g_gl, LoadImage(name));
+		return ret;
+	}
 }
 Material Application::LoadMaterial(const String& name)
 {
