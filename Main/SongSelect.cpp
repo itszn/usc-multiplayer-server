@@ -455,7 +455,7 @@ public:
 		m_style = SongSelectStyle::Get(g_application);
 
 		// Split between statistics and selection wheel (in percentage)
-		const float screenSplit = 0.4f;
+		const float screenSplit = 0.0f;
 
 		// Statistics window
 		m_statisticsWindow = Ref<SongStatistics>(new SongStatistics(m_style));

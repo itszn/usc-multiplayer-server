@@ -122,16 +122,25 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	RenderState rs = g_application->GetRenderStateBase();
 	
+	float verticalPlayPitchOffset = -3.0f;
+	float verticalPlayRadiusOffset = 0.5f;
+
+	if (g_aspectRatio > 1.0f)
+	{
+		verticalPlayPitchOffset = 0.0f;
+		verticalPlayRadiusOffset = 0.0f;
+	}
+
 	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = -33.0f * pow(1.33f, -zoomTop);
-	float base_radius = 4.f * cameraHeightBase * pow(1.1f, -zoomBottom * 3.0f);
+	float base_pitch = -33.0f * pow(1.33f, -zoomTop) - (verticalPlayPitchOffset * 5.f);
+	float base_radius = 4.f * cameraHeightBase * pow(1.1f, -zoomBottom * 3.0f) - verticalPlayRadiusOffset;
 
 	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
 
 	Transform cameraTransform;
 	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f});
-	cameraTransform *= Transform::Rotation({base_pitch - 40.0f, 0.0f, 0.0f });
+	cameraTransform *= Transform::Rotation({base_pitch - 40.0f + verticalPlayPitchOffset, 0.0f, 0.0f });
 	cameraTransform *= Transform::Translation(m_shakeOffset + Vector3( 0.0f, -targetHeight, -targetNear));
 
 	// Calculate clipping distances
@@ -145,7 +154,9 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	rs.cameraTransform = cameraTransform;
 	/// TODO: Fix d1 and use that instead of fixed 7.0f (?)
-	rs.projectionTransform = ProjectionMatrix::CreatePerspective(90.0f, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), 7.0f + viewRangeExtension);
+
+	float fov = g_aspectRatio > 1.0f ? 90.0f : 120.0f;
+	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), 7.0f + viewRangeExtension);
 
 	m_rsLast = rs;
 
