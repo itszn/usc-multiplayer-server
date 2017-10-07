@@ -525,7 +525,7 @@ Texture Application::LoadTexture(const String& name)
 	return ret;
 }
 
-Texture Application::LoadTexture(const String& name, const bool external)
+Texture Application::LoadTexture(const String& name, const bool& external)
 {
 	if (external)
 	{
@@ -554,9 +554,9 @@ Material Application::LoadMaterial(const String& name)
 	assert(ret);
 	return ret;
 }
-Sample Application::LoadSample(const String& name)
+Sample Application::LoadSample(const String& name, const bool& external)
 {
-	String path = String("audio/") + name + ".wav";
+	String path = external ? name : String("audio/") + name + ".wav";
 	Sample ret = g_audio->CreateSample(path);
 	assert(ret);
 	return ret;

@@ -91,6 +91,7 @@ bool Track::AsyncLoad()
 	// Track materials
 	loader->AddMaterial(trackMaterial, "track");
 	loader->AddMaterial(spriteMaterial, "sprite"); // General purpose material
+	loader->AddMaterial(buttonMaterial, "button");
 	loader->AddMaterial(holdButtonMaterial, "holdbutton");
 	loader->AddMaterial(laserMaterial, "laser");
 	loader->AddMaterial(trackOverlay, "overlay");
@@ -310,7 +311,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		bool isHold = obj->type == ObjectType::Hold;
 		MultiObjectState* mobj = (MultiObjectState*)obj;
 		MaterialParameterSet params;
-		Material mat = trackMaterial;
+		Material mat = buttonMaterial;
 		Mesh mesh;
 		float width;
 		float xposition;
@@ -321,6 +322,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			width = buttonWidth;
 			xposition = buttonTrackWidth * -0.5f + width * mobj->button.index;
 			length = buttonLength;
+			params.SetParameter("hasSample", mobj->button.hasSample);
 			params.SetParameter("mainTex", isHold ? buttonHoldTexture : buttonTexture);
 			mesh = buttonMesh;
 		}
@@ -329,6 +331,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			width = fxbuttonWidth;
 			xposition = buttonTrackWidth * -0.5f + fxbuttonWidth *(mobj->button.index - 4);
 			length = fxbuttonLength;
+			params.SetParameter("hasSample", mobj->button.hasSample);
 			params.SetParameter("mainTex", isHold ? fxbuttonHoldTexture : fxbuttonTexture);
 			mesh = fxbuttonMesh;
 		}

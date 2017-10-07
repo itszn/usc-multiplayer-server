@@ -83,6 +83,11 @@ const Vector<ZoomControlPoint*>& Beatmap::GetZoomControlPoints() const
 	return m_zoomControlPoints;
 }
 
+const Vector<String>& Beatmap::GetSamplePaths() const
+{
+	return m_samplePaths;
+}
+
 AudioEffect Beatmap::GetEffect(EffectType type) const
 {
 	if(type >= EffectType::UserDefined0)

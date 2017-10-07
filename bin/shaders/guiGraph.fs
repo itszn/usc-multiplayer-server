@@ -5,22 +5,26 @@ layout(location=1) in vec2 fsTex;
 layout(location=0) out vec4 target;
 
 uniform sampler2D graphTex;
+uniform ivec2 viewport;
 uniform vec4 color;
 
 void main()
 {
 	target = vec4(1.0f);
-    
+    float xStep = 1. / viewport.x;
     vec3 col = vec3(0.0f);
     
-    float gauge = texture2D(graphTex, vec2(clamp(fsTex.x, 0.01f, 0.99f) , 0.5f)).x;
+    vec2 current = vec2(fsTex.x, texture2D(graphTex, vec2(clamp(fsTex.x, 0.01f, 0.99f) , 0.5f)).x);
+    vec2 next = vec2(fsTex.x + xStep, texture2D(graphTex, vec2(clamp(fsTex.x + xStep, 0.01f, 0.99f) , 0.5f)).x);
+    vec2 avg = (current + next) / 2.0;
+    float dist = abs(distance(vec2(fsTex.x,fsTex.y * -1 + 1.),avg));
     
-    if (gauge >= 0.75f)
+    if (avg.y >= 0.75f)
         col = vec3(0.0f, 1.0f, 0.0f);
     else
         col = vec3(1.0f, 0.0f, 0.0f);
     
 
-    target.xyz = col;
-    target.a = 1.0f - smoothstep(0.0, 0.02, abs(1.0 - fsTex.y - gauge));
+    target.xyz = vec3(col);
+    target.a = smoothstep(abs(next.y - current.y) + 0.010, abs(next.y - current.y),dist);
 }

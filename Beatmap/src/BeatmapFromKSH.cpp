@@ -17,6 +17,10 @@ struct TempButtonState
 	bool fineSnap = false;
 	// Set for hold continuations, this is where there is a hold right after an existing one but with different effects
 	HoldObjectState* lastHoldObject = nullptr;
+
+	uint8 sampleIndex = 0xFF;
+	bool usingSample = false;
+
 };
 struct TempLaserState
 {
@@ -478,6 +482,9 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 	const uint32 maxEffectParamsPerButtons = 2;
 	float laserRanges[2] = { 1.0f, 1.0f };
 
+	uint8 sampleIndex = 0;
+
+
 	for (KShootMap::TickIterator it(kshootMap); it; ++it)
 	{
 		const KShootBlock& block = it.GetCurrentBlock();
@@ -707,6 +714,19 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 				m_objectStates.Add(*evt);
 			}
+			else if (p.first == "fx_sample")
+			{
+				auto it = std::find(m_samplePaths.begin(), m_samplePaths.end(), p.second);
+				if (it == m_samplePaths.end())
+				{
+					sampleIndex = m_samplePaths.size();
+					m_samplePaths.Add(p.second);
+				}
+				else
+				{
+					sampleIndex = std::distance(m_samplePaths.begin(), it);
+				}
+			}
 			else
 			{
 				Logf("[KSH]Unkown map parameter at %d:%d: %s", Logger::Warning, it.GetTime().block, it.GetTime().tick, p.first);
@@ -742,8 +762,11 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				else
 				{
 					ButtonObjectState* obj = new ButtonObjectState();
+					
 					obj->time = state->startTime;
 					obj->index = i;
+					obj->hasSample = state->usingSample;
+					obj->sampleIndex = state->sampleIndex;
 					m_objectStates.Add(*obj);
 				}
 
@@ -789,7 +812,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				else
 				{
 					// FX object '2' is always individual
-					state->fineSnap = c != '2';
+					// FX objext '3' is like '2' but with sound sample
+					state->fineSnap = c != '2' && c != '3';
 
 					// Set effect
 					if (c == 'B')
@@ -836,6 +860,11 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 						memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
 							sizeof(state->effectParams));
 					}
+					else if (c == '3')
+					{
+						state->usingSample = true;
+						state->sampleIndex = sampleIndex;
+					}
 					else
 					{
 						// Use settings method of setting effects+params (1.60)
@@ -864,7 +893,12 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					else
 					{
 						// Hold are always on a high enough snap to make suere they are seperate when needed
-						state->fineSnap = true;
+						state->fineSnap = c != '2' && c != '3';
+						if (c == '3')
+						{
+							state->usingSample = true;
+							state->sampleIndex = sampleIndex;
+						}
 					}
 				}
 				else

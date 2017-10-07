@@ -75,6 +75,8 @@ public:
 
 	const Vector<LaneHideTogglePoint*>& GetLaneTogglePoints() const;
 
+	const Vector<String>& GetSamplePaths() const;
+
 	// Retrieves audio effect settings for a given button id
 	AudioEffect GetEffect(EffectType type) const;
 	// Retrieves audio effect settings for a given filter effect id
@@ -91,5 +93,7 @@ private:
 	Vector<LaneHideTogglePoint*> m_laneTogglePoints;
 	Vector<ObjectState*> m_objectStates;
 	Vector<ZoomControlPoint*> m_zoomControlPoints;
+	Vector<String> m_samplePaths;
 	BeatmapSettings m_settings;
+	
 };

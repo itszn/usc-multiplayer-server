@@ -56,7 +56,7 @@ public:
 	void RenderText(Text& text, const Vector2& position, const Color& color = Color(1.0f));
 	// Draws a rectangle, either with a texture or just a color
 	void RenderRect(const Rect& rect, const Color& color = Color(1.0f), Texture texture = Texture());
-	void RenderGraph(const Rect& rect, Texture graphTex);
+	void RenderGraph(const Rect& rect, const Texture& graphTex);
 	// Draws a button using the given edge coordinates to 
 	//	stretch the center over the given area without affecting the border
 	void RenderButton(const Rect& rect, Texture texture, Margini border, const Color& color = Color::White);

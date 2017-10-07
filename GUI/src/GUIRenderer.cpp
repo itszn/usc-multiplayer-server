@@ -304,7 +304,7 @@ void GUIRenderer::RenderRect(const Rect& rect, const Color& color /*= Color(1.0f
 		m_renderQueue->DrawScissored(m_scissorRect, transform, guiQuad, colorMaterial, params);
 	}
 }
-void GUIRenderer::RenderGraph(const Rect& rect, Texture graphTex)
+void GUIRenderer::RenderGraph(const Rect& rect, const Texture& graphTex)
 {
 	if (m_scissorRect.size.x == 0 || m_scissorRect.size.y == 0)
 		return;
@@ -314,6 +314,7 @@ void GUIRenderer::RenderGraph(const Rect& rect, Texture graphTex)
 	transform *= Transform::Scale(Vector3(rect.size.x, rect.size.y, 1.0f));
 	MaterialParameterSet params;
 	params.SetParameter("graphTex", graphTex);
+	params.SetParameter("viewport", Vector2(rect.size.x,rect.size.y));
 	m_renderQueue->DrawScissored(m_scissorRect, transform, guiQuad, graphMaterial, params);
 	
 }

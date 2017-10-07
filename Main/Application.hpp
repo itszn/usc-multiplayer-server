@@ -47,9 +47,9 @@ public:
 	Image LoadImage(const String& name);
 	Graphics::Image LoadImageExternal(const String & name);
 	Texture LoadTexture(const String& name);
-	Texture LoadTexture(const String & name, const bool external);
+	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
-	Sample LoadSample(const String& name);
+	Sample LoadSample(const String& name, const bool& external = false);
 
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;

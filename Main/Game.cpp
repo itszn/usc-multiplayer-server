@@ -122,6 +122,7 @@ private:
 
 	Sample m_slamSample;
 	Sample m_clickSamples[2];
+	Sample* m_fxSamples;
 
 	// Roll intensity, default = 1
 	const float m_rollIntensityBase = 0.03f;
@@ -154,6 +155,7 @@ public:
 			delete m_track;
 		if(m_background)
 			delete m_background;
+
 
 		// Save hispeed
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
@@ -629,6 +631,14 @@ public:
 		CheckedLoad(m_slamSample = g_application->LoadSample("laser_slam"));
 		CheckedLoad(m_clickSamples[0] = g_application->LoadSample("click-01"));
 		CheckedLoad(m_clickSamples[1] = g_application->LoadSample("click-02"));
+
+		auto samples = m_beatmap->GetSamplePaths();
+		m_fxSamples = new Sample[samples.size()];
+		for (int i = 0; i < samples.size(); i++)
+		{
+			CheckedLoad(m_fxSamples[i] = g_application->LoadSample(m_mapRootPath + "/" + samples[i], true));
+		}
+
 		return true;
 	}
 	bool InitGameplay()
@@ -954,11 +964,17 @@ public:
 	}
 	void OnButtonHit(Input::Button button, ScoreHitRating rating, ObjectState* hitObject)
 	{
+		ButtonObjectState* st = (ButtonObjectState*)hitObject;
 		uint32 buttonIdx = (uint32)button;
 		Color c = m_track->hitColors[(size_t)rating];
 
 		// The color effect in the button lane
 		m_track->AddEffect(new ButtonHitEffect(buttonIdx, c));
+
+		if (st != nullptr && st->hasSample)
+		{
+			m_fxSamples[st->sampleIndex]->Play();
+		}
 
 		if(rating != ScoreHitRating::Idle)
 		{

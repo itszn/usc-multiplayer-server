@@ -102,6 +102,12 @@ struct ObjectTypeData_Button
 	// 4-5 FX buttons
 	uint8 index = 0xFF;
 
+	// Does this button have a sound sample attached
+	bool hasSample = false;
+
+	// Index of the sound sample
+	uint8 sampleIndex = 0xFF;
+
 	static const ObjectType staticType = ObjectType::Single;
 };
 // A Hold button, extends a normal button with duration and effect type
