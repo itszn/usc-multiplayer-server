@@ -21,6 +21,7 @@ private:
 
 	bool m_selected = false;
 	float m_fade = 0.0f;
+
 public:
 	SongDifficultyFrame(Ref<SongSelectStyle> style, DifficultyIndex* diff)
 	{
@@ -93,9 +94,37 @@ public:
 		if (m_diff->scores.size() == 0)
 			return 0;
 
-		return m_diff->scores.front()->score;
+		return m_diff->scores.back()->score;
 	}
 
+	double GetGauge()
+	{
+		if (m_diff->scores.size() == 0)
+			return 0;
+
+		return m_diff->scores.back()->gauge;
+	}
+
+	bool HasScores()
+	{
+		return m_diff->scores.size() > 0;
+	}
+
+	uint32 CalculateGrade()
+	{
+		uint32 value = (uint32)(m_diff->scores.back()->score * 0.9 + m_diff->scores.back()->gauge * 1000000.0);
+		if (value > 9800000) // AAA
+			return 0;
+		if (value > 9400000) // AA
+			return 1;
+		if (value > 8900000) // A
+			return 2;
+		if (value > 8000000) // B
+			return 3;
+		if (value > 7000000) // C
+			return 4;
+		return 5; // D
+	}
 
 };
 const Vector2 SongDifficultyFrame::m_size = Vector2(512, 512);
@@ -241,7 +270,30 @@ void SongSelectItem::SetSelectedDifficulty(int32 selectedIndex)
 			m_diffSelectors[m_selectedDifficulty]->SetSelected(false);
 		}
 		m_diffSelectors[selectedIndex]->SetSelected(true);
-		m_score->SetText(Utility::WSprintf(L"%08d", m_diffSelectors[selectedIndex]->GetScore()));
+
+		if (m_diffSelectors[selectedIndex]->HasScores())
+		{
+			int score = m_diffSelectors[selectedIndex]->GetScore();
+			double gauge = m_diffSelectors[selectedIndex]->GetGauge();
+			int grade = m_diffSelectors[selectedIndex]->CalculateGrade();
+			int gaugeDisplay = gauge * 100;
+
+			WString gradeStrings[] =
+			{
+				L"AAA",
+				L"AA",
+				L"A",
+				L"B",
+				L"C",
+				L"D",
+			};
+
+			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%s", score, gaugeDisplay, gradeStrings[grade]));
+		}
+		else
+		{
+			m_score->SetText(L"00000000\n0\%\nNo Play");
+		}
 		m_selectedDifficulty = selectedIndex;
 	}
 }
