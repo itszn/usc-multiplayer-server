@@ -87,6 +87,15 @@ public:
 				new GUIAnimation<float>(&m_fade, selected ? 1.0f : 0.0f, 0.2f)), true);
 		}
 	}
+	
+	int GetScore()
+	{
+		if (m_diff->scores.size() == 0)
+			return 0;
+
+		return m_diff->scores.front()->score;
+	}
+
 
 };
 const Vector2 SongDifficultyFrame::m_size = Vector2(512, 512);
@@ -136,6 +145,8 @@ SongSelectItem::SongSelectItem(Ref<SongSelectStyle> style)
 		slot->allowOverflow = true;
 	}
 
+
+
 	SwitchCompact(true);
 }
 
@@ -179,6 +190,17 @@ void SongSelectItem::SetMap(struct MapIndex* map)
 		slot->allowOverflow = true;
 		m_diffSelectors.Add(frame);
 	}
+
+	// Add score display to the end of diff select
+	{
+		m_score = new Label();
+		m_score->SetFontSize(32);
+		m_score->SetText(L"<score>");
+		LayoutBox::Slot* slot = m_diffSelect->Add(m_score->MakeShared());
+		slot->padding = Margin(10);
+		slot->alignment = Vector2(0.0f, 0.5f);
+		slot->allowOverflow = true;
+	}
 }
 void SongSelectItem::SwitchCompact(bool compact)
 {
@@ -219,6 +241,7 @@ void SongSelectItem::SetSelectedDifficulty(int32 selectedIndex)
 			m_diffSelectors[m_selectedDifficulty]->SetSelected(false);
 		}
 		m_diffSelectors[selectedIndex]->SetSelected(true);
+		m_score->SetText(Utility::WSprintf(L"%08d", m_diffSelectors[selectedIndex]->GetScore()));
 		m_selectedDifficulty = selectedIndex;
 	}
 }

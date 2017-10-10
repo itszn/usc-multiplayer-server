@@ -66,6 +66,11 @@ int64 DBStatement::Int64Column(int32 index /*= 0*/) const
 	assert(m_stmt && m_queryResult == SQLITE_ROW);
 	return sqlite3_column_int64(m_stmt, index);
 }
+double DBStatement::DoubleColumn(int32 index) const
+{
+	assert(m_stmt && m_queryResult == SQLITE_ROW);
+	return sqlite3_column_double(m_stmt, index);
+}
 String DBStatement::StringColumn(int32 index /*= 0*/) const
 {
 	assert(m_stmt && m_queryResult == SQLITE_ROW);
@@ -82,6 +87,11 @@ void DBStatement::BindInt(int32 index, const int32& value)
 {
 	assert(m_stmt);
 	sqlite3_bind_int(m_stmt, index, value);
+}
+void DBStatement::BindDouble(int32 index, const double& value)
+{
+	assert(m_stmt);
+	sqlite3_bind_double(m_stmt, index, value);
 }
 void DBStatement::BindInt64(int32 index, const int64& value)
 {

@@ -1,6 +1,7 @@
 #pragma once
 #include "ApplicationTickable.hpp"
 #include "AsyncLoadable.hpp"
+#include <Beatmap/MapDatabase.hpp>
 
 /*
 	Main game scene / logic manager
@@ -11,6 +12,7 @@ protected:
 	Game() = default;
 public:
 	virtual ~Game() = default;
+	static Game* Create(const DifficultyIndex& mapPath);
 	static Game* Create(const String& mapPath);
 
 public:
@@ -27,6 +29,8 @@ public:
 
 	// Map jacket image
 	virtual Texture GetJacketImage() = 0;
+	// Difficulty data
+	virtual const DifficultyIndex& GetDifficultyIndex() const = 0;
 	// The beatmap
 	virtual Ref<class Beatmap> GetBeatmap() = 0;
 	// The folder that contians the map

@@ -38,6 +38,7 @@ private:
 	class LayoutBox* m_diffSelect = nullptr;
 	class Label* m_title = nullptr;
 	class Label* m_artist = nullptr;
+	class Label* m_score = nullptr;
 };
 
 // Song statistics window on the left

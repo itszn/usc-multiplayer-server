@@ -566,7 +566,7 @@ public:
 			{
 				DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
 
-				Game* game = Game::Create(diff->path);
+				Game* game = Game::Create(*diff);
 				if(!game)
 				{
 					Logf("Failed to start game", Logger::Error);
@@ -615,7 +615,7 @@ public:
 			{
 				DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
 
-				Game* game = Game::Create(diff->path);
+				Game* game = Game::Create(*diff);
 				if(!game)
 				{
 					Logf("Failed to start game", Logger::Error);

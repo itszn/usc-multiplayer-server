@@ -413,6 +413,26 @@ public:
 		}
 	}
 
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge)
+	{
+		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,diffid) VALUES(?,?,?,?,?,?)");
+
+		m_database.Exec("BEGIN");
+
+		addScore.BindInt(1, score);
+		addScore.BindInt(2, crit);
+		addScore.BindInt(3, almost);
+		addScore.BindInt(4, miss);
+		addScore.BindDouble(5, gauge);
+		addScore.BindInt(6, diff.id);
+
+		addScore.Step();
+		addScore.Rewind();
+
+		m_database.Exec("END");
+
+	}
+
 private:
 	void m_CleanupMapIndex()
 	{
@@ -431,12 +451,18 @@ private:
 	{
 		m_database.Exec("DROP TABLE IF EXISTS Maps");
 		m_database.Exec("DROP TABLE IF EXISTS Difficulties");
+		m_database.Exec("DROP TABLE IF EXISTS Scores");
 
 		m_database.Exec("CREATE TABLE Maps"
 			"(artist TEXT, title TEXT, tags TEXT, path TEXT)");
+
 		m_database.Exec("CREATE TABLE Difficulties"
 			"(metadata BLOB, path TEXT, lwt INTEGER, mapid INTEGER,"
 			"FOREIGN KEY(mapid) REFERENCES Maps(rowid))");
+
+		m_database.Exec("CREATE TABLE Scores"
+			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, diffid INTEGER,"
+			"FOREIGN KEY(diffid) REFERENCES Difficulties(rowid))");
 	}
 	void m_LoadInitialData()
 	{
@@ -493,6 +519,29 @@ private:
 			ed.lwt = diff->lwt;
 			m_searchState.difficulties.Add(diff->path, ed);
 		}
+
+		// Select Scores
+		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,diffid FROM Scores");
+		while (scoreScan.StepRow())
+		{
+			ScoreIndex* score = new ScoreIndex();
+			score->id = scoreScan.IntColumn(0);
+			score->score = scoreScan.IntColumn(1);
+			score->crit = scoreScan.IntColumn(2);
+			score->almost = scoreScan.IntColumn(3);
+			score->miss = scoreScan.IntColumn(4);
+			score->gauge = scoreScan.DoubleColumn(5);
+			score->diffid = scoreScan.IntColumn(6);
+
+			// Add difficulty to map and resort difficulties
+			auto diffIt = m_difficulties.find(score->diffid);
+			assert(diffIt != m_difficulties.end());
+			diffIt->second->scores.Add(score);
+			m_SortScores(diffIt->second);
+		}
+
+
+
 		m_nextDiffId = m_difficulties.empty() ? 1 : (m_difficulties.rbegin()->first + 1);
 
 		m_outer.OnMapsCleared.Call(m_maps);
@@ -502,6 +551,14 @@ private:
 		mapIndex->difficulties.Sort([](DifficultyIndex* a, DifficultyIndex* b)
 		{
 			return a->settings.difficulty < b->settings.difficulty;
+		});
+	}
+
+	void m_SortScores(DifficultyIndex* diffIndex)
+	{
+		diffIndex->scores.Sort([](ScoreIndex* a, ScoreIndex* b)
+		{
+			return a->score < b->score;
 		});
 	}
 
@@ -653,4 +710,8 @@ void MapDatabase::AddSearchPath(const String& path)
 void MapDatabase::RemoveSearchPath(const String& path)
 {
 	m_impl->RemoveSearchPath(path);
+}
+void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge)
+{
+	m_impl->AddScore(diff, score, crit, almost, miss, gauge);
 }

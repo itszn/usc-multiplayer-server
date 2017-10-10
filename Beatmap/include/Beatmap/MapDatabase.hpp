@@ -1,6 +1,20 @@
 #pragma once
 #include "Beatmap.hpp"
 
+
+
+struct ScoreIndex
+{
+	int32 id;
+	int32 diffid;
+	int32 score;
+	int32 crit;
+	int32 almost;
+	int32 miss;
+	float gauge;
+};
+
+
 // Single difficulty of a map
 // a single map may contain multiple difficulties
 struct DifficultyIndex
@@ -15,6 +29,10 @@ struct DifficultyIndex
 	uint64 lwt;
 	// Map metadata
 	BeatmapSettings settings;
+	// Map scores
+	Vector<ScoreIndex*> scores;
+
+
 };
 
 // Map located in database
@@ -50,6 +68,7 @@ public:
 	MapIndex* GetMap(int32 idx);
 
 	void AddSearchPath(const String& path);
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge);
 	void RemoveSearchPath(const String& path);
 
 	// (mapId, mapIndex)

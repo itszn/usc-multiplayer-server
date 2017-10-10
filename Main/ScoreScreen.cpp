@@ -4,6 +4,7 @@
 #include <GUI/GUI.hpp>
 #include <GUI/CommonGUIStyle.hpp>
 #include <Audio/Audio.hpp>
+#include <Beatmap/MapDatabase.hpp>
 #include "Scoring.hpp"
 #include "Game.hpp"
 #include "AsyncAssetLoader.hpp"
@@ -20,7 +21,7 @@ private:
 	Ref<HealthGauge> m_gauge;
 	Ref<Panel> m_jacket;
 	Ref<LayoutBox> m_itemBox;
-
+	MapDatabase m_mapDatabase;
 	// Things for score screen
 	Graphics::Font m_specialFont;
 	Sample m_applause;
@@ -54,7 +55,7 @@ public:
 		m_finalGaugeValue = scoring.currentGauge;
 		m_gaugeSamples = game->GetGaugeSamples();
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
-
+		m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue);
 		// Used for jacket images
 		m_songSelectStyle = SongSelectStyle::Get(g_application);
 

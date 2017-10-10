@@ -51,6 +51,7 @@ public:
 	// Startup parameters
 	String m_mapRootPath;
 	String m_mapPath;
+	DifficultyIndex m_diffIndex;
 
 private:
 	bool m_playing = true;
@@ -140,7 +141,20 @@ public:
 	{
 		// Store path to map
 		m_mapPath = Path::Normalize(mapPath);
+		// Get Parent path
+		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
 
+		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
+		m_usemMod = g_gameConfig.GetBool(GameConfigKeys::UseMMod);
+		m_usecMod = g_gameConfig.GetBool(GameConfigKeys::UseCMod);
+		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
+	}
+
+	Game_Impl(const DifficultyIndex& difficulty)
+	{
+		// Store path to map
+		m_mapPath = Path::Normalize(difficulty.path);
+		m_diffIndex = difficulty;
 		// Get Parent path
 		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
 
@@ -1217,10 +1231,21 @@ public:
 	{
 		return m_mapPath;
 	}
+	virtual const DifficultyIndex& GetDifficultyIndex() const
+	{
+		return m_diffIndex;
+	}
+
 };
 
-Game* Game::Create(const String& mapPath)
+Game* Game::Create(const DifficultyIndex& difficulty)
 {
-	Game_Impl* impl = new Game_Impl(mapPath);
+	Game_Impl* impl = new Game_Impl(difficulty);
+	return impl;
+}
+
+Game* Game::Create(const String& difficulty)
+{
+	Game_Impl* impl = new Game_Impl(difficulty);
 	return impl;
 }
