@@ -2,9 +2,9 @@
 A game based on [KShoot](http://kshoot.client.jp/) and [SDVX](https://www.youtube.com/watch?v=JBHKNl87juA).
 
 ### Download
-[![Build](https://ci.appveyor.com/api/projects/status/github/guusw/unnamed-sdvx-clone?branch=master&svg=true&retina=true)](https://ci.appveyor.com/project/guusw/unnamed-sdvx-clone)
+[![Build](https://ci.appveyor.com/api/projects/status/github/drewol/unnamed-sdvx-clone?branch=master&svg=true&retina=true)](https://ci.appveyor.com/project/drewol/unnamed-sdvx-clone)
 
-[Download latest build](http://tdrz.nl/sdvx-releases/bin/artifacts.zip)
+[Download latest build](https://drewol.me/Downloads/Game.zip)
 
 Demo Videos (Song Select/ Gameplay / Realtime effects):
 
@@ -53,7 +53,7 @@ Additional command line parameters:
 - '-autobuttons' makes all BT/FX object be played automatically. so you only have to control the lasers
 
 ### Game Controls (Customizable, read **Readme_Input.txt**):
-- White buttons = [S] [D] [K] [L]
+- White buttons = [D] [F] [J] [K]
 - Yellow notes = [C] [M] 
 - Left Laser = [W] [E] 
  Move left / move right respectively

@@ -38,14 +38,14 @@ void GameConfig::InitDefaults()
 
 	// Default keyboard bindings
 	Set(GameConfigKeys::Key_BTS, SDLK_1); // Start button on Dao controllers
-	Set(GameConfigKeys::Key_BT0, SDLK_s);
-	Set(GameConfigKeys::Key_BT1, SDLK_d);
-	Set(GameConfigKeys::Key_BT2, SDLK_k);
-	Set(GameConfigKeys::Key_BT3, SDLK_l);
-	Set(GameConfigKeys::Key_BT0Alt, SDLK_h);
-	Set(GameConfigKeys::Key_BT1Alt, SDLK_j);
-	Set(GameConfigKeys::Key_BT2Alt, SDLK_f);
-	Set(GameConfigKeys::Key_BT3Alt, SDLK_g);
+	Set(GameConfigKeys::Key_BT0, SDLK_d);
+	Set(GameConfigKeys::Key_BT1, SDLK_f);
+	Set(GameConfigKeys::Key_BT2, SDLK_j);
+	Set(GameConfigKeys::Key_BT3, SDLK_k);
+	Set(GameConfigKeys::Key_BT0Alt, -1);
+	Set(GameConfigKeys::Key_BT1Alt, -1);
+	Set(GameConfigKeys::Key_BT2Alt, -1);
+	Set(GameConfigKeys::Key_BT3Alt, -1);
 	Set(GameConfigKeys::Key_FX0, SDLK_c);
 	Set(GameConfigKeys::Key_FX1, SDLK_m);
 	Set(GameConfigKeys::Key_FX0Alt, SDLK_n);
@@ -66,8 +66,8 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::Controller_FX1, 10); // Right Shoulder
 	Set(GameConfigKeys::Controller_Laser0Axis, 0); // Fist strick Left/Right
 	Set(GameConfigKeys::Controller_Laser1Axis, 2); // Second stick Left/Right
-	Set(GameConfigKeys::Controller_Sensitivity, 6.0f);
-	Set(GameConfigKeys::Controller_Deadzone, 0.1f);
+	Set(GameConfigKeys::Controller_Sensitivity, 1.0f);
+	Set(GameConfigKeys::Controller_Deadzone, 0.f);
 
 	// Default mouse settings
 	Set(GameConfigKeys::Mouse_Laser0Axis, 0);
