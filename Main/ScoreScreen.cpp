@@ -28,6 +28,7 @@ private:
 	Texture m_categorizedHitTextures[4];
 
 	bool m_autoplay;
+	bool m_autoButtons;
 	bool m_startPressed;
 	uint32 m_score;
 	uint32 m_grade;
@@ -49,13 +50,18 @@ public:
 	{
 		Scoring& scoring = game->GetScoring();
 		m_autoplay = scoring.autoplay;
+		m_autoButtons = scoring.autoplayButtons;
 		m_score = scoring.CalculateCurrentScore();
 		m_grade = scoring.CalculateCurrentGrade();
 		m_maxCombo = scoring.maxComboCounter;
 		m_finalGaugeValue = scoring.currentGauge;
 		m_gaugeSamples = game->GetGaugeSamples();
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
-		m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue);
+
+		// Don't save the score if autoplay was on or if the song was launched using command line
+		if(!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1)
+			m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue);
+
 		// Used for jacket images
 		m_songSelectStyle = SongSelectStyle::Get(g_application);
 

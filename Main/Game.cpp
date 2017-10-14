@@ -144,6 +144,9 @@ public:
 		// Get Parent path
 		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
 
+		m_diffIndex.id = -1;
+		m_diffIndex.mapId = -1;
+
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
 		m_usemMod = g_gameConfig.GetBool(GameConfigKeys::UseMMod);
 		m_usecMod = g_gameConfig.GetBool(GameConfigKeys::UseCMod);
