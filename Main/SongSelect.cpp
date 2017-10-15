@@ -607,27 +607,6 @@ public:
 		{
 			m_selectionWheel->AdvanceDifficultySelection(1);
 		}
-		else if(key == SDLK_RETURN)
-		{
-			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
-			MapIndex* map = m_selectionWheel->GetSelection();
-			if(map)
-			{
-				DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
-
-				Game* game = Game::Create(*diff);
-				if(!game)
-				{
-					Logf("Failed to start game", Logger::Error);
-					return;
-				}
-				game->GetScoring().autoplay = autoplay;
-
-				// Transition to game
-				TransitionScreen* transistion = TransitionScreen::Create(game);
-				g_application->AddTickable(transistion);
-			}
-		}
 		else if(key == SDLK_F5)
 		{
 			m_mapDatabase.StartSearching();
