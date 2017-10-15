@@ -406,7 +406,9 @@ public:
 	}
 	virtual void Render(float deltaTime) override
 	{
-		m_track->SetViewRange(8.0f / m_hispeed);
+		// Magic number to make the resulting HiSpeed numbers somewhat match the resulting speeds in the other games
+		m_track->SetViewRange(7.4f / m_hispeed); 
+
 		m_track->Tick(m_playback, deltaTime);
 
 		// Get render state from the camera
@@ -749,18 +751,24 @@ public:
 		gaugeSampleSlot = Math::Clamp(gaugeSampleSlot, (int32)0, (int32)255);
 		m_gaugeSamples[gaugeSampleSlot] = m_scoring.currentGauge;
 
+		// Get the current timing point
+		m_currentTiming = &m_playback.GetCurrentTimingPoint();
 
         // Update hispeed
         if (g_input.GetButton(Input::Button::BT_S))
         {
             for (int i = 0; i < 2; i++)
             {
-                m_hispeed += g_input.GetInputLaserDir(i);
+				m_hispeed += g_input.GetInputLaserDir(i);
+				m_hispeed = Math::Clamp(m_hispeed, 0.1f, 16.f);
+				if (m_usecMod || m_usemMod)
+				{
+					g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
+				}
             }
         }
 
-		// Get the current timing point
-		m_currentTiming = &m_playback.GetCurrentTimingPoint();
+
 
 		m_lastMapTime = playbackPositionMs;
 		
