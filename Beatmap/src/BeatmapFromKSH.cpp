@@ -889,7 +889,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					{
 						// Use settings method of setting effects+params (1.60)
 						state->effectType = currentButtonEffectTypes[i - 4];
-						if (currentButtonEffectParams[i - 4] != -1)
+						if (currentButtonEffectParams[(i - 4) * maxEffectParamsPerButtons] != -1)
 							memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
 								sizeof(state->effectParams));
 						else
