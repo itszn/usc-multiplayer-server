@@ -54,8 +54,7 @@ bool AudioPlayback::Init(class BeatmapPlayback& playback, const String& mapRootP
 	{
 		if(!Path::FileExists(audioPath))
 		{
-			Logf("FX audio for for beatmap does not exists at: \"%s\"", Logger::Error, audioPath);
-			return false;
+			Logf("FX audio for for beatmap does not exists at: \"%s\" Using real-time effects instead.", Logger::Warning, audioPath);
 		}
 		else
 		{

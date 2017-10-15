@@ -536,7 +536,7 @@ private:
 			// Add difficulty to map and resort difficulties
 			auto diffIt = m_difficulties.find(score->diffid);
 			if(diffIt == m_difficulties.end()) // If for whatever reason the diff that the score is attatched to is not in the db, ignore the score.
-				break;
+				continue;
 
 			diffIt->second->scores.Add(score);
 			m_SortScores(diffIt->second);

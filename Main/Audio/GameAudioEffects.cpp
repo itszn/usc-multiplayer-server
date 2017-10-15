@@ -176,7 +176,7 @@ void GameAudioEffect::SetParams(DSP* dsp, AudioPlayback& playback, HoldObjectSta
 	{
 		FlangerDSP* fl = (FlangerDSP*)dsp;
 		double delay = (noteDuration) / 1000.0;
-		fl->SetLength((uint32)(noteDuration / object->effectParams[0]));
+		fl->SetLength(object->effectParams[0]);
 		fl->SetDelayRange(2, 40);
 		break;
 	}

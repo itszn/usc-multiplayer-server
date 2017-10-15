@@ -309,6 +309,19 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 	EffectTypeMap effectTypeMap;
 	EffectTypeMap filterTypeMap;
+	Map<EffectType, int16> defaultEffectParams;
+
+	// Set defaults
+	{
+		defaultEffectParams[EffectType::Bitcrush] = 4;
+		defaultEffectParams[EffectType::Gate] = 8;
+		defaultEffectParams[EffectType::Retrigger] = 8;
+		defaultEffectParams[EffectType::Phaser] = 5000;
+		defaultEffectParams[EffectType::Flanger] = 5000;
+		defaultEffectParams[EffectType::Wobble] = 12;
+		defaultEffectParams[EffectType::SideChain] = 8;
+		defaultEffectParams[EffectType::TapeStop] = 50;
+	}
 
 	// Add all the custom effect types
 	for (auto it = kshootMap.fxDefines.begin(); it != kshootMap.fxDefines.end(); it++)
@@ -478,7 +491,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 	EffectType currentButtonEffectTypes[2] = { EffectType::None };
 	// 2 per button
-	int16 currentButtonEffectParams[4] = { 0 };
+	int16 currentButtonEffectParams[4] = { -1 };
 	const uint32 maxEffectParamsPerButtons = 2;
 	float laserRanges[2] = { 1.0f, 1.0f };
 
@@ -556,7 +569,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			auto ParseFXAndParameters = [&](String in, int16* paramsOut)
 			{
 				// Clear parameters
-				memset(paramsOut, 0, sizeof(uint16) * maxEffectParamsPerButtons);
+				memset(paramsOut, -1, sizeof(uint16) * maxEffectParamsPerButtons);
 
 				String effectName = in;
 				size_t paramSplit = in.find_first_of(';');
@@ -792,7 +805,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				if (i >= 4)
 				{
 					// Unset effect parameters
-					currentButtonEffectParams[i - 4] = 0;
+					currentButtonEffectParams[i - 4] = -1;
 				}
 			}
 			else if (!state)
@@ -819,7 +832,10 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					if (c == 'B')
 					{
 						state->effectType = EffectType::Bitcrush;
-						state->effectParams[0] = currentButtonEffectParams[i - 4];
+						if (currentButtonEffectParams[i - 4] != -1)
+							state->effectParams[0] = currentButtonEffectParams[i - 4];
+						else
+							state->effectParams[0] = 5;
 					}
 					else if (c >= 'G' && c <= 'L') // Gate 4/8/16/32/12/24
 					{
@@ -844,6 +860,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					else if (c == 'F')
 					{
 						state->effectType = EffectType::Flanger;
+						state->effectParams[0] = 5000;
 					}
 					else if (c == 'X')
 					{
@@ -857,8 +874,11 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					else if (c == 'A')
 					{
 						state->effectType = EffectType::TapeStop;
-						memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
-							sizeof(state->effectParams));
+						if (currentButtonEffectParams[i - 4] != -1)
+							memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
+								sizeof(state->effectParams));
+						else
+							state->effectParams[0] = 50;
 					}
 					else if (c == '3')
 					{
@@ -869,8 +889,14 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					{
 						// Use settings method of setting effects+params (1.60)
 						state->effectType = currentButtonEffectTypes[i - 4];
-						memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
-							sizeof(state->effectParams));
+						if (currentButtonEffectParams[i - 4] != -1)
+							memcpy(state->effectParams, currentButtonEffectParams + (i - 4) * maxEffectParamsPerButtons,
+								sizeof(state->effectParams));
+						else
+						{
+							state->effectParams[0] = defaultEffectParams[state->effectType];
+							state->effectParams[1] = 0;
+						}
 					}
 				}
 			}
