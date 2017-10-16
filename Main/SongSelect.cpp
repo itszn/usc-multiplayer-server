@@ -12,7 +12,11 @@
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
 #include <Audio/Audio.hpp>
+#ifdef _WIN32
 #include "SDL_keycode.h"
+#else
+#include "SDL2/SDL_keycode.h"
+#endif
 
 /*
 	Song preview player with fade-in/out

@@ -17,7 +17,11 @@
 #include <GUI/Canvas.hpp>
 #include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
+#ifdef _WIN32
 #include "SDL_keycode.h"
+#else
+#include "SDL2/SDL_keycode.h"
+#endif
 
 GameConfig g_gameConfig;
 OpenGL* g_gl = nullptr;
@@ -556,7 +560,12 @@ Material Application::LoadMaterial(const String& name)
 }
 Sample Application::LoadSample(const String& name, const bool& external)
 {
-	String path = external ? name : String("audio/") + name + ".wav";
+    String path;
+    if(external)
+	    path = name;
+    else
+        path = String("audio/") + name + ".wav";
+
 	Sample ret = g_audio->CreateSample(path);
 	assert(ret);
 	return ret;
