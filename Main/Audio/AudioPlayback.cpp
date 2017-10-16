@@ -52,7 +52,7 @@ bool AudioPlayback::Init(class BeatmapPlayback& playback, const String& mapRootP
 	audioPathUnicode = Utility::ConvertToWString(audioPath);
 	if(!audioPath.empty())
 	{
-		if(!Path::FileExists(audioPath))
+		if(!Path::FileExists(audioPath) || Path::IsDirectory(audioPath))
 		{
 			Logf("FX audio for for beatmap does not exists at: \"%s\" Using real-time effects instead.", Logger::Warning, audioPath);
 		}

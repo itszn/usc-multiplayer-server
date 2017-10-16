@@ -114,7 +114,7 @@ bool Path::IsDirectory(const String& path)
 
 bool Path::FileExists(const String& path)
 {
-	return access(*path, F_OK) != -1;
+	return access(path.c_str(), F_OK) != -1;
 }
 String Path::Normalize(const String& path)
 {
