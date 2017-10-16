@@ -26,7 +26,7 @@ A game based on [KShootMania](http://kshoot.client.jp/) and [SDVX](https://www.y
 - GUI remake
 - Song select UI/Controls to change HiSpeed and other game settings
 
-The folder that is scanned for songs can be changed in the "Main.cfg" file (`songfolder = "path to song folder"`).  
+The folder that is scanned for songs can be changed in the "Main.cfg" file (`songfolder = "path to song folder"`). Make sure you use a *plain* text editor like Notepad, Notepad++ or gedit; NOT a *rich* text editor like Wordpad or Word!  
 If something breaks in the song database, delete "maps.db". **Please note this this will also wipe saved scores.**
 
 ## Controls
@@ -58,7 +58,7 @@ Just run 'Main_Release' or 'Main_Debug' from within the 'bin' folder. Or, to pla
 - `-test` - Runs test scene, for development purposes only
 
 ## How to build:
-It is not required to build from source. A download link to a pre-built is located at the beginning of this README. But, if you must:
+It is not required to build from source. A download link to a pre-built copy of the game is located at the beginning of this README. But, if you must:
 
 ### Windows:
 1. Install [CMake](https://cmake.org/download/)
