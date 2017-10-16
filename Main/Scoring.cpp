@@ -485,7 +485,7 @@ void Scoring::m_UpdateTicks()
 						}
 
 						// Check laser input
-						float laserDelta = abs(laserPositions[laserObject->index] - laserTargetPositions[laserObject->index]);\
+						float laserDelta = fabs(laserPositions[laserObject->index] - laserTargetPositions[laserObject->index]);\
 
 						if(laserDelta < laserDistanceLeniency)
 						{
@@ -770,7 +770,7 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			if (laserDir == 0.0f && currentSegment->prev == nullptr)
 				laserPositions[i] = laserTargetPositions[i];
 			// Lock lasers on straight parts
-			else if (laserDir == 0.0f && abs(positionDelta) < laserDistanceLeniency)
+			else if (laserDir == 0.0f && fabs(positionDelta) < laserDistanceLeniency)
 			{
 				laserPositions[i] = laserTargetPositions[i];
 				if (m_autoLaserTick[i] < m_assistLevel)
