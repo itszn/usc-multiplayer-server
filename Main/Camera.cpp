@@ -21,7 +21,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	float rollDelta = m_targetRoll - m_laserRoll;
 	rollSpeedLimit *= Math::Sign(rollDelta);
-	m_laserRoll += (abs(rollDelta) < abs(rollSpeedLimit)) ? rollDelta : rollSpeedLimit;
+	m_laserRoll += (fabs(rollDelta) < fabs(rollSpeedLimit)) ? rollDelta : rollSpeedLimit;
 
 
 	// Calculate camera spin
@@ -209,10 +209,10 @@ float Camera::GetRoll() const
 
 float Camera::m_ClampRoll(float in) const
 {
-	float ain = abs(in);
+	float ain = fabs(in);
 	if(ain < 1.0f)
 		return in;
-	bool odd = ((uint32)abs(in) % 2) == 1;
+	bool odd = ((uint32)fabs(in) % 2) == 1;
 	float sign = Math::Sign(in);
 	if(odd)
 	{

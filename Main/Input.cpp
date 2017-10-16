@@ -119,9 +119,9 @@ void Input::Update(float deltaTime)
 			{
 				float axisState = m_gamepad->GetAxis(m_controllerAxisMapping[i]);
 				float delta = axisState - m_prevLaserStates[i];
-				if (abs(delta) > 1.5f)
+				if (fabs(delta) > 1.5f)
 					delta += 2 * (Math::Sign(delta) * -1);
-				if (abs(delta) < m_controllerDeadzone)
+				if (fabs(delta) < m_controllerDeadzone)
 					m_laserStates[i] = 0.0f;
 				else
 					m_laserStates[i] = delta * m_controllerSensitivity;
