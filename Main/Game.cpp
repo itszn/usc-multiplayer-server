@@ -823,7 +823,7 @@ public:
 		emitter->SetStartDrag(PPConstant<float>(0.0f));
 		emitter->SetStartVelocity(PPConstant<Vector3>({ 0, 0.0f, 2.0f }));
 		emitter->SetSpawnVelocityScale(PPRandomRange<float>(0.9f, 2));
-		emitter->SetStartColor(PPConstant<Color>(color * 0.7f));
+		emitter->SetStartColor(PPConstant<Color>((Color)(color * 0.7f)));
 		emitter->SetGravity(PPConstant<Vector3>(Vector3(0.0f, 0.0f, -9.81f)));
 		emitter->position.y = 0.0f;
 		emitter->scale = 0.3f;
@@ -845,7 +845,7 @@ public:
 		emitter->SetStartDrag(PPConstant<float>(0.0f));
 		emitter->SetStartVelocity(PPConstant<Vector3>({ 0.0f, 0.0f, 0.0f }));
 		emitter->SetSpawnVelocityScale(PPRandomRange<float>(0.2f, 0.2f));
-		emitter->SetStartColor(PPConstant<Color>(color*0.6f));
+		emitter->SetStartColor(PPConstant<Color>((Color)(color*0.6f)));
 		emitter->SetGravity(PPConstant<Vector3>(Vector3(0.0f, 0.0f, -4.81f)));
 		emitter->position.y = 0.01f;
 		emitter->scale = 1.0f;

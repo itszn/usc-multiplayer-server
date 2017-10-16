@@ -4,7 +4,7 @@
 
 Color::Color(const VectorMath::VectorBase<uint8, 4>& icolor)
 {
-	*this = Vector4(icolor) / 255.0f;
+	*this = (Color)(Vector4(icolor) / 255.0f);
 }
 
 Color::Color(float r, float g, float b) : Color(r,g,b,1.0f)
