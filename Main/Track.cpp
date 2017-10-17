@@ -173,7 +173,7 @@ bool Track::AsyncFinalize()
 	{
 		m_laserTrackBuilder[i] = new LaserTrackBuilder(g_gl, this, i);
 		m_laserTrackBuilder[i]->laserBorderPixels = 12;
-		m_laserTrackBuilder[i]->laserLengthScale = trackLength / GetViewRange();
+		m_laserTrackBuilder[i]->laserLengthScale = trackLength / (GetViewRange() * laserSpeedOffset);
 		m_laserTrackBuilder[i]->Reset(); // Also initializes the track builder
 	}
 
@@ -357,7 +357,8 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 	else if(obj->type == ObjectType::Laser) // Draw laser
 	{
 		
-		position = playback.TimeToViewDistance(obj->time)/ (viewRange * laserSpeedOffset);
+		position = playback.TimeToViewDistance(obj->time);
+		float posmult = trackLength / (m_viewRange * laserSpeedOffset);
 		LaserObjectState* laser = (LaserObjectState*)obj;
 
 		// Draw segment function
@@ -374,7 +375,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 
 			// Get the length of this laser segment
 			Transform laserTransform;
-			laserTransform *= Transform::Translation(Vector3{ 0.0f, trackLength * position, 
+			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position,
 				0.007f + 0.003f * laser->index }); // Small amount of elevation
 
 			// Set laser color
@@ -507,7 +508,7 @@ void Track::SetViewRange(float newRange)
 		m_viewRange = newRange;
 
 		// Update view range
-		float newLaserLengthScale = trackLength / (GetViewRange() * laserSpeedOffset);
+		float newLaserLengthScale = trackLength / (m_viewRange * laserSpeedOffset);
 		m_laserTrackBuilder[0]->laserLengthScale = newLaserLengthScale;
 		m_laserTrackBuilder[1]->laserLengthScale = newLaserLengthScale;
 
