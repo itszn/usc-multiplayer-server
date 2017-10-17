@@ -288,7 +288,7 @@ void SongSelectItem::SetSelectedDifficulty(int32 selectedIndex)
 				L"D",
 			};
 
-			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%s", score, gaugeDisplay, gradeStrings[grade]));
+			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%ls", score, gaugeDisplay, gradeStrings[grade]));
 		}
 		else
 		{
