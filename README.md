@@ -1,5 +1,5 @@
 # Unnamed SDVX clone ![language: C/C++](https://img.shields.io/badge/language-C%2FC%2B%2B-green.svg)
-A game based on [KShootMania](http://kshoot.client.jp/) and [SDVX](https://www.youtube.com/watch?v=JBHKNl87juA).
+A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://en.wikipedia.org/wiki/Sound_Voltex).
 
 ### [**Download latest build \(pre\-built\)**](https://drewol.me/Downloads/Game.zip) | [![Build](https://ci.appveyor.com/api/projects/status/github/drewol/unnamed-sdvx-clone?branch=master&svg=true&retina=true)](https://ci.appveyor.com/project/drewol/unnamed-sdvx-clone)
 
