@@ -286,6 +286,8 @@ void Track::DrawBase(class RenderQueue& rq)
 	Transform transform;
 	transform *= Transform::Translation({ 0.0f, -m_trackHide * trackLength * 1.1f, 0.0f });
 	params.SetParameter("mainTex", trackTexture);
+	params.SetParameter("lCol", laserColors[0]);
+	params.SetParameter("rCol", laserColors[1]);
 	rq.Draw(transform, trackMesh, trackMaterial, params);
 
 	// Draw the main beat ticks on the track
@@ -296,7 +298,7 @@ void Track::DrawBase(class RenderQueue& rq)
 		Vector3 tickPosition = Vector3(0.0f, trackLength * fLocal - trackTickLength * 0.5f, 0.01f);
 		Transform tickTransform;
 		tickTransform *= Transform::Translation(tickPosition);
-		rq.Draw(tickTransform, trackTickMesh, trackMaterial, params);
+		rq.Draw(tickTransform, trackTickMesh, buttonMaterial, params);
 	}
 }
 void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, ObjectState* obj, bool active)
