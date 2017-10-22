@@ -58,6 +58,7 @@ public:
 
 	// Value from 0 to 1 that indicates how far in a single bar the playback is
 	float GetBarTime() const;
+	float GetBeatTime() const;
 
 	// Gets the currently set value of a value set by events in the beatmap
 	const EventData& GetEventData(EventKey key);
@@ -134,6 +135,7 @@ private:
 	Map<EventKey, EventData> m_eventMapping;
 
 	float m_barTime;
+	float m_beatTime;
 
 	Beatmap* m_beatmap = nullptr;
 };
