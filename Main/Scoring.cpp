@@ -452,10 +452,10 @@ void Scoring::m_UpdateTicks()
 					if(!tick->HasFlag(TickFlags::Start) || (autoplay || autoplayButtons))
 					{
 						// Check buttons here for holds
-						if(m_input && (m_input->GetButton(button) || autoplay || autoplayButtons))
+						if((m_input && m_input->GetButton(button)) || autoplay || autoplayButtons)
 						{							
 							// Make sure the button wasnt being held long before the hold became active.
-							if (tick->object->time - goodHitTime < m_buttonHitTime[buttonCode])
+							if (tick->object->time - goodHitTime < m_buttonHitTime[buttonCode] || autoplay || autoplayButtons)
 							{
 								m_TickHit(tick, buttonCode);
 								processed = true;
