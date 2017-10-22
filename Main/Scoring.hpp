@@ -15,7 +15,7 @@ enum class TickFlags : uint8
 	Button = 0x8,
 	// For lasers only
 	Laser = 0x10,
-	Slam = 0x20, 
+	Slam = 0x20,
 };
 TickFlags operator|(const TickFlags& a, const TickFlags& b);
 TickFlags operator&(const TickFlags& a, const TickFlags& b);
@@ -153,7 +153,7 @@ public:
 	// 1 = Late
 	uint32 timedHits[2] = { 0 };
 
-	
+
 
 	// Amount of gauge to gain on a short note
 	float shortGaugeGain = 0.0f;
@@ -250,6 +250,8 @@ private:
 	float m_lastLaserInputDirection[2] = { 0.0f };
 	// Decides if the coming tick should be auto completed
 	uint32 m_autoLaserTick[2] = { 0,0 };
+	// Saves the time when a button was hit, used to decide if a button was held before a hold object was active
+	MapTime m_buttonHitTime[6] = { -1,-1,-1,-1,-1,-1 };
 	// Max number of ticks to assist
 	uint32 m_assistLevel = 2;
 	// Offet to use for calculating judge (ms)

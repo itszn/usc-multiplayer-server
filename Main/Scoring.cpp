@@ -452,9 +452,13 @@ void Scoring::m_UpdateTicks()
 					{
 						// Check buttons here for holds
 						if(m_input && (m_input->GetButton(button) || autoplay || autoplayButtons))
-						{
-							m_TickHit(tick, buttonCode);
-							processed = true;
+						{							
+							// Make sure the button wasnt being held long before the hold became active.
+							if (tick->object->time - goodHitTime < m_buttonHitTime[buttonCode])
+							{
+								m_TickHit(tick, buttonCode);
+								processed = true;
+							}
 						}
 					}
 				}
@@ -828,6 +832,7 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 
 	if(buttonCode < Input::Button::BT_S)
 	{
+		m_buttonHitTime[(uint32)buttonCode] = m_playback->GetLastTime();
 		ObjectState* obj = m_ConsumeTick((uint32)buttonCode);
 		if(!obj)
 		{
