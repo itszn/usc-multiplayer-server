@@ -128,6 +128,7 @@ public:
 	Delegate<uint32> OnScoreChanged;
 
 	// Object timing window
+	static const MapTime missHitTime;
 	static const MapTime goodHitTime;
 	static const MapTime perfectHitTime;
 	static const float idleLaserSpeed;
