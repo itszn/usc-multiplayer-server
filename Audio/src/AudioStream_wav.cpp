@@ -210,7 +210,10 @@ public:
 	}
 	virtual void SetPosition_Internal(int32 pos)
 	{
-		m_playbackPointer = pos;
+		if(pos > 0)
+			m_playbackPointer = pos;
+		else
+			m_playbackPointer = 0;
 	}
 
 	virtual int32 DecodeData_Internal()
