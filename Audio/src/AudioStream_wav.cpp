@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "AudioStreamBase.hpp"
 
-// Fixed point format for resampling
-static uint64 fp_sampleStep = 1ull << 48;
-
 struct WavHeader
 {
 	char id[4];
@@ -33,88 +30,85 @@ struct WavFormat
 class AudioStreamWAV_Impl : public AudioStreamBase
 {
 private:
-	Buffer m_pcm;
+	Buffer m_Internaldata;
 	WavFormat m_format = { 0 };
 
 
-	// Resampling values
-	uint64 m_sampleStep = 0;
-	uint64 m_sampleStepIncrement = 0;
-
 	uint64 m_playbackPointer = 0;
 
-	void m_decode_ms_adpcm(const Buffer& encoded)
+	uint32 m_decode_ms_adpcm(const Buffer& encoded, Buffer* decoded, uint64 pos)
 	{
-		int16* pcm = (int16*)m_pcm.data();
-		for (size_t b = 0; b < (encoded.size() / m_format.nBlockAlign); b++)
+		int16* pcm = (int16*)decoded->data();
+
+		int8* src = ((int8*)encoded.data()) + pos;
+		int8 blockPredictors[] = { 0, 0 };
+		int32 ideltas[] = { 0, 0 };
+		int32 sample1[] = { 0, 0 };
+		int32 sample2[] = { 0, 0 };
+
+		blockPredictors[0] = *src++;
+		blockPredictors[1] = *src++;
+		assert(blockPredictors[0] >= 0 && blockPredictors[0] < 7);
+		assert(blockPredictors[1] >= 0 && blockPredictors[0] < 7);
+
+		int16* src_16 = (int16*)src;
+		ideltas[0] = *src_16++;
+		ideltas[1] = *src_16++;
+
+		sample1[0] = *src_16++;
+		sample1[1] = *src_16++;
+
+		sample2[0] = *src_16++;
+		sample2[1] = *src_16++;
+
+		*pcm++ = sample2[0];
+		*pcm++ = sample2[1];
+		*pcm++ = sample1[0];
+		*pcm++ = sample1[1];
+
+
+		src = (int8*)src_16;
+		uint32 decodedCount = 2;
+
+		int AdaptationTable[] = {
+			230, 230, 230, 230, 307, 409, 512, 614,
+			768, 614, 512, 409, 307, 230, 230, 230
+		};
+		int AdaptCoeff1[] = { 256, 512, 0, 192, 240, 460, 392 };
+		int AdaptCoeff2[] = { 0, -256, 0, 64, 0, -208, -232 };
+
+		// Decode the rest of the data in the block
+		int remainingInBlock = m_format.nBlockAlign - 14;
+		while (remainingInBlock > 0)
 		{
-			int8* src = ((int8*)encoded.data()) + (b * m_format.nBlockAlign);
-			int8 blockPredictors[] = { 0, 0 };
-			int32 ideltas[] = { 0, 0 };
-			int32 sample1[] = { 0, 0 };
-			int32 sample2[] = { 0, 0 };
+			int8 nibbleData = *src++;
 
-			blockPredictors[0] = *src++;
-			blockPredictors[1] = *src++;
-			assert(blockPredictors[0] >= 0 && blockPredictors[0] < 7);
-			assert(blockPredictors[1] >= 0 && blockPredictors[0] < 7);
+			int8 nibbles[] = { 0, 0 };
+			nibbles[0] = nibbleData >> 4;
+			nibbles[0] &= 0x0F;
+			nibbles[1] = nibbleData & 0x0F;
 
-			int16* src_16 = (int16*)src;
-			ideltas[0] = *src_16++;
-			ideltas[1] = *src_16++;
-
-			sample1[0] = *src_16++;
-			sample1[1] = *src_16++;
-
-			sample2[0] = *src_16++;
-			sample2[1] = *src_16++;
-
-			*pcm++ = sample2[0];
-			*pcm++ = sample2[1];
-			*pcm++ = sample1[0];
-			*pcm++ = sample1[1];
-
-
-			src = (int8*)src_16;
-
-			int AdaptationTable[] = {
-				230, 230, 230, 230, 307, 409, 512, 614,
-				768, 614, 512, 409, 307, 230, 230, 230
-			};
-			int AdaptCoeff1[] = { 256, 512, 0, 192, 240, 460, 392 };
-			int AdaptCoeff2[] = { 0, -256, 0, 64, 0, -208, -232 };
-
-			// Decode the rest of the data in the block
-			int remainingInBlock = m_format.nBlockAlign - 14;
-			while (remainingInBlock > 0)
+			int16 predictors[] = { 0, 0 };
+			for (size_t i = 0; i < 2; i++)
 			{
-				int8 nibbleData = *src++;
-
-				int8 nibbles[] = { 0, 0 };
-				nibbles[0] = nibbleData >> 4;
-				nibbles[0] &= 0x0F;
-				nibbles[1] = nibbleData & 0x0F;
-
-				int16 predictors[] = { 0, 0 };
-				for (size_t i = 0; i < 2; i++)
-				{
 
 
-					predictors[i] = ((sample1[i] * AdaptCoeff1[blockPredictors[i]]) + (sample2[i] * AdaptCoeff2[blockPredictors[i]])) / 256;
-					if (nibbles[i] & 0x08)
-						predictors[i] += (nibbles[i] - 0x10) * ideltas[i];
-					else
-						predictors[i] += nibbles[i] * ideltas[i];
-					*pcm++ = predictors[i];
-					sample2[i] = sample1[i];
-					sample1[i] = predictors[i];
-					ideltas[i] = (AdaptationTable[nibbles[i]] * ideltas[i]) / 256;
-					if (ideltas[i] < 16)
-						ideltas[i] = 16;
-				}
-				remainingInBlock--;
+				predictors[i] = ((sample1[i] * AdaptCoeff1[blockPredictors[i]]) + (sample2[i] * AdaptCoeff2[blockPredictors[i]])) / 256;
+				if (nibbles[i] & 0x08)
+					predictors[i] += (nibbles[i] - 0x10) * ideltas[i];
+				else
+					predictors[i] += nibbles[i] * ideltas[i];
+				*pcm++ = predictors[i];
+				sample2[i] = sample1[i];
+				sample1[i] = predictors[i];
+				ideltas[i] = (AdaptationTable[nibbles[i]] * ideltas[i]) / 256;
+				if (ideltas[i] < 16)
+					ideltas[i] = 16;
 			}
+			decodedCount++;
+			remainingInBlock--;
 		}
+		return decodedCount;
 	}
 
 
@@ -183,19 +177,13 @@ public:
 				if (m_format.nFormat == 1)
 				{
 					m_samplesTotal = chunkHdr.nLength / sizeof(short);
-					m_pcm.resize(chunkHdr.nLength);
-					m_memoryReader.Serialize(m_pcm.data(), chunkHdr.nLength);
+					m_Internaldata.resize(chunkHdr.nLength);
+					m_memoryReader.Serialize(m_Internaldata.data(), chunkHdr.nLength);
 				}
 				else if (m_format.nFormat == 2)
 				{
-					Buffer encoded;
-					encoded.resize(chunkHdr.nLength);
-					m_memoryReader.Serialize(encoded.data(), chunkHdr.nLength);
-					m_samplesTotal -= m_samplesTotal % m_format.nBlockAlign;
-					m_samplesTotal += m_format.nBlockAlign;
-					m_pcm.resize(m_samplesTotal * m_format.nChannels * sizeof(short));
-					// TODO: dont decode it all on load.
-					m_decode_ms_adpcm(encoded);
+					m_Internaldata.resize(m_samplesTotal * m_format.nChannels * sizeof(short));
+					m_memoryReader.Serialize(m_Internaldata.data(), chunkHdr.nLength);
 				}
 			}
 			else
@@ -203,21 +191,21 @@ public:
 				m_memoryReader.Skip(chunkHdr.nLength);
 			}
 		}
-		InitSampling(m_audio->GetSampleRate());
+		InitSampling(m_format.nSampleRate);
 
-		// Calculate the sample step if the rate is not the same as the output rate
-		double sampleStep = (double)m_format.nSampleRate / (double)m_audio->GetSampleRate();
-		m_sampleStepIncrement = (uint64)(sampleStep * (double)fp_sampleStep);
 		m_playbackPointer = 0;
 		return true;
 	}
 	virtual int32 GetStreamPosition_Internal()
 	{
-		return m_playbackPointer / m_format.nChannels;
+		return m_playbackPointer;
 	}
 	virtual int32 GetStreamRate_Internal()
 	{
-		return m_format.nSampleRate;
+		if (m_format.nFormat == 2)
+			return m_format.nByteRate;
+		else
+			return m_format.nSampleRate * m_format.nChannels;
 	}
 	virtual void SetPosition_Internal(int32 pos)
 	{
@@ -226,56 +214,73 @@ public:
 
 	virtual int32 DecodeData_Internal()
 	{
-		uint32 samplesPerRead = 128;
-
-		if (m_format.nChannels == 2)
+		if (m_format.nFormat == 1)
 		{
-			for (uint32 i = 0; i < samplesPerRead; i++)
-			{
-				if ((m_playbackPointer / m_format.nChannels) >= m_samplesTotal)
-				{
-					return i;
-				}
+			uint32 samplesPerRead = 128;
 
-				int16* src = ((int16*)m_pcm.data()) + m_playbackPointer;
+			if (m_format.nChannels == 2)
+			{
+				for (uint32 i = 0; i < samplesPerRead; i++)
+				{
+					if ((m_playbackPointer / m_format.nChannels) >= m_samplesTotal)
+					{
+						m_currentBufferSize = samplesPerRead;
+						m_remainingBufferData = samplesPerRead;
+						return i;
+					}
+
+					int16* src = ((int16*)m_Internaldata.data()) + m_playbackPointer;
+					m_readBuffer[0][i] = (float)src[0] / (float)0x7FFF;
+					m_readBuffer[1][i] = (float)src[1] / (float)0x7FFF;
+					m_playbackPointer+=2;
+
+				}
+			}
+			else
+			{
+				// Mix mono sample
+				for (uint32 i = 0; i < samplesPerRead; i++)
+				{
+					if (m_playbackPointer >= m_samplesTotal)
+					{
+						m_currentBufferSize = samplesPerRead;
+						m_remainingBufferData = samplesPerRead;
+						return i;
+					}
+
+					int16* src = ((int16*)m_Internaldata.data()) + m_playbackPointer;
+					m_readBuffer[0][i] = (float)src[0] / (float)0x7FFF;
+					m_readBuffer[1][i] = (float)src[0] / (float)0x7FFF;
+					m_playbackPointer++;
+				}
+			}
+			m_currentBufferSize = samplesPerRead;
+			m_remainingBufferData = samplesPerRead;
+			return samplesPerRead;
+		}
+		else if (m_format.nFormat == 2)
+		{
+			Buffer decoded;
+			m_playbackPointer -= m_playbackPointer % m_format.nBlockAlign;
+			decoded.resize(m_format.nBlockAlign * m_format.nChannels * sizeof(short));
+			uint32 decodedCount = m_decode_ms_adpcm(m_Internaldata, &decoded, m_playbackPointer);
+			uint32 samplesInserted = 0;
+			uint64 bufferOffset = 0;
+			for (uint32 i = 0; i < decodedCount; i++)
+			{
+				int16* src = ((int16*)decoded.data()) + (i * 2);
 				m_readBuffer[0][i] = (float)src[0] / (float)0x7FFF;
 				m_readBuffer[1][i] = (float)src[1] / (float)0x7FFF;
-
-				// Increment source sample with resampling
-				m_sampleStep += m_sampleStepIncrement;
-				while (m_sampleStep >= fp_sampleStep)
-				{
-					m_playbackPointer += 2;
-					m_sampleStep -= fp_sampleStep;
-				}
 			}
-		}
-		else
-		{
-			// Mix mono sample
-			for (uint32 i = 0; i < samplesPerRead; i++)
-			{
-				if (m_playbackPointer >= m_samplesTotal)
-				{
-					return i;
-				}
+			
+			m_playbackPointer += m_format.nBlockAlign;
 
-				int16* src = ((int16*)m_pcm.data()) + m_playbackPointer;
-				m_readBuffer[0][i] = (float)src[0] / (float)0x7FFF;
-				m_readBuffer[1][i] = (float)src[0] / (float)0x7FFF;
+			m_currentBufferSize = decodedCount;
+			m_remainingBufferData = decodedCount;
+			return decodedCount;
 
-				// Increment source sample with resampling
-				m_sampleStep += m_sampleStepIncrement;
-				while (m_sampleStep >= fp_sampleStep)
-				{
-					m_playbackPointer += 1;
-					m_sampleStep -= fp_sampleStep;
-				}
-			}
 		}
-		m_currentBufferSize = samplesPerRead;
-		m_remainingBufferData = samplesPerRead;
-		return samplesPerRead;
+		return 0;
 	}
 
 };
