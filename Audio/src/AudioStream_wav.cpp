@@ -182,6 +182,7 @@ public:
 				}
 				else if (m_format.nFormat == 2)
 				{
+					m_samplesTotal = chunkHdr.nLength;
 					m_Internaldata.resize(m_samplesTotal * m_format.nChannels * sizeof(short));
 					m_memoryReader.Serialize(m_Internaldata.data(), chunkHdr.nLength);
 				}
