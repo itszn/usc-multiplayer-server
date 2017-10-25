@@ -391,9 +391,11 @@ void FlangerDSP::SetLength(uint32 length)
 void FlangerDSP::SetDelayRange(uint32 min, uint32 max)
 {
 	assert(max > min);
-	m_min = min;
-	m_max = max;
-	m_bufferLength = m_max * 2 + 8;
+	// Assuming 44100hz is the base sample rate
+	float mult = (float)audio->GetSampleRate() / 44100.f;
+	m_min = min * mult;
+	m_max = max * mult;
+	m_bufferLength = m_max * 2;
 	m_sampleBuffer.resize(m_bufferLength);
 }
 void FlangerDSP::Process(float* out, uint32 numSamples)
@@ -406,10 +408,14 @@ void FlangerDSP::Process(float* out, uint32 numSamples)
 	for(uint32 i = 0; i < numSamples; i++)
 	{
 		// Determine where we want to sample past samples
-		float f = ((float)m_time / (float)m_length) * Math::pi * 2.0f;
-		uint32 d = (uint32)(m_min + ((m_max - 1) - m_min) * (sin(f) * 0.5f + 0.5f));
-		uint32 samplePos = (m_bufferOffset - d * 2) % m_bufferLength;
+		float f =  fmodf(((float)m_time / (float)m_length), 1.f);
+		f = fabsf(f * 2 - 1);
+		uint32 d = (uint32)(m_min + ((m_max - 1) - m_min) * (f));
 
+		// TODO: clean up?
+		int32 samplePos = ((int)m_bufferOffset - (int)d * 2) % (int)m_bufferLength;
+		if (samplePos < 0)
+			samplePos = m_bufferLength + samplePos;
 
 		// Inject new sample
 		data[m_bufferOffset + 0] = out[i*2];

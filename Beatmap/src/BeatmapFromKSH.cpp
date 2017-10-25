@@ -317,7 +317,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		defaultEffectParams[EffectType::Gate] = 8;
 		defaultEffectParams[EffectType::Retrigger] = 8;
 		defaultEffectParams[EffectType::Phaser] = 5000;
-		defaultEffectParams[EffectType::Flanger] = 5000;
+		defaultEffectParams[EffectType::Flanger] = 2000;
 		defaultEffectParams[EffectType::Wobble] = 12;
 		defaultEffectParams[EffectType::SideChain] = 8;
 		defaultEffectParams[EffectType::TapeStop] = 50;
