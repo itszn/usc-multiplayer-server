@@ -71,10 +71,12 @@ private:
 
 	bool m_buttonStates[(size_t)Button::Length];
 	float m_laserStates[2] = { 0.0f };
+	float m_rawKeyLaserStates[2] = { 0.0f };
 	float m_prevLaserStates[2] = { 0.0f };
 
 	// Keyboard bindings
 	Multimap<int32, Button> m_buttonMap;
+	float m_keySensitivity;
 
 	// Mouse bindings
 	uint32 m_mouseAxisMapping[2] = { 0,1 };
