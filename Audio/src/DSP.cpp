@@ -344,10 +344,12 @@ void PhaserDSP::Process(float* out, uint32 numSamples)
 {
 	for(uint32 i = 0; i < numSamples; i++)
 	{
-		float f = ((float)time / (float)m_length) * Math::pi * 2.0f;
+		//float f = ((float)time / (float)m_length) * Math::pi * 2.0f;
+		float f = abs(2.0f * ((float)time / (float)m_length) - 1.0f);
 
 		//calculate and update phaser sweep lfo...
-		float d = dmin + (dmax - dmin) * ((sin(f) + 1.0f) / 2.0f);
+		//float d = dmin + (dmax - dmin) * ((sin(f) + 1.0f) / 2.0f);
+		float d = dmin + (dmax - dmin) * f;
 		d /= (float)audio->GetSampleRate();
 
 		//calculate output per channel
@@ -370,10 +372,11 @@ void PhaserDSP::Process(float* out, uint32 numSamples)
 			za[c] = filtered;
 
 			// Final sample
-			out[i * 2 + c] = out[i * 2 + c] + filtered * mix;
+			out[i * 2 + c] = out[i * 2 + c] * (1.f - lmix) + filtered * mix * lmix;
 		}
 
 		time++;
+		time %= m_length;
 	}
 }
 float PhaserDSP::APF::Update(float in)

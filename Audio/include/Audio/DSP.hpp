@@ -160,7 +160,8 @@ public:
 	float dmin = 1000.0f;
 	float dmax = 4000.0f;
 	float fb = 0.2f; //feedback
-	
+	float lmix = 0.33f; //local mix
+
 	void SetLength(uint32 length);
 
 	virtual void Process(float* out, uint32 numSamples);
