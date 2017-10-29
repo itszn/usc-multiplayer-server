@@ -289,8 +289,8 @@ AudioEffect ParseCustomEffect(const KShootEffectDefinition& def)
 		break;
 	case EffectType::Wobble:
 		AssignDurationIfSet(effect.duration, "waveLength");
-		AssignFloatIfSet(effect.wobble.startingFrequency, "loFreq");
-		AssignFloatIfSet(effect.wobble.frequency, "hiFreq");
+		AssignFloatIfSet(effect.wobble.min, "loFreq");
+		AssignFloatIfSet(effect.wobble.max, "hiFreq");
 		AssignFloatIfSet(effect.wobble.q, "Q");
 		break;
 	case EffectType::TapeStop:
@@ -316,7 +316,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		defaultEffectParams[EffectType::Bitcrush] = 4;
 		defaultEffectParams[EffectType::Gate] = 8;
 		defaultEffectParams[EffectType::Retrigger] = 8;
-		defaultEffectParams[EffectType::Phaser] = 5000;
+		defaultEffectParams[EffectType::Phaser] = 2000;
 		defaultEffectParams[EffectType::Flanger] = 2000;
 		defaultEffectParams[EffectType::Wobble] = 12;
 		defaultEffectParams[EffectType::SideChain] = 8;

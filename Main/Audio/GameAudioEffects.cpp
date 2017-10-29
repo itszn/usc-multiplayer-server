@@ -75,6 +75,9 @@ DSP* GameAudioEffect::CreateDSP(class AudioBase* audioTrack, AudioPlayback& play
 		WobbleDSP* wb = new WobbleDSP();
 		audioTrack->AddDSP(wb);
 		wb->SetLength(actualLength);
+		wb->q = wobble.q.Sample(filterInput);
+		wb->fmax = wobble.max.Sample(filterInput);
+		wb->fmin = wobble.min.Sample(filterInput);
 		ret = wb;
 		break;
 	}

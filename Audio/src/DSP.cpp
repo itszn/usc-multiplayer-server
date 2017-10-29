@@ -318,8 +318,8 @@ void WobbleDSP::Process(float* out, uint32 numSamples)
 	{
 		float f = abs(2.0f * ((float)m_currentSample / (float)m_length) - 1.0f);
 		f = easing.Sample(f);
-		float freq = 25.0f + 24000.0f * f;
-		SetLowPass(2.0f + 2.5f * f, freq);
+		float freq = fmin + (fmax - fmin) * f;
+		SetLowPass(q, freq);
 
 		float s[2] = { out[i * 2], out[i * 2 + 1] };
 

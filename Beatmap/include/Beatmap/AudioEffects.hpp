@@ -173,10 +173,10 @@ struct AudioEffect
 		} bitcrusher;
 		struct
 		{
-			// Center frequency of the wobble (Hz)
-			EffectParam<float> startingFrequency;
-			// Frequency range of the wobble (Hz)
-			EffectParam<float> frequency;
+			// Top frequency of the wobble (Hz)
+			EffectParam<float> max;
+			// Bottom frequency of the wobble (Hz)
+			EffectParam<float> min;
 			// Q factor for filter (>0)
 			EffectParam<float> q;
 		} wobble;

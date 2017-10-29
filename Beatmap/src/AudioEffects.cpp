@@ -92,14 +92,14 @@ static AudioEffect CreateDefault(EffectType type)
 	case EffectType::Phaser:
 		ret.phaser.min = FloatRange(400.0f);
 		ret.phaser.max = FloatRange(4000.0f);
-		ret.phaser.feedback = FloatRange(0.5f);
-		ret.duration = TimeRange(1.0f);
+		ret.phaser.feedback = FloatRange(0.35f);
+		ret.duration = TimeRange(2.f);
 		break;
 	case EffectType::Wobble:
 		// wobble is 1/12 by default
 		ret.duration = TimeRange(1.0f / 12.0f);
-		ret.wobble.startingFrequency = FloatRange(1500.0f);
-		ret.wobble.frequency = FloatRange(500.0f);
+		ret.wobble.max = FloatRange(20000.0f);
+		ret.wobble.min = FloatRange(500.0f);
 		ret.wobble.q = FloatRange(2.0f);
 		break;
 	case EffectType::Flanger:

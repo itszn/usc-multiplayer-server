@@ -139,6 +139,11 @@ class WobbleDSP : public BQFDSP
 public:
 	void SetLength(uint32 length);
 
+	// Frequency range
+	float fmin = 500.0f;
+	float fmax = 20000.0f;
+	float q = 1.414f;
+
 	virtual void Process(float* out, uint32 numSamples);
 private:
 	uint32 m_length;
