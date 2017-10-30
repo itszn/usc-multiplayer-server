@@ -50,6 +50,7 @@ DefineEnum(GameConfigKeys,
 	Key_Laser1Pos,
 	Key_Laser1Neg,
 	Key_Sensitivity,
+	Key_LaserReleaseTime,
 
 	// Controller bindings
 	Controller_DeviceID,

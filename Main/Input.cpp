@@ -22,6 +22,7 @@ void Input::Init(Graphics::Window& wnd)
 	m_buttonDevice = g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice);
 
 	m_keySensitivity = g_gameConfig.GetFloat(GameConfigKeys::Key_Sensitivity);
+	m_keyLaserReleaseTime = g_gameConfig.GetFloat(GameConfigKeys::Key_LaserReleaseTime);
 
 	m_mouseAxisMapping[0] = g_gameConfig.GetInt(GameConfigKeys::Mouse_Laser0Axis);
 	m_mouseAxisMapping[1] = g_gameConfig.GetInt(GameConfigKeys::Mouse_Laser1Axis);
@@ -116,6 +117,23 @@ void Input::Update(float deltaTime)
 		for(uint32 i = 0; i < 2; i++)
 		{
 			m_laserStates[i] = m_rawKeyLaserStates[i] * deltaTime;
+
+			// if neither laser button is being held fade out the laser input
+			if (!m_buttonStates[(int32)Button::LS_0Neg + i * 2 + 1] && !m_buttonStates[(int32)Button::LS_0Neg + i * 2])
+			{
+				if (m_keyLaserReleaseTime != 0.f)
+				{
+					float reduction = m_keySensitivity * deltaTime / m_keyLaserReleaseTime;
+					if (reduction > fabs(m_rawKeyLaserStates[i]))
+						m_rawKeyLaserStates[i] = 0.f;
+					else
+						m_rawKeyLaserStates[i] -= reduction * Math::Sign(m_rawKeyLaserStates[i]);
+				}
+				else
+				{
+					m_rawKeyLaserStates[i] = 0.f;
+				}
+			}
 		}
 	}
 
@@ -251,17 +269,15 @@ void Input::m_OnButtonInput(Button b, bool pressed)
 		int32 laserIdx = btnIdx / 2;
 		// Set laser state based uppon the button that was pressed last
 		if(pressed)
-			m_rawKeyLaserStates[laserIdx] = (btnIdx % 2) == 0 ? -1.0f : 1.0f;
+			m_rawKeyLaserStates[laserIdx] = (btnIdx % 2) == 0 ? -m_keySensitivity : m_keySensitivity;
 		else // If a button was released check if the other one is still held
 		{
 			if(m_buttonStates[(int32)Button::LS_0Neg + laserIdx * 2])
-				m_rawKeyLaserStates[laserIdx] = -1;
+				m_rawKeyLaserStates[laserIdx] = -m_keySensitivity;
 			else if(m_buttonStates[(int32)Button::LS_0Neg + laserIdx * 2 + 1])
-				m_rawKeyLaserStates[laserIdx] = 1;
-			else
-				m_rawKeyLaserStates[laserIdx] = 0;
+				m_rawKeyLaserStates[laserIdx] = m_keySensitivity;
+
 		}
-		m_rawKeyLaserStates[laserIdx] *= m_keySensitivity;
 	}
 }
 
