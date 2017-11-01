@@ -19,6 +19,7 @@ DefineEnum(GameConfigKeys,
 	GlobalOffset,
 	InputOffset,
 	SongFolder,
+	Skin,
 	FPSTarget,
 	LaserAssistLevel,
 

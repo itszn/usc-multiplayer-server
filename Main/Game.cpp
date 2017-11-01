@@ -555,7 +555,8 @@ public:
 	// Initialize HUD elements/layout
 	bool InitHUD()
 	{
-		CheckedLoad(m_fontDivlit = FontRes::Create(g_gl, "fonts/divlit_custom.ttf"));
+		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
+		CheckedLoad(m_fontDivlit = FontRes::Create(g_gl, "skins/" + skin + "/fonts/divlit_custom.ttf"));
 		m_guiStyle = g_commonGUIStyle;
 
 		// Game GUI canvas

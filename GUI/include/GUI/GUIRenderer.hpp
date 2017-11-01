@@ -22,7 +22,7 @@ public:
 	~GUIRenderer();
 
 	// Loads gui shaders/textures/etc.
-	bool Init(class OpenGL* gl, Graphics::Window* window = nullptr);
+	bool Init(class OpenGL* gl, Graphics::Window* window = nullptr, String skin = "Default");
 	void Render(float deltaTime, Rect viewportSize, Ref<class GUIElementBase> rootElement);
 
 	// Use to manually start rendering GUI elements

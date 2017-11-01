@@ -14,7 +14,7 @@ GUIRenderer::~GUIRenderer()
 	SetInputFocus(nullptr);
 	SetWindow(nullptr);
 }
-bool GUIRenderer::Init(class OpenGL* gl, class Graphics::Window* window)
+bool GUIRenderer::Init(class OpenGL* gl, class Graphics::Window* window, String skin)
 {
 	assert(gl);
 	m_gl = gl;
@@ -22,11 +22,11 @@ bool GUIRenderer::Init(class OpenGL* gl, class Graphics::Window* window)
 	m_time = 0.0f;
 
 	// Font
-	CheckedLoad(font = FontRes::Create(gl, "fonts/segoeui.ttf"));
+	CheckedLoad(font = FontRes::Create(gl, "skins/" + skin + "/fonts/segoeui.ttf"));
 
 	auto LoadMaterial = [&](const String& name)
 	{
-		String basePath = String("shaders/");
+		String basePath = String("skins/") + skin + String("/shaders/");
 		String vs = Path::Normalize(basePath + name + ".vs");
 		String fs = Path::Normalize(basePath + name + ".fs");
 		String gs = Path::Normalize(basePath + name + ".gs");

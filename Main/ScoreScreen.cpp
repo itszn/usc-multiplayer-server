@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ScoreScreen.hpp"
 #include "Application.hpp"
+#include "GameConfig.hpp"
 #include <GUI/GUI.hpp>
 #include <GUI/CommonGUIStyle.hpp>
 #include <Audio/Audio.hpp>
@@ -97,10 +98,10 @@ public:
 		m_guiStyle = g_commonGUIStyle;
 
 		m_canvas = Utility::MakeRef(new Canvas());
-
+		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 		// Font
-		CheckedLoad(m_specialFont = FontRes::Create(g_gl, "fonts/divlit_custom.ttf"));
-		CheckedLoad(m_applause = g_audio->CreateSample("audio/applause.wav"));
+		CheckedLoad(m_specialFont = FontRes::Create(g_gl,"skins/" + skin + "/fonts/divlit_custom.ttf"));
+		CheckedLoad(m_applause = g_audio->CreateSample("skins/" + skin + "/audio/applause.wav"));
 
 		// Background
 		Panel* fullBg = new Panel();

@@ -225,8 +225,11 @@ bool Application::m_Init()
 	// Initialize Input
 	g_input.Init(*g_gameWindow);
 
+	// Set skin variable
+	m_skin = g_gameConfig.GetString(GameConfigKeys::Skin);
+
 	// Window cursor
-	Image cursorImg = ImageRes::Create("textures/cursor.png");
+	Image cursorImg = ImageRes::Create("skins/" + m_skin + "/textures/cursor.png");
 	g_gameWindow->SetCursor(cursorImg, Vector2i(5, 5));
 
 	if(startFullscreen)
@@ -271,14 +274,14 @@ bool Application::m_Init()
 
 	// GUI Rendering
 	g_guiRenderer = new GUIRenderer();
-	if(!g_guiRenderer->Init(g_gl, g_gameWindow))
+	if(!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
 	{
 		Logf("Failed to initialize GUI renderer", Logger::Error);
 		return false;
 	}
 
 	// Load GUI style for common elements
-	g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl));
+	g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
 
 	// Create root canvas
 	g_rootCanvas = Ref<Canvas>(new Canvas());
@@ -515,7 +518,7 @@ RenderState Application::GetRenderStateBase() const
 
 Graphics::Image Application::LoadImage(const String& name)
 {
-	String path = String("textures/") + name;
+	String path = String("skins/") + m_skin + String("/textures/") + name;
 	return ImageRes::Create(path);
 }
 
@@ -544,9 +547,9 @@ Texture Application::LoadTexture(const String& name, const bool& external)
 }
 Material Application::LoadMaterial(const String& name)
 {
-	String pathV = String("shaders/") + name + ".vs";
-	String pathF = String("shaders/") + name + ".fs";
-	String pathG = String("shaders/") + name + ".gs";
+	String pathV = String("skins/") + m_skin + String("/shaders/") + name + ".vs";
+	String pathF = String("skins/") + m_skin + String("/shaders/") + name + ".fs";
+	String pathG = String("skins/") + m_skin + String("/shaders/") + name + ".gs";
 	Material ret = MaterialRes::Create(g_gl, pathV, pathF);
 	// Additionally load geometry shader
 	if(Path::FileExists(pathG))
@@ -564,7 +567,7 @@ Sample Application::LoadSample(const String& name, const bool& external)
     if(external)
 	    path = name;
     else
-        path = String("audio/") + name + ".wav";
+        path = String("skins/") + m_skin + String("/audio/") + name + ".wav";
 
 	Sample ret = g_audio->CreateSample(path);
 	assert(ret);

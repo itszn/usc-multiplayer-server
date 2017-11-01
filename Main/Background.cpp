@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Background.hpp"
 #include "Application.hpp"
+#include "GameConfig.hpp"
 #include "Background.hpp"
 #include "Game.hpp"
 #include "Track.hpp"
@@ -46,6 +47,7 @@ class TestBackground : public FullscreenBackground
 
 		/// TODO: Handle invalid background configurations properly
 		/// e.g. missing bg_texture.png and such
+		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 		String matPath = game->GetBeatmap()->GetMapSettings().backgroundPath;
 		String texPath = "textures/bg_texture.png";
 		if (matPath.substr(matPath.length() - 3, 3) == ".fs")
@@ -56,7 +58,7 @@ class TestBackground : public FullscreenBackground
 		}
 		else
 		{
-			matPath = "shaders/background.fs";
+			matPath = "skins/" + skin + "/shaders/background.fs";
 			CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
 		}
 
@@ -107,9 +109,10 @@ class TestBackground : public FullscreenBackground
 
 	Material LoadBackgroundMaterial(const String& path)
 	{
-		String pathV = String("shaders/") + "background" + ".vs";
+		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
+		String pathV = String("skins/" + skin + "/shaders/") + "background" + ".vs";
 		String pathF = path;
-		String pathG = String("shaders/") + "background" + ".gs";
+		String pathG = String("skins/" + skin + "/shaders/") + "background" + ".gs";
 		Material ret = MaterialRes::Create(g_gl, pathV, pathF);
 		// Additionally load geometry shader
 		if (Path::FileExists(pathG))

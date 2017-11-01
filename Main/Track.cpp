@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Application.hpp"
+#include "GameConfig.hpp"
 #include "Game.hpp"
 #include "Track.hpp"
 #include "LaserTrackBuilder.hpp"
@@ -36,17 +37,17 @@ Track::~Track()
 bool Track::AsyncLoad()
 {
 	loader = new AsyncAssetLoader();
-
+	String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 	// Load laser colors
 	Image laserColorPalette;
-	CheckedLoad(laserColorPalette = ImageRes::Create("textures/lasercolors.png"));
+	CheckedLoad(laserColorPalette = ImageRes::Create("skins/" + skin + "/textures/lasercolors.png"));
 	assert(laserColorPalette->GetSize().x >= 2);
 	for(uint32 i = 0; i < 2; i++)
 		laserColors[i] = laserColorPalette->GetBits()[i];
 
 	// Load hit effect colors
 	Image hitColorPalette;
-	CheckedLoad(hitColorPalette = ImageRes::Create("textures/hitcolors.png"));
+	CheckedLoad(hitColorPalette = ImageRes::Create("skins/" + skin + "/textures/hitcolors.png"));
 	assert(hitColorPalette->GetSize().x >= 4);
 	for(uint32 i = 0; i < 4; i++)
 		hitColors[i] = hitColorPalette->GetBits()[i];

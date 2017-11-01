@@ -34,6 +34,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::UseCMod, false);
 	Set(GameConfigKeys::ModSpeed, 300.0f);
 	Set(GameConfigKeys::SongFolder, "songs");
+	Set(GameConfigKeys::Skin, "Default");
 
 
 	// Input settings

@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "CommonGUIStyle.hpp"
 
-CommonGUIStyle::CommonGUIStyle(class OpenGL* gl)
+CommonGUIStyle::CommonGUIStyle(class OpenGL* gl, String skin)
 {
 	auto LoadTexture = [&](const String& path)
 	{
-		String fullPath = Path::Normalize(String("textures/ui/") + path);
+		String fullPath = Path::Normalize(String("skins/") + skin + String("/textures/ui/") + path);
 		Image img = ImageRes::Create(fullPath);
 		if(!img)
 			return Texture();

@@ -78,4 +78,5 @@ private:
 	float m_lastRenderTime;
 	float m_deltaTime;
 	bool m_allowMapConversion;
+	String m_skin;
 };
