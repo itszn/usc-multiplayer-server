@@ -18,6 +18,7 @@
 #include "Shared/Jobs.hpp"
 #include "ScoreScreen.hpp"
 #include "Shared/Enum.hpp"
+
 #ifdef _WIN32
 #include "SDL_keycode.h"
 #else
@@ -35,8 +36,9 @@ private:
 	float b = 2.0f; // 0 - 10
 	float c = 1.0f; // 0 - 5
 	float d = 0.0f; // -2 - 2
-
+	String e = "Setting 1";
 	Ref<Gamepad> m_gamepad;
+	Vector<String> m_textSettings;
 
 public:
 	static void StaticFunc(int32 arg)
@@ -143,12 +145,17 @@ public:
 
 		// Setting bar
 		{
+
 			SettingsBar* sb = new SettingsBar(m_guiStyle);
 			m_settings = Ref<SettingsBar>(sb);
 			sb->AddSetting(&a, 0.0f, 1.0f, "A");
 			sb->AddSetting(&b, 0.0f, 10.0f, "B");
 			sb->AddSetting(&c, 0.0f, 5.0f, "C");
 			sb->AddSetting(&d, -2.0f, 2.0f, "D");
+			m_textSettings.Add("Setting 1");
+			m_textSettings.Add("Set 2");
+			m_textSettings.Add("3");
+			sb->AddSetting(&e, m_textSettings, m_textSettings.size(), "E");
 
 			Canvas::Slot* slot = g_rootCanvas->Add(sb->MakeShared());
 			slot->anchor = Anchor(0.75f, 0.0f, 1.0f, 1.0f);

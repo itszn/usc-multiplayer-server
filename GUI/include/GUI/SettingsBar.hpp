@@ -21,6 +21,13 @@ struct SettingBarSetting
 			float min;
 			float max;
 		} floatSetting;
+		struct
+		{
+			String* target;
+			Vector<String>* options;
+			int optionsCount;
+			int currentIndex;
+		} textSetting;
 	};
 	WString name;
 	class Label* label;
@@ -28,6 +35,9 @@ struct SettingBarSetting
 protected:
 	friend class SettingsBar;
 	void m_SliderUpdate(float val);
+	void m_UpdateTextSetting(int change);
+	void m_NextTextSetting();
+	void m_PrevTextSetting();
 };
 
 class SettingsBar : public ScrollBox
@@ -40,6 +50,7 @@ public:
 	virtual void Render(GUIRenderData rd) override;
 
 	void AddSetting(float* target, float min, float max, const String& name);
+	void AddSetting(String* target, Vector<String> options, int optionsCount, const String& name);
 	void ClearSettings();
 	
 	void SetShow(bool shown);
