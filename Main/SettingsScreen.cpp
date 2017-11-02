@@ -93,6 +93,15 @@ private:
 			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BTS));
 	}
 
+	void SetLL()
+	{
+		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_Laser0Axis, m_laserMode == 2, m_selectedGamepad));
+	}
+	void SetRL()
+	{
+		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_Laser1Axis, m_laserMode == 2, m_selectedGamepad));
+	}
+
 	void Exit()
 	{
 		Map<String, InputDevice> inputModeMap = {
@@ -201,11 +210,21 @@ public:
 		box->layoutDirection = LayoutBox::Vertical;
 		scroller->SetContent(box->MakeShared());
 		LayoutBox::Slot* btnSlot;
-		// Start Button
+		// Start Button & Knob buttons
 		{
 			LayoutBox* stBox = new LayoutBox();
 
 			stBox->layoutDirection = LayoutBox::Horizontal;
+			{
+				Button* stBtn = new Button(m_guiStyle);
+				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetLL);
+				stBtn->SetText(L"LL");
+				stBtn->SetFontSize(32);
+				btnSlot = stBox->Add(stBtn->MakeShared());
+				btnSlot->padding = Margin(2);
+				btnSlot->padding = Margin(60.f, 2.f);
+
+			}
 			{
 				Button* stBtn = new Button(m_guiStyle);
 				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_ST);
@@ -213,7 +232,18 @@ public:
 				stBtn->SetFontSize(32);
 				btnSlot = stBox->Add(stBtn->MakeShared());
 				btnSlot->padding = Margin(2);
-				btnSlot->fillX = true;
+				btnSlot->alignment = Vector2(.5f, 0.f);
+			}
+			{
+				Button* stBtn = new Button(m_guiStyle);
+				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetRL);
+				stBtn->SetText(L"RL");
+				stBtn->SetFontSize(32);
+				btnSlot = stBox->Add(stBtn->MakeShared());
+				btnSlot->padding = Margin(2);
+				btnSlot->alignment = Vector2(1.f, 0.f);
+				btnSlot->padding = Margin(60.f, 2.f);
+
 			}
 			LayoutBox::Slot* stSlot = box->Add(stBox->MakeShared());
 			stSlot->alignment = Vector2(0.5f, 0.f);
@@ -348,10 +378,13 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
 	Ref<Gamepad> m_gamepad;
+	Label* m_prompt;
 	GameConfigKeys m_key;
 	bool m_isGamepad;
 	int m_gamepadIndex;
 	bool m_completed = false;
+	bool m_knobs = false;
+	Vector<float> m_gamepadAxes;
 
 public:
 	ButtonBindingScreen_Impl(GameConfigKeys key, bool gamepad, int controllerindex)
@@ -359,6 +392,8 @@ public:
 		m_key = key;
 		m_gamepadIndex = controllerindex;
 		m_isGamepad = gamepad;
+		m_knobs = (key == GameConfigKeys::Controller_Laser0Axis || key == GameConfigKeys::Controller_Laser1Axis);
+			
 	}
 
 	bool Init()
@@ -374,15 +409,26 @@ public:
 		slot->autoSizeY = true;
 		slot->alignment = Vector2(0.5f, 0.5f);
 
-		Label* titleLabel = new Label();
-		titleLabel->SetText(L"Press Key");
-		titleLabel->SetFontSize(100);
-		box->Add(titleLabel->MakeShared());
+		m_prompt = new Label();
+		m_prompt->SetText(L"Press Key");
+		m_prompt->SetFontSize(100);
+		box->Add(m_prompt->MakeShared());
+		if (m_knobs)
+			m_prompt->SetText(L"Press Left Key");
+
 
 		if (m_isGamepad)
 		{
-			titleLabel->SetText(L"Press Button");
+			m_prompt->SetText(L"Press Button");
 			m_gamepad = g_gameWindow->OpenGamepad(m_gamepadIndex);
+			if (m_knobs)
+			{
+				m_prompt->SetText(L"Turn Knob");
+				for (size_t i = 0; i < m_gamepad->NumAxes(); i++)
+				{
+					m_gamepadAxes.Add(m_gamepad->GetAxis(i));
+				}
+			}
 			m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
 		}
 
@@ -391,7 +437,22 @@ public:
 
 	void Tick(float deltatime)
 	{
-		if (m_completed)
+		if (m_knobs && m_isGamepad)
+		{
+			for (uint8 i = 0; i < m_gamepad->NumAxes(); i++)
+			{
+				float delta = fabs(m_gamepad->GetAxis(i) - m_gamepadAxes[i]);
+				if (delta > 0.3f)
+				{
+					g_gameConfig.Set(m_key, i);
+					m_completed = true;
+					break;
+				}
+
+			}
+		}
+
+		if (m_completed && m_gamepad)
 		{
 			m_gamepad->OnButtonPressed.RemoveAll(this);
 			m_gamepad.Release();
@@ -402,16 +463,53 @@ public:
 
 	void OnButtonPressed(uint8 key)
 	{
-		g_gameConfig.Set(m_key, key);
-		m_completed = true;
+		if (!m_knobs)
+		{
+			g_gameConfig.Set(m_key, key);
+			m_completed = true;
+		}
 	}
 
 	virtual void OnKeyPressed(int32 key)
 	{
-		if (!m_isGamepad)
+		if (!m_isGamepad && !m_knobs)
 		{
 			g_gameConfig.Set(m_key, key);
 			g_application->RemoveTickable(this);
+		}
+		else if (!m_isGamepad && m_knobs)
+		{
+			if (!m_completed)
+			{
+				switch (m_key)
+				{
+				case GameConfigKeys::Controller_Laser0Axis:
+					g_gameConfig.Set(GameConfigKeys::Key_Laser0Neg, key);
+					break;
+				case GameConfigKeys::Controller_Laser1Axis:
+					g_gameConfig.Set(GameConfigKeys::Key_Laser1Neg, key);
+					break;
+				default:
+					break;
+				}
+				m_prompt->SetText(L"Press Right Key");
+				m_completed = true;
+			}
+			else
+			{
+				switch (m_key)
+				{
+				case GameConfigKeys::Controller_Laser0Axis:
+					g_gameConfig.Set(GameConfigKeys::Key_Laser0Pos, key);
+					break;
+				case GameConfigKeys::Controller_Laser1Axis:
+					g_gameConfig.Set(GameConfigKeys::Key_Laser1Pos, key);
+					break;
+				default:
+					break;
+				}
+				g_application->RemoveTickable(this);
+			}
 		}
 	}
 
