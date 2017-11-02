@@ -21,6 +21,7 @@
 #include "Shared/Enum.hpp"
 #include "Input.hpp"
 
+
 class SettingsScreen_Impl : public SettingsScreen
 {
 private:
@@ -31,10 +32,12 @@ private:
 	Vector<String> m_speedMods = { "XMod", "MMod", "CMod" };
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
 	Vector<String> m_buttonModes = { "Keyboard", "Controller" };
+	Vector<String> m_gamePads;
 
-	String m_speedMod = "XMod";
-	String m_laserMode = "Keyboard";
-	String m_buttonMode = "Keyboard";
+	int m_speedMod = 0;
+	int m_laserMode = 0;
+	int m_buttonMode = 0;
+	int m_selectedGamepad = 0;
 	float m_modSpeed = 400.f;
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
@@ -42,31 +45,52 @@ private:
 	//TODO: Use argument instead of many functions if possible.
 	void SetKey_BTA()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT0));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_BT0, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT0));
 	}
 	void SetKey_BTB()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT1));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_BT1, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT1));
 	}
 	void SetKey_BTC()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT2));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_BT2, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT2));
 	}
 	void SetKey_BTD()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT3));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_BT3, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BT3));
 	}
 	void SetKey_FXL()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_FX0));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_FX0, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_FX0));
 	}
 	void SetKey_FXR()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_FX1));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_FX1, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_FX1));
 	}
 	void SetKey_ST()
 	{
-		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BTS));
+		if (m_buttonMode == 1)
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_BTS, true, m_selectedGamepad));
+		else
+			g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Key_BTS));
 	}
 
 	void Exit()
@@ -77,13 +101,14 @@ private:
 			{ "Controller", InputDevice::Controller },
 		};
 
-		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice, inputModeMap[m_buttonMode]);
-		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, inputModeMap[m_laserMode]);
+		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice, inputModeMap[m_buttonModes[m_buttonMode]]);
+		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, inputModeMap[m_laserModes[m_laserMode]]);
 
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 		g_gameConfig.Set(GameConfigKeys::ModSpeed, m_modSpeed);
+		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
 
-		switch (inputModeMap[m_laserMode])
+		switch (inputModeMap[m_laserModes[m_laserMode]])
 		{
 		case InputDevice::Controller:
 			g_gameConfig.Set(GameConfigKeys::Controller_Sensitivity, m_laserSens);
@@ -97,12 +122,12 @@ private:
 			break;
 		}
 
-		if (m_speedMod == "CMod")
+		if (m_speedMod == 2)
 		{
 			g_gameConfig.Set(GameConfigKeys::UseCMod, true);
 			g_gameConfig.Set(GameConfigKeys::UseMMod, false);
 		}
-		else if (m_speedMod == "MMod")
+		else if (m_speedMod == 1)
 		{
 			g_gameConfig.Set(GameConfigKeys::UseCMod, false);
 			g_gameConfig.Set(GameConfigKeys::UseMMod, true);
@@ -124,50 +149,51 @@ public:
 	{
 		m_guiStyle = g_commonGUIStyle;
 		m_canvas = Utility::MakeRef(new Canvas());
+		m_gamePads = g_gameWindow->GetGamepadDeviceNames();
 
 		if (g_gameConfig.GetBool(GameConfigKeys::UseCMod))
-			m_speedMod = "CMod";
+			m_speedMod = 2;
 		else if (g_gameConfig.GetBool(GameConfigKeys::UseMMod))
-			m_speedMod = "MMod";
+			m_speedMod = 1;
 
 		switch (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice))
 		{
 		case InputDevice::Controller:
-			m_buttonMode = "Controller";
+			m_buttonMode = 1;
 			break;
 		case InputDevice::Keyboard:
 		default:
-			m_buttonMode = "Keyboard";
+			m_buttonMode = 0;
 			break;
 		}
 
 		switch (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice))
 		{
 		case InputDevice::Controller:
-			m_laserMode = "Controller";
+			m_laserMode = 2;
 			m_laserSens = g_gameConfig.GetFloat(GameConfigKeys::Controller_Sensitivity);
 			break;
 		case InputDevice::Mouse:
-			m_laserMode = "Mouse";
+			m_laserMode = 1;
 			m_laserSens = g_gameConfig.GetFloat(GameConfigKeys::Mouse_Sensitivity);
 			break;
 		case InputDevice::Keyboard:
 		default:
-			m_laserMode = "Keyboard";
+			m_laserMode = 0;
 			m_laserSens = g_gameConfig.GetFloat(GameConfigKeys::Key_Sensitivity);
 			break;
 		}
 
 		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
-
+		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 
 		//Options select
 		ScrollBox* scroller = new ScrollBox(m_guiStyle);
 
 		Canvas::Slot* slot = m_canvas->Add(scroller->MakeShared());
 
-		slot->anchor = Anchor(0.1f, 0.1f, 0.9f, 0.9f);
+		slot->anchor = Anchor(0.1f, 0.f, 0.9f, 1.f);
 		//slot->autoSizeX = true;
 		//slot->alignment = Vector2(0.5, 0.0);
 		
@@ -277,7 +303,11 @@ public:
 			sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
 			sb->AddSetting(&m_hispeed, 0.25f, 10.0f, "HiSpeed");
 			sb->AddSetting(&m_modSpeed, 50.0f, 1500.0f, "ModSpeed");
+			if (m_gamePads.size() > 0)
+			{
+				sb->AddSetting(&m_selectedGamepad, m_gamePads, m_gamePads.size(), "Selected Controller");
 
+			}
 			LayoutBox::Slot* slot = box->Add(sb->MakeShared());
 			slot->fillX = true;
 		}
@@ -317,13 +347,18 @@ class ButtonBindingScreen_Impl : public ButtonBindingScreen
 private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
+	Ref<Gamepad> m_gamepad;
 	GameConfigKeys m_key;
-
+	bool m_isGamepad;
+	int m_gamepadIndex;
+	bool m_completed = false;
 
 public:
-	ButtonBindingScreen_Impl(GameConfigKeys key)
+	ButtonBindingScreen_Impl(GameConfigKeys key, bool gamepad, int controllerindex)
 	{
 		m_key = key;
+		m_gamepadIndex = controllerindex;
+		m_isGamepad = gamepad;
 	}
 
 	bool Init()
@@ -344,13 +379,40 @@ public:
 		titleLabel->SetFontSize(100);
 		box->Add(titleLabel->MakeShared());
 
+		if (m_isGamepad)
+		{
+			titleLabel->SetText(L"Press Button");
+			m_gamepad = g_gameWindow->OpenGamepad(m_gamepadIndex);
+			m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
+		}
+
 		return true;
+	}
+
+	void Tick(float deltatime)
+	{
+		if (m_completed)
+		{
+			m_gamepad->OnButtonPressed.RemoveAll(this);
+			m_gamepad.Release();
+
+			g_application->RemoveTickable(this);
+		}
+	}
+
+	void OnButtonPressed(uint8 key)
+	{
+		g_gameConfig.Set(m_key, key);
+		m_completed = true;
 	}
 
 	virtual void OnKeyPressed(int32 key)
 	{
-		g_gameConfig.Set(m_key, key);
-		g_application->RemoveTickable(this);
+		if (!m_isGamepad)
+		{
+			g_gameConfig.Set(m_key, key);
+			g_application->RemoveTickable(this);
+		}
 	}
 
 	virtual void OnSuspend()
@@ -364,8 +426,8 @@ public:
 	}
 };
 
-ButtonBindingScreen* ButtonBindingScreen::Create(GameConfigKeys key)
+ButtonBindingScreen* ButtonBindingScreen::Create(GameConfigKeys key, bool gamepad, int controllerIndex)
 {
-	ButtonBindingScreen_Impl* impl = new ButtonBindingScreen_Impl(key);
+	ButtonBindingScreen_Impl* impl = new ButtonBindingScreen_Impl(key, gamepad, controllerIndex);
 	return impl;
 }

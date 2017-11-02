@@ -500,6 +500,25 @@ namespace Graphics
 	{
 		return SDL_NumJoysticks();
 	}
+	Vector<String> Window::GetGamepadDeviceNames() const
+	{
+		Vector<String> ret;
+		uint32 numJoysticks = SDL_NumJoysticks();
+		for (uint32 i = 0; i < numJoysticks; i++)
+		{
+			SDL_Joystick* joystick = SDL_JoystickOpen(i);
+			if (!joystick)
+			{
+				continue;
+			}
+			String deviceName = SDL_JoystickName(joystick);
+			ret.Add(deviceName);
+
+			SDL_JoystickClose(joystick);
+		}
+		return ret;
+	}
+
 	Ref<Gamepad> Window::OpenGamepad(int32 deviceIndex)
 	{
 		Ref<Gamepad_Impl>* openGamepad = m_impl->m_gamepads.Find(deviceIndex);

@@ -64,15 +64,15 @@ void GameConfig::InitDefaults()
 
 	// Default controller settings
 	Set(GameConfigKeys::Controller_DeviceID, 0); // First device
-	Set(GameConfigKeys::Controller_BTS, 8); // TODO: Find good default
-	Set(GameConfigKeys::Controller_BT0, 13); // D-Pad Left
-	Set(GameConfigKeys::Controller_BT1, 12); // D-Pad Down
-	Set(GameConfigKeys::Controller_BT2, 0); // A / X
-	Set(GameConfigKeys::Controller_BT3, 1); // B / O
-	Set(GameConfigKeys::Controller_FX0, 9); // Left Shoulder
-	Set(GameConfigKeys::Controller_FX1, 10); // Right Shoulder
-	Set(GameConfigKeys::Controller_Laser0Axis, 0); // Fist strick Left/Right
-	Set(GameConfigKeys::Controller_Laser1Axis, 2); // Second stick Left/Right
+	Set(GameConfigKeys::Controller_BTS, 0); // TODO: Find good default
+	Set(GameConfigKeys::Controller_BT0, 1); // D-Pad Left
+	Set(GameConfigKeys::Controller_BT1, 2); // D-Pad Down
+	Set(GameConfigKeys::Controller_BT2, 3); // A / X
+	Set(GameConfigKeys::Controller_BT3, 4); // B / O
+	Set(GameConfigKeys::Controller_FX0, 5); // Left Shoulder
+	Set(GameConfigKeys::Controller_FX1, 6); // Right Shoulder
+	Set(GameConfigKeys::Controller_Laser0Axis, 0); // First axis
+	Set(GameConfigKeys::Controller_Laser1Axis, 1); // Second axis
 	Set(GameConfigKeys::Controller_Sensitivity, 1.0f);
 	Set(GameConfigKeys::Controller_Deadzone, 0.f);
 

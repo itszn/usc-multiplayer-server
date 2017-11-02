@@ -84,6 +84,8 @@ namespace Graphics
 
 		// The number of available gamepad devices
 		int32 GetNumGamepads() const;
+		// List of gamepad device names
+		Vector<String> GetGamepadDeviceNames() const;
 		// Open a gamepad within the range of the number of gamepads
 		Ref<Gamepad> OpenGamepad(int32 deviceIndex);
 

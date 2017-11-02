@@ -23,10 +23,9 @@ struct SettingBarSetting
 		} floatSetting;
 		struct
 		{
-			String* target;
+			int* target;
 			Vector<String>* options;
 			int optionsCount;
-			int currentIndex;
 		} textSetting;
 	};
 	WString name;
@@ -50,7 +49,7 @@ public:
 	virtual void Render(GUIRenderData rd) override;
 
 	void AddSetting(float* target, float min, float max, const String& name);
-	void AddSetting(String* target, Vector<String> options, int optionsCount, const String& name);
+	void AddSetting(int* target, Vector<String> options, int optionsCount, const String& name);
 	void ClearSettings();
 	
 	void SetShow(bool shown);

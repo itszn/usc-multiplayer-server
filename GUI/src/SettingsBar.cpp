@@ -77,7 +77,7 @@ void SettingsBar::AddSetting(float* target, float min, float max, const String& 
 	m_settings.Add(setting, box->MakeShared());
 	setting->m_SliderUpdate(v); // Initial update
 }
-void SettingsBar::AddSetting(String* target, Vector<String> options, int optionsCount, const String& name)
+void SettingsBar::AddSetting(int* target, Vector<String> options, int optionsCount, const String& name)
 {
 	SettingBarSetting* setting = new SettingBarSetting();
 	setting->name = Utility::ConvertToWString(name);
@@ -94,17 +94,6 @@ void SettingsBar::AddSetting(String* target, Vector<String> options, int options
 	LayoutBox* buttonBox = new LayoutBox();
 
 	buttonBox->layoutDirection = LayoutBox::Horizontal;
-
-	// Find index of current setting
-	for (size_t i = 0; i < optionsCount; i++)
-	{
-		if (options[i] == *target)
-		{
-			setting->textSetting.currentIndex = i;
-			break;
-		}
-
-	}
 
 	// Create Visuals
 	{
@@ -140,6 +129,7 @@ void SettingsBar::AddSetting(String* target, Vector<String> options, int options
 
 	setting->m_UpdateTextSetting(0);
 }
+
 void SettingsBar::ClearSettings()
 {
 	for (auto & s : m_settings)
@@ -163,12 +153,11 @@ void SettingBarSetting::m_SliderUpdate(float val)
 
 void SettingBarSetting::m_UpdateTextSetting(int change)
 {
-	textSetting.currentIndex += change;
-	textSetting.currentIndex %= textSetting.optionsCount;
-	if (textSetting.currentIndex < 0)
-		textSetting.currentIndex = textSetting.optionsCount - 1;
-	textSetting.target[0] = (*textSetting.options)[textSetting.currentIndex];
-	WString display = Utility::ConvertToWString(textSetting.target[0]);
+	textSetting.target[0] += change;
+	textSetting.target[0] %= textSetting.optionsCount;
+	if (textSetting.target[0] < 0)
+		textSetting.target[0] = textSetting.optionsCount - 1;
+	WString display = Utility::ConvertToWString((*textSetting.options)[textSetting.target[0]]);
 	label->SetText(Utility::WSprintf(L"%ls", display));
 }
 void SettingBarSetting::m_PrevTextSetting()
