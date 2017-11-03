@@ -12,9 +12,9 @@ before_install:
   - "sudo apt-get install -y libogg-dev"
   - "sudo apt-get install -y libvorbis-dev"
   - "sudo apt-get install -y libsdl2-dev"
-  - "sudo apt-get install -y zlib1g-dev"
-  - "sudo apt-get install -y libpng-dev"
-  - "sudo apt-get install -y libjpeg-dev"
+  - "sudo apt-get install -y zlib1g-dev --reinstall"
+  - "sudo apt-get install -y libpng-dev --reinstall"
+  - "sudo apt-get install -y libjpeg-dev --reinstall"
 script:
   - "gcc --version"
   - "cmake ."
