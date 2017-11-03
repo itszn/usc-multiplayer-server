@@ -1,0 +1,21 @@
+branches:
+  only:
+   - master
+language: cpp
+compiler: gcc
+os: linux
+before_install:
+  - "sudo apt-get -qq update"
+  - "sudo apt-get install -y cmake"
+  - "sudo apt-get install -y libegl1-mesa-dev"
+  - "sudo apt-get install -y libfreetype6-dev"
+  - "sudo apt-get install -y libogg-dev"
+  - "sudo apt-get install -y libvorbis-dev"
+  - "sudo apt-get install -y libsdl2-dev"
+  - "sudo apt-get install -y zlib1g-dev"
+  - "sudo apt-get install -y libpng-dev"
+  - "sudo apt-get install -y libjpeg-dev"
+script:
+  - "gcc --version"
+  - "cmake ."
+  - "make"
