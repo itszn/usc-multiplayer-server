@@ -1081,7 +1081,49 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		}
 	}
 
+	//// Split laser segments on bpm changes
+
+	//Vector<ObjectState*> newLasers;
+	//for (ObjectState* it : m_objectStates)
+	//{
+	//	if (it->type == ObjectType::Laser)
+	//	{
+	//		LaserObjectState* laser = (LaserObjectState*)it;
+	//		if (laser->flags & LaserObjectState::flag_Instant)
+	//			continue;
+	//		for (TimingPoint* tp : m_timingPoints)
+	//		{
+	//			if (laser->time < tp->time && laser->time + laser->duration > tp->time)
+	//			{
+	//				LaserObjectState* obj = new LaserObjectState();
+
+	//				obj->time = tp->time;
+	//				obj->duration = (laser->time + laser->duration) - tp->time;
+	//				obj->index = laser->index;
+	//				obj->flags = laser->flags;
+	//				float meetingPoint = (float)(laser->duration - obj->duration) / laser->duration;
+	//				meetingPoint = laser->points[0] + (meetingPoint * (laser->points[1] - laser->points[0]));
+	//				obj->points[0] = meetingPoint;
+	//				obj->points[1] = laser->points[1];
+	//				laser->points[1] = meetingPoint;
+	//				laser->duration -= obj->duration;
+	//				
+	//				obj->next = laser->next;
+	//				obj->prev = laser;
+	//				if (laser->next)
+	//					laser->next->prev = obj;
+	//				laser->next = obj;
+	//				newLasers.Add(*obj);
+	//			}
+	//		}
+	//	}
+	//}
+
+	//m_objectStates.reserve(newLasers.size());
+	//m_objectStates.insert(m_objectStates.end(), newLasers.begin(), newLasers.end());
+
 	// Re-sort collection to fix some inconsistencies caused by corrections after laser slams
 	ObjectState::SortArray(m_objectStates);
+
 	return true;
 }

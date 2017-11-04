@@ -12,9 +12,9 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_objects = m_beatmap->GetLinearObjects();
 	m_zoomPoints = m_beatmap->GetZoomControlPoints();
 	m_laneTogglePoints = m_beatmap->GetLaneTogglePoints();
-	if(m_objects.size() == 0)
+	if (m_objects.size() == 0)
 		return false;
-	if(m_timingPoints.size() == 0)
+	if (m_timingPoints.size() == 0)
 		return false;
 
 	Logf("Reseting BeatmapPlayback with StartTime = %d", Logger::Info, startTime);
@@ -37,7 +37,7 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 void BeatmapPlayback::Update(MapTime newTime)
 {
 	MapTime delta = newTime - m_playbackTime;
-	if(newTime < m_playbackTime)
+	if (newTime < m_playbackTime)
 	{
 		// Don't allow backtracking
 		//Logf("New time was before last time %ull -> %ull", Logger::Warning, m_playbackTime, newTime);
@@ -45,7 +45,7 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Fire initial effect changes (only once)
-	if(!m_initialEffectStateSent)
+	if (!m_initialEffectStateSent)
 	{
 		const BeatmapSettings& settings = m_beatmap->GetMapSettings();
 		OnEventChanged.Call(EventKey::LaserEffectMix, settings.laserEffectMix);
@@ -67,7 +67,7 @@ void BeatmapPlayback::Update(MapTime newTime)
 
 	// Advance timing
 	TimingPoint** timingEnd = m_SelectTimingPoint(m_playbackTime);
-	if(timingEnd != nullptr && timingEnd != m_currentTiming)
+	if (timingEnd != nullptr && timingEnd != m_currentTiming)
 	{
 		m_currentTiming = timingEnd;
 		OnTimingPointChanged.Call(*m_currentTiming);
@@ -82,13 +82,13 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Advance objects
-	ObjectState** objEnd = m_SelectHitObject(m_playbackTime+hittableObjectTreshold);
-	if(objEnd != nullptr && objEnd != m_currentObj)
+	ObjectState** objEnd = m_SelectHitObject(m_playbackTime + hittableObjectTreshold);
+	if (objEnd != nullptr && objEnd != m_currentObj)
 	{
-		for(auto it = m_currentObj; it < objEnd; it++)
+		for (auto it = m_currentObj; it < objEnd; it++)
 		{
 			MultiObjectState* obj = **it;
-			if(obj->type == ObjectType::Hold || obj->type == ObjectType::Laser || obj->type == ObjectType::Single)
+			if (obj->type == ObjectType::Hold || obj->type == ObjectType::Laser || obj->type == ObjectType::Single)
 			{
 				m_holdObjects.Add(*obj);
 			}
@@ -116,10 +116,10 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Advance zoom points
-	if(m_currentZoomPoint)
+	if (m_currentZoomPoint)
 	{
 		ZoomControlPoint** objEnd = m_SelectZoomObject(m_playbackTime);
-		for(auto it = m_currentZoomPoint; it < objEnd; it++)
+		for (auto it = m_currentZoomPoint; it < objEnd; it++)
 		{
 			// Set this point as new start point
 			uint32 index = (*it)->index;
@@ -127,10 +127,10 @@ void BeatmapPlayback::Update(MapTime newTime)
 
 			// Set next point
 			m_zoomEndPoints[index] = nullptr;
-			ZoomControlPoint** ptr = it+1;
-			while(!IsEndZoomPoint(ptr))
+			ZoomControlPoint** ptr = it + 1;
+			while (!IsEndZoomPoint(ptr))
 			{
-				if((*ptr)->index == index)
+				if ((*ptr)->index == index)
 				{
 					m_zoomEndPoints[index] = *ptr;
 					break;
@@ -143,50 +143,50 @@ void BeatmapPlayback::Update(MapTime newTime)
 
 	// Check passed hittable objects
 	MapTime objectPassTime = m_playbackTime - hittableObjectTreshold;
-	for(auto it = m_hittableObjects.begin(); it != m_hittableObjects.end();)
+	for (auto it = m_hittableObjects.begin(); it != m_hittableObjects.end();)
 	{
 		MultiObjectState* obj = **it;
-		if(obj->type == ObjectType::Hold)
+		if (obj->type == ObjectType::Hold)
 		{
 			MapTime endTime = obj->hold.duration + obj->time;
-			if(endTime < objectPassTime)
+			if (endTime < objectPassTime)
 			{
 				OnObjectLeaved.Call(*it);
 				it = m_hittableObjects.erase(it);
 				continue;
 			}
-			if(obj->hold.effectType != EffectType::None && // Hold button with effect
+			if (obj->hold.effectType != EffectType::None && // Hold button with effect
 				obj->time <= m_playbackTime && endTime > m_playbackTime) // Hold button in active range
 			{
-				if(!m_effectObjects.Contains(*obj))
+				if (!m_effectObjects.Contains(*obj))
 				{
 					OnFXBegin.Call((HoldObjectState*)*it);
 					m_effectObjects.Add(*obj);
 				}
 			}
 		}
-		else if(obj->type == ObjectType::Laser)
+		else if (obj->type == ObjectType::Laser)
 		{
-			if((obj->laser.duration + obj->time) < objectPassTime)
+			if ((obj->laser.duration + obj->time) < objectPassTime)
 			{
 				OnObjectLeaved.Call(*it);
 				it = m_hittableObjects.erase(it);
 				continue;
 			}
 		}
-		else if(obj->type == ObjectType::Single)
+		else if (obj->type == ObjectType::Single)
 		{
-			if(obj->time < objectPassTime)
+			if (obj->time < objectPassTime)
 			{
 				OnObjectLeaved.Call(*it);
 				it = m_hittableObjects.erase(it);
 				continue;
 			}
 		}
-		else if(obj->type == ObjectType::Event)
+		else if (obj->type == ObjectType::Event)
 		{
 			EventObjectState* evt = (EventObjectState*)obj;
-			if(obj->time < (m_playbackTime+2)) // Tiny offset to make sure events are triggered before they are needed
+			if (obj->time < (m_playbackTime + 2)) // Tiny offset to make sure events are triggered before they are needed
 			{
 				// Trigger event
 				OnEventChanged.Call(evt->key, evt->data);
@@ -199,37 +199,37 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Remove passed hold objects
-	for(auto it = m_holdObjects.begin(); it != m_holdObjects.end();)
+	for (auto it = m_holdObjects.begin(); it != m_holdObjects.end();)
 	{
 		MultiObjectState* obj = **it;
-		if(obj->type == ObjectType::Hold)
+		if (obj->type == ObjectType::Hold)
 		{
 			MapTime endTime = obj->hold.duration + obj->time;
-			if(endTime < objectPassTime)
+			if (endTime < objectPassTime)
 			{
 				it = m_holdObjects.erase(it);
 				continue;
 			}
-			if(endTime < m_playbackTime)
+			if (endTime < m_playbackTime)
 			{
-				if(m_effectObjects.Contains(*it))
+				if (m_effectObjects.Contains(*it))
 				{
 					OnFXEnd.Call((HoldObjectState*)*it);
 					m_effectObjects.erase(*it);
 				}
 			}
 		}
-		else if(obj->type == ObjectType::Laser)
+		else if (obj->type == ObjectType::Laser)
 		{
-			if((obj->laser.duration + obj->time) < objectPassTime)
+			if ((obj->laser.duration + obj->time) < objectPassTime)
 			{
 				it = m_holdObjects.erase(it);
 				continue;
 			}
 		}
-		else if(obj->type == ObjectType::Single)
+		else if (obj->type == ObjectType::Single)
 		{
-			if(obj->time < objectPassTime)
+			if (obj->time < objectPassTime)
 			{
 				it = m_holdObjects.erase(it);
 				continue;
@@ -253,7 +253,7 @@ Vector<ObjectState*> BeatmapPlayback::GetObjectsInRange(MapTime range)
 	Vector<ObjectState*> ret;
 
 	// Add hold objects
-	for(auto& ho : m_holdObjects)
+	for (auto& ho : m_holdObjects)
 	{
 		ret.AddUnique(ho);
 	}
@@ -261,9 +261,9 @@ Vector<ObjectState*> BeatmapPlayback::GetObjectsInRange(MapTime range)
 	// Iterator
 	ObjectState** obj = m_currentObj;
 	// Return all objects that lie after the currently queued object and fall within the given range
-	while(!IsEndObject(obj))
+	while (!IsEndObject(obj))
 	{
-		if((*obj)->time > end)
+		if ((*obj)->time > end)
 			break; // No more objects
 
 		ret.AddUnique(*obj);
@@ -275,7 +275,7 @@ Vector<ObjectState*> BeatmapPlayback::GetObjectsInRange(MapTime range)
 
 const TimingPoint& BeatmapPlayback::GetCurrentTimingPoint() const
 {
-	if(!m_currentTiming)
+	if (!m_currentTiming)
 		return *m_timingPoints.front();
 	return **m_currentTiming;
 }
@@ -301,12 +301,12 @@ MapTime BeatmapPlayback::ViewDistanceToDuration(float distance)
 	double time = 0;
 
 	MapTime currentTime = m_playbackTime;
-	while(true)
+	while (true)
 	{
-		if(!IsEndTiming(tp + 1))
+		if (!IsEndTiming(tp + 1))
 		{
 			double maxDist = (tp[1]->time - (double)currentTime) / tp[0]->beatDuration;
-			if(maxDist < distance)
+			if (maxDist < distance)
 			{
 				// Split up
 				time += maxDist * tp[0]->beatDuration;
@@ -328,17 +328,25 @@ float BeatmapPlayback::DurationToViewDistance(MapTime duration)
 float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime duration)
 {
 	MapTime endTime = time + duration;
+	int8 direction = Math::Sign(duration);
+	if (duration < 0)
+	{
+		MapTime temp = time;
+		time = endTime;
+		endTime = temp;
+		duration *= -1;
+	}
 
 	// Accumulated value
 	double barTime = 0.0f;
 
 	// Split up to see if passing other timing points on the way
 	TimingPoint** tp = m_SelectTimingPoint(time, true);
-	while(true)
+	while (true)
 	{
-		if(!IsEndTiming(tp + 1))
+		if (!IsEndTiming(tp + 1))
 		{
-			if(tp[1]->time < endTime)
+			if (tp[1]->time < endTime)
 			{
 				// Split up
 				MapTime myDuration = tp[1]->time - time;
@@ -354,7 +362,7 @@ float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime durati
 		break;
 	}
 
- 	return (float)barTime;
+	return (float)barTime * direction;
 }
 
 float BeatmapPlayback::TimeToViewDistance(MapTime time)
@@ -377,7 +385,7 @@ float BeatmapPlayback::GetZoom(uint8 index)
 	assert(index >= 0 && index <= 1);
 	MapTime startTime = m_zoomStartPoints[index] ? m_zoomStartPoints[index]->time : 0;
 	float start = m_zoomStartPoints[index] ? m_zoomStartPoints[index]->zoom : 0.0f;
-	if(!m_zoomEndPoints[index]) // Last point?
+	if (!m_zoomEndPoints[index]) // Last point?
 		return start;
 
 	// Interpolate
@@ -395,17 +403,17 @@ MapTime BeatmapPlayback::GetLastTime() const
 TimingPoint** BeatmapPlayback::m_SelectTimingPoint(MapTime time, bool allowReset)
 {
 	TimingPoint** objStart = m_currentTiming;
-	if(IsEndTiming(objStart))
+	if (IsEndTiming(objStart))
 		return objStart;
 
 	// Start at front of array if current object lies ahead of given input time
-	if(objStart[0]->time > time && allowReset)
+	if (objStart[0]->time > time && allowReset)
 		objStart = &m_timingPoints.front();
 
 	// Keep advancing the start pointer while the next object's starting time lies before the input time
-	while(true)
+	while (true)
 	{
-		if(!IsEndTiming(objStart+1) && objStart[1]->time <= time)
+		if (!IsEndTiming(objStart + 1) && objStart[1]->time <= time)
 		{
 			objStart = objStart + 1;
 		}
@@ -446,17 +454,17 @@ LaneHideTogglePoint** BeatmapPlayback::m_SelectLaneTogglePoint(MapTime time, boo
 ObjectState** BeatmapPlayback::m_SelectHitObject(MapTime time, bool allowReset)
 {
 	ObjectState** objStart = m_currentObj;
-	if(IsEndObject(objStart))
+	if (IsEndObject(objStart))
 		return objStart;
 
 	// Start at front of array if current object lies ahead of given input time
-	if(objStart[0]->time > time && allowReset)
+	if (objStart[0]->time > time && allowReset)
 		objStart = &m_objects.front();
 
 	// Keep advancing the start pointer while the next object's starting time lies before the input time
-	while(true)
+	while (true)
 	{
-		if(!IsEndObject(objStart) && objStart[0]->time < time)
+		if (!IsEndObject(objStart) && objStart[0]->time < time)
 		{
 			objStart = objStart + 1;
 		}
@@ -469,13 +477,13 @@ ObjectState** BeatmapPlayback::m_SelectHitObject(MapTime time, bool allowReset)
 ZoomControlPoint** BeatmapPlayback::m_SelectZoomObject(MapTime time)
 {
 	ZoomControlPoint** objStart = m_currentZoomPoint;
-	if(IsEndZoomPoint(objStart))
+	if (IsEndZoomPoint(objStart))
 		return objStart;
 
 	// Keep advancing the start pointer while the next object's starting time lies before the input time
-	while(true)
+	while (true)
 	{
-		if(!IsEndZoomPoint(objStart) && objStart[0]->time < time)
+		if (!IsEndZoomPoint(objStart) && objStart[0]->time < time)
 		{
 			objStart = objStart + 1;
 		}
