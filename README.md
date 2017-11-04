@@ -1,12 +1,10 @@
-# Unnamed SDVX clone ![language: C/C++](https://img.shields.io/badge/language-C%2FC%2B%2B-green.svg)
+# Unnamed SDVX clone ![language: C/C++](https://img.shields.io/badge/language-C%2FC%2B%2B-green.svg) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/drewol/unnamed-sdvx-clone?branch=master&svg=true&retina=true)](https://ci.appveyor.com/project/drewol/unnamed-sdvx-clone) [![Linux Build Status](https://travis-ci.org/Drewol/unnamed-sdvx-clone.svg?branch=master)](https://travis-ci.org/Drewol/unnamed-sdvx-clone)
 A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://en.wikipedia.org/wiki/Sound_Voltex).
 
-### [**Download latest build \(pre\-built\)**](https://drewol.me/Downloads/Game.zip) | [![Build](https://ci.appveyor.com/api/projects/status/github/drewol/unnamed-sdvx-clone?branch=master&svg=true&retina=true)](https://ci.appveyor.com/project/drewol/unnamed-sdvx-clone)
+### [**Download latest Windows build**](https://drewol.me/Downloads/Game.zip)
 
-#### Demo Videos (Song Select/ Gameplay / Realtime effects):
-[![Song Select Video](http://img.youtube.com/vi/GYOHy5CY2pU/1.jpg)](https://www.youtube.com/watch?v=GYOHy5CY2pU)
-[![Gameplay Video](http://img.youtube.com/vi/dfEbmBzdvYA/1.jpg)](https://www.youtube.com/watch?v=dfEbmBzdvYA)
-[![Realtime Effects Video](http://img.youtube.com/vi/PVIAENg13OU/1.jpg)](https://www.youtube.com/watch?v=PVIAENg13OU)
+#### Demo Video:
+[![Gameplay Video](http://img.youtube.com/vi/RDG3Dpmqh0Y/2.jpg)](https://www.youtube.com/watch?v=RDG3Dpmqh0Y)
 
 ### Current features:
 - Basic GUI (Buttons, Sliders, Scroll Boxes)
