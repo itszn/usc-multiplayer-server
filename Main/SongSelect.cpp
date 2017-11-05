@@ -635,6 +635,13 @@ public:
 			m_suspended = true;
 			g_application->RemoveTickable(this);
 		}
+		else if (key == SDLK_TAB)
+		{
+			if (m_searchField->HasInputFocus())
+				g_guiRenderer->SetInputFocus(nullptr);
+			else
+				g_guiRenderer->SetInputFocus(&*m_searchField);
+		}
 	}
 	virtual void OnKeyReleased(int32 key)
 	{
