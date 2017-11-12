@@ -640,7 +640,7 @@ public:
 			if (m_searchField->HasInputFocus())
 				g_guiRenderer->SetInputFocus(nullptr);
 			else
-				g_guiRenderer->SetInputFocus(&*m_searchField);
+				g_guiRenderer->SetInputFocus(m_searchField.GetData());
 		}
 	}
 	virtual void OnKeyReleased(int32 key)

@@ -124,8 +124,10 @@ int32 Application::Run()
 
 		if(!mapLaunched)
 		{
-			// Start regular game, goto song select
-			AddTickable(TitleScreen::Create());
+			if(m_commandLine.Contains("-notitle"))
+				AddTickable(SongSelect::Create());
+			else // Start regular game, goto title screen
+				AddTickable(TitleScreen::Create());
 		}
 	}
 
