@@ -50,6 +50,7 @@ Just run 'Main_Release' or 'Main_Debug' from within the 'bin' folder. Or, to pla
 #### `{Download Location}/bin> Main_{Release or Debug} {path to *.ksh chart} [flags]`
 
 #### Command line flags (all are optional):
+- `-notitle` - Skips the title menu launching the game directly into song select.
 - `-mute` - Mutes all audio output
 - `-autoplay` - Plays chart automatically, no user input required
 - `-autobuttons` Like autoplay, but just for the buttons. You only have to control the lasers
