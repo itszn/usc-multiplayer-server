@@ -71,12 +71,17 @@ private:
 	float m_rollIntensity;
 
 	// Spin variables
-	float m_spinDuration;
-	float m_spinProgress;
+	int32 m_spinDuration = 1;
+	int32 m_spinStart = 0;
 	uint8 m_spinType;
 	float m_spinDirection = 0.0f;
 	float m_spinRoll = 0.0f;
 
+	// Camera variables Landscape, Portrait
+	float m_basePitch[2] = { -20.f, -18.f };
+	float m_baseRadius[2] = { 0.25f, 0.225f };
+	float m_pitchOffset[2] = { 40.f, 43.f };
+	float m_fov[2] = { 90.f, 120.f };
 
 	RenderState m_rsLast;
 

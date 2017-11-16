@@ -23,34 +23,32 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 	rollSpeedLimit *= Math::Sign(rollDelta);
 	m_laserRoll += (fabs(rollDelta) < fabs(rollSpeedLimit)) ? rollDelta : rollSpeedLimit;
 
-
+	float spinProgress = (float)(playback.GetLastTime() - m_spinStart) / m_spinDuration;
 	// Calculate camera spin
-	if (m_spinProgress < m_spinDuration * 2.0f)
+	if (spinProgress < 2.0f)
 	{
-		float relativeProgress = m_spinProgress / m_spinDuration;
 		if (m_spinType == SpinStruct::SpinType::Full)
 		{
-			if(relativeProgress <= 1.0f)
-				m_spinRoll = -m_spinDirection * (1.0 - relativeProgress);
+			if(spinProgress <= 1.0f)
+				m_spinRoll = -m_spinDirection * (1.0 - spinProgress);
 			else
 			{
-				float amplitude = (15.0f / 360.0f) / (relativeProgress + 1);
-				m_spinRoll = sin(relativeProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
+				float amplitude = (15.0f / 360.0f) / (spinProgress + 1);
+				m_spinRoll = sin(spinProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
 			}
 		}
 		else if (m_spinType == SpinStruct::SpinType::Quarter)
 		{
-			if (relativeProgress <= 1.0f)
+			if (spinProgress <= 1.0f)
 			{
-				float amplitude = (80.0f / 360.0f) / ((relativeProgress * 2) + 1);
-				m_spinRoll = sin(relativeProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
+				float amplitude = (80.0f / 360.0f) / ((spinProgress * 2) + 1);
+				m_spinRoll = sin(spinProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
 			}
 			else
 			{
 				m_spinRoll = 0.0f;
 			}
 		}
-		m_spinProgress += deltaTime;
 	}
 	else
 	{
@@ -122,25 +120,18 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	RenderState rs = g_application->GetRenderStateBase();
 	
-	float verticalPlayPitchOffset = -3.0f;
-	float verticalPlayRadiusOffset = 0.5f;
-
-	if (g_aspectRatio > 1.0f)
-	{
-		verticalPlayPitchOffset = 0.0f;
-		verticalPlayRadiusOffset = 0.0f;
-	}
+	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
 
 	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = -33.0f * pow(1.33f, -zoomTop) - (verticalPlayPitchOffset * 5.f);
-	float base_radius = 4.f * cameraHeightBase * pow(1.1f, -zoomBottom * 3.0f) - verticalPlayRadiusOffset;
+	float base_pitch = m_basePitch[portrait] * pow(1.33f, -zoomTop);
+	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.1f, -zoomBottom * 3.0f);
 
 	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
 
 	Transform cameraTransform;
 	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f});
-	cameraTransform *= Transform::Rotation({base_pitch - 40.0f + verticalPlayPitchOffset, 0.0f, 0.0f });
+	cameraTransform *= Transform::Rotation({base_pitch - m_pitchOffset[portrait], 0.0f, 0.0f });
 	cameraTransform *= Transform::Translation(m_shakeOffset + Vector3( 0.0f, -targetHeight, -targetNear));
 
 	// Calculate clipping distances
@@ -151,12 +142,13 @@ RenderState Camera::CreateRenderState(bool clipped)
 	// Dot products of start and end of track on the viewing direction to get the near and far clipping planes
 	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
 	float d1 = VectorMath::Dot(Vector3(0.0f, track->trackLength, 0.0f), cameraDir) + offset; // Breaks when doing full spins
+	d1 = track->trackLength;
 
 	rs.cameraTransform = cameraTransform;
 	/// TODO: Fix d1 and use that instead of fixed 7.0f (?)
 
-	float fov = g_aspectRatio > 1.0f ? 90.0f : 120.0f;
-	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), 7.0f + viewRangeExtension);
+	float fov = m_fov[portrait];
+	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), d1 + viewRangeExtension);
 
 	m_rsLast = rs;
 
@@ -192,8 +184,8 @@ void Camera::SetSpin(float direction, uint32 duration, uint8 type, class Beatmap
 	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
 
 	m_spinDirection = direction;
-	m_spinDuration = (duration / 192.0f) * (currentTimingPoint.beatDuration / 1000.0f) * 4.0f;
-	m_spinProgress = 0;
+	m_spinDuration = (duration / 192.0f) * (currentTimingPoint.beatDuration) * 4;
+	m_spinStart = playback.GetLastTime();
 	m_spinType = type;
 }
 
