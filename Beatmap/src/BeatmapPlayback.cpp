@@ -9,6 +9,7 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 {
 	m_effectObjects.clear();
 	m_timingPoints = m_beatmap->GetLinearTimingPoints();
+	m_chartStops = m_beatmap->GetLinearChartStops();
 	m_objects = m_beatmap->GetLinearObjects();
 	m_zoomPoints = m_beatmap->GetZoomControlPoints();
 	m_laneTogglePoints = m_beatmap->GetLaneTogglePoints();
@@ -318,6 +319,8 @@ MapTime BeatmapPlayback::ViewDistanceToDuration(float distance)
 		time += distance * tp[0]->beatDuration;
 		break;
 	}
+	for (auto cs : m_SelectChartStops(currentTime, time))
+		time += cs->duration;
 	return (MapTime)time;
 }
 float BeatmapPlayback::DurationToViewDistance(MapTime duration)
@@ -325,7 +328,7 @@ float BeatmapPlayback::DurationToViewDistance(MapTime duration)
 	return DurationToViewDistanceAtTime(m_playbackTime, duration);
 }
 
-float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime duration)
+float BeatmapPlayback::DurationToViewDistanceAtTimeNoStops(MapTime time, MapTime duration)
 {
 	MapTime endTime = time + duration;
 	int8 direction = Math::Sign(duration);
@@ -361,6 +364,61 @@ float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime durati
 		barTime += (double)duration / tp[0]->beatDuration;
 		break;
 	}
+
+	return (float)barTime * direction;
+}
+
+float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime duration)
+{
+	MapTime endTime = time + duration;
+	int8 direction = Math::Sign(duration);
+	if (duration < 0)
+	{
+		MapTime temp = time;
+		time = endTime;
+		endTime = temp;
+		duration *= -1;
+	}
+
+	MapTime startTime = time;
+
+	// Accumulated value
+	double barTime = 0.0f;
+
+	// Split up to see if passing other timing points on the way
+	TimingPoint** tp = m_SelectTimingPoint(time, true);
+	while (true)
+	{
+		if (!IsEndTiming(tp + 1))
+		{
+			if (tp[1]->time < endTime)
+			{
+				// Split up
+				MapTime myDuration = tp[1]->time - time;
+				barTime += (double)myDuration / tp[0]->beatDuration;
+				duration -= myDuration;
+				time = tp[1]->time;
+				tp++;
+				continue;
+			}
+		}
+		// Whole
+		barTime += (double)duration / tp[0]->beatDuration;
+		break;
+	}
+
+	// calculate stop ViewDistance
+	double stopTime = 0.;
+	for (auto cs : m_SelectChartStops(startTime, endTime - startTime))
+	{
+		MapTime overlap = Math::Min(abs(endTime - startTime), 
+			Math::Min(abs(endTime - cs->time), 
+				Math::Min(abs((cs->time + cs->duration) - startTime), abs((cs->time + cs->duration) - cs->time))));
+
+		stopTime += DurationToViewDistanceAtTimeNoStops(Math::Max(cs->time, startTime), overlap);
+	}
+	barTime -= stopTime;
+
 
 	return (float)barTime * direction;
 }
@@ -423,6 +481,18 @@ TimingPoint** BeatmapPlayback::m_SelectTimingPoint(MapTime time, bool allowReset
 
 	return objStart;
 }
+
+Vector<ChartStop*> BeatmapPlayback::m_SelectChartStops(MapTime time, MapTime duration)
+{
+	Vector<ChartStop*> stops;
+	for (auto cs : m_chartStops)
+	{
+		if (time <= cs->time + cs->duration && time + duration >= cs->time)
+			stops.Add(cs);
+	}
+	return stops;
+}
+
 
 
 LaneHideTogglePoint** BeatmapPlayback::m_SelectLaneTogglePoint(MapTime time, bool allowReset)

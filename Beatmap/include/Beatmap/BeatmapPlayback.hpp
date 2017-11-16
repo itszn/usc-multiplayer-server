@@ -51,6 +51,7 @@ public:
 	MapTime ViewDistanceToDuration(float distance);
 	float DurationToViewDistance(MapTime time);
 	float DurationToViewDistanceAtTime(MapTime time, MapTime duration);
+	float DurationToViewDistanceAtTimeNoStops(MapTime time, MapTime duration);
 	float TimeToViewDistance(MapTime time);
 
 	// Current map time in ms as last passed to Update
@@ -99,6 +100,7 @@ private:
 	LaneHideTogglePoint** m_SelectLaneTogglePoint(MapTime time, bool allowReset = false);
 	ObjectState** m_SelectHitObject(MapTime time, bool allowReset = false);
 	ZoomControlPoint** m_SelectZoomObject(MapTime time);
+	Vector<ChartStop*> m_SelectChartStops(MapTime time, MapTime duration);
 
 	// End object pointer, this is not a valid pointer, but points to the element after the last element
 	bool IsEndTiming(TimingPoint** obj);
@@ -109,6 +111,7 @@ private:
 	// Current map position of this playback object
 	MapTime m_playbackTime;
 	Vector<TimingPoint*> m_timingPoints;
+	Vector<ChartStop*> m_chartStops;
 	Vector<ObjectState*> m_objects;
 	Vector<ZoomControlPoint*> m_zoomPoints;
 	Vector<LaneHideTogglePoint*> m_laneTogglePoints;

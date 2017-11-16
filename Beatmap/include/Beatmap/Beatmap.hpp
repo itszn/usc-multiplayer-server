@@ -64,6 +64,10 @@ public:
 	// Must keep the beatmap class instance alive for these to stay valid
 	// Can contain multiple objects at the same time
 	const Vector<TimingPoint*>& GetLinearTimingPoints() const;
+	// Vector of chart stops in the chart, sorted by when they appear in the map
+	// Must keep the beatmap class instance alive for these to stay valid
+	// Can contain multiple objects at the same time
+	const Vector<ChartStop*>& GetLinearChartStops() const;
 	// Vector of objects in the map, sorted by when they appear in the map
 	// Must keep the beatmap class instance alive for these to stay valid
 	// Can contain multiple objects at the same time
@@ -90,6 +94,7 @@ private:
 	Map<EffectType, AudioEffect> m_customFilters;
 
 	Vector<TimingPoint*> m_timingPoints;
+	Vector<ChartStop*> m_chartStops;
 	Vector<LaneHideTogglePoint*> m_laneTogglePoints;
 	Vector<ObjectState*> m_objectStates;
 	Vector<ZoomControlPoint*> m_zoomControlPoints;

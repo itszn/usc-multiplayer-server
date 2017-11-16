@@ -70,6 +70,10 @@ const Vector<TimingPoint*>& Beatmap::GetLinearTimingPoints() const
 {
 	return m_timingPoints;
 }
+const Vector<ChartStop*>& Beatmap::GetLinearChartStops() const
+{
+	return m_chartStops;
+}
 const Vector<LaneHideTogglePoint*>& Beatmap::GetLaneTogglePoints() const
 {
 	return m_laneTogglePoints;

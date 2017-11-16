@@ -298,3 +298,10 @@ struct ZoomControlPoint
 	// 1 being fully zoomed in
 	float zoom = 0.0f;
 };
+
+// Chart stop object
+struct ChartStop
+{
+	MapTime time;
+	MapTime duration;
+};

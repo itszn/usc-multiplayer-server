@@ -740,6 +740,13 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					sampleIndex = std::distance(m_samplePaths.begin(), it);
 				}
 			}
+			else if (p.first == "stop")
+			{
+				ChartStop* cs = new ChartStop();
+				cs->time = mapTime;
+				cs->duration = (atol(*p.second) / 192.0f) * (lastTimingPoint->beatDuration) * 4;
+				m_chartStops.Add(cs);
+			}
 			else
 			{
 				Logf("[KSH]Unkown map parameter at %d:%d: %s", Logger::Warning, it.GetTime().block, it.GetTime().tick, p.first);
