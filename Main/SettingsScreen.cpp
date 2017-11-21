@@ -41,6 +41,7 @@ private:
 	float m_modSpeed = 400.f;
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
+	float m_masterVolume = 1.0f;
 
 	//TODO: Use argument instead of many functions if possible.
 	void SetKey_BTA()
@@ -115,6 +116,7 @@ private:
 
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 		g_gameConfig.Set(GameConfigKeys::ModSpeed, m_modSpeed);
+		g_gameConfig.Set(GameConfigKeys::MasterVolume, m_masterVolume);
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
 
 		switch (inputModeMap[m_laserModes[m_laserMode]])
@@ -195,6 +197,7 @@ public:
 
 		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
+		m_masterVolume = g_gameConfig.GetFloat(GameConfigKeys::MasterVolume);
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 
 		//Options select
@@ -327,6 +330,7 @@ public:
 			
 			m_settings = Ref<SettingsBar>(sb);
 
+			sb->AddSetting(&m_masterVolume, 0.f, 1.0f, "Master Volume");
 			sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
 			sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
 			sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");

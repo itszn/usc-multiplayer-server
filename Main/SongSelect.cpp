@@ -511,6 +511,9 @@ public:
 
 		m_selectionWheel->SelectRandom();
 
+		/// TODO: Check if debugmute is enabled
+		g_audio->SetGlobalVolume(g_gameConfig.GetFloat(GameConfigKeys::MasterVolume));
+
 		return true;
 	}
 	~SongSelect_Impl()

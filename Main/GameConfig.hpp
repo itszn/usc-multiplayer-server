@@ -10,6 +10,7 @@ DefineEnum(GameConfigKeys,
 	ScreenY,
 	Fullscreen,
 	FullscreenMonitorIndex,
+	MasterVolume,
 
 	// Game settings
 	HiSpeed,
