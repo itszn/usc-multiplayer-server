@@ -312,6 +312,9 @@ public:
 		if(!loader.Load())
 			return false;
 
+		// Always hide mouse during gameplay no matter what input mode.
+		g_gameWindow->SetCursorVisible(false);
+
 		return true;
 	}
 	virtual bool AsyncFinalize() override
@@ -410,8 +413,8 @@ public:
 	}
 	virtual void Render(float deltaTime) override
 	{
-		// Magic number to make the resulting HiSpeed numbers somewhat match the resulting speeds in the other games
-		m_track->SetViewRange(7.4f / m_hispeed); 
+		// 8 beats (2 measures) in view at 1x hi-speed
+		m_track->SetViewRange(8.0f / (m_hispeed)); 
 
 		m_track->Tick(m_playback, deltaTime);
 
@@ -1156,6 +1159,7 @@ public:
 		}
 		else if(key == SDLK_TAB)
 		{
+			g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
 			m_settingsBar->SetShow(!m_settingsBar->IsShown());
 		}
 	}

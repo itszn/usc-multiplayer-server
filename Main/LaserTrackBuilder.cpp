@@ -315,7 +315,7 @@ void LaserTrackBuilder::m_RecalculateConstants()
 	realBorderSize = (actualLaserWidth - laserWidthNoBorder) * 0.5f;
 
 	// The length of the horizontal slam segments
-	slamDuration = 40;
+	slamDuration = 70;
 
 	// The effective area in which the center point of the laser can move
 	effectiveWidth = m_trackWidth - m_laserWidth;

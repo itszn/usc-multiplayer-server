@@ -109,6 +109,7 @@ public:
 	{
 		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		slot->anchor = Anchors::Full;
+		g_gameWindow->SetCursorVisible(true);
 	}
 
 
