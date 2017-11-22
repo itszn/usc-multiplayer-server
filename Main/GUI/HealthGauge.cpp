@@ -54,5 +54,5 @@ void HealthGauge::Render(GUIRenderData rd)
 
 Vector2 HealthGauge::GetDesiredSize(GUIRenderData rd)
 {
-	return Vector2(g_resolution.x * 0.25, g_resolution.y * 0.8);
+	return Vector2(g_resolution.x * 0.25, g_resolution.y * 0.5);
 }

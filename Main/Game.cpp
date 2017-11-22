@@ -25,6 +25,7 @@
 #include "GUI/GUI.hpp"
 #include "GUI/HealthGauge.hpp"
 #include "GUI/SettingsBar.hpp"
+#include "GUI/PlayingSongInfo.hpp"
 
 // Try load map helper
 Ref<Beatmap> TryLoadMap(const String& path)
@@ -79,6 +80,7 @@ private:
 	// Game Canvas
 	Ref<Canvas> m_canvas;
 	Ref<HealthGauge> m_scoringGauge;
+	Ref<PlayingSongInfo> m_psi;
 	Ref<SettingsBar> m_settingsBar;
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Label> m_scoreText;
@@ -578,8 +580,8 @@ public:
 			m_scoringGauge->barMargin = Margin(36, 34, 33, 34);
 
 			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
-			slot->anchor = Anchor(0.0f, 0.5f);
-			slot->alignment = Vector2(0.0f, 0.5f);
+			slot->anchor = Anchor(0.0f, 0.25f);
+			slot->alignment = Vector2(0.0f, 0.0f);
 			slot->autoSizeX = true;
 			slot->autoSizeY = true;
 		}
@@ -628,6 +630,20 @@ public:
 			Panel::Slot* slot = scorePanel->SetContent(m_scoreText.As<GUIElementBase>());
 			slot->padding = Margin(30, 0, 10, 30) + textPadding;
 			slot->alignment = Vector2(0.5f, 0.5f);
+		}
+
+		// Song info
+		{
+			PlayingSongInfo* psi = new PlayingSongInfo(*this);
+			m_psi = Ref<PlayingSongInfo>(psi);
+			loader.AddMaterial(m_psi->progressMaterial, "progressBar");
+			Canvas::Slot* psiSlot = m_canvas->Add(psi->MakeShared());
+			psiSlot->autoSizeY = true;
+			psiSlot->autoSizeX = true;
+			psiSlot->anchor = Anchors::TopLeft;
+			psiSlot->alignment = Vector2(0.0f, 0.0f);
+			psiSlot->padding = Margin(10, 10, 0, 0);
+
 		}
 
 		return true;
@@ -756,6 +772,9 @@ public:
 
 		// Update scoring gauge
 		m_scoringGauge->rate = m_scoring.currentGauge;
+
+		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
 
 		int32 gaugeSampleSlot = playbackPositionMs;
 		gaugeSampleSlot /= m_gaugeSampleRate;
@@ -1159,6 +1178,7 @@ public:
 		else if(key == SDLK_F8)
 		{
 			m_renderDebugHUD = !m_renderDebugHUD;
+			m_psi->visibility = m_renderDebugHUD ? Visibility::Collapsed : Visibility::Visible;
 		}
 		else if(key == SDLK_TAB)
 		{
