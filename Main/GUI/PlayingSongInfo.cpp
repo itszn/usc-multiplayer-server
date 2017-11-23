@@ -110,6 +110,7 @@ void SongTitleArtist::Render(GUIRenderData rd)
 	transform *= Transform::Translation(rd.area.pos);
 	transform *= Transform::Scale(Vector3(rd.area.size.x, rd.area.size.y, 1.0f));
 
+	/// TODO: Actually use a progress bar object
 	MaterialParameterSet params;
 	params.SetParameter("progress", progress);
 	rd.rq->Draw(transform, rd.guiRenderer->guiQuad, m_psi->progressMaterial, params);

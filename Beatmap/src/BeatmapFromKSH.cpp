@@ -610,7 +610,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					assert(false);
 				uint32 num = atol(*n);
 				uint32 denom = atol(*d);
-				assert(denom % 4 == 0);
+				//assert(denom % 4 == 0);
 
 				AddTimingPoint(lastTimingPoint->beatDuration, num, denom);
 			}
