@@ -71,6 +71,16 @@ void PlayingSongInfo::SetProgress(float progress)
 	m_titleArtist->progress = Math::Clamp(progress, 0.f, 1.f);
 }
 
+void PlayingSongInfo::SetBPM(float bpm)
+{
+	m_titleArtist->BPM = bpm;
+}
+
+void PlayingSongInfo::SetHiSpeed(float hiSpeed)
+{
+	m_titleArtist->hiSpeed = hiSpeed;
+}
+
 SongTitleArtist::SongTitleArtist(String title, String artist, PlayingSongInfo* info)
 {
 	m_title = Utility::ConvertToWString(title);
@@ -85,26 +95,45 @@ void SongTitleArtist::PreRender(GUIRenderData rd, GUIElementBase *& inputElement
 
 void SongTitleArtist::Render(GUIRenderData rd)
 {
+	float roundedSpeed = Math::Floor(hiSpeed * 10) / 10;
+	int speedBase = roundedSpeed;
+	int speedDecimal = (int)(roundedSpeed * 10) % 10;
+	int roundBpm = BPM;
+	// Make Bpm and Hispeed string
+	WString speedText = Utility::WSprintf(
+		L"BPM: %d\nHiSpeed: %d x %d.%d = %d",
+		roundBpm, roundBpm, speedBase, speedDecimal, (int)(roundedSpeed * roundBpm));
+
+
 	/// TODO: Cache stuff and only regen if the resolution changes.
 	Ref<TextRes> title = rd.guiRenderer->font->CreateText(m_title, rd.area.size.y / 2);
 	Ref<TextRes> artist = rd.guiRenderer->font->CreateText(m_artist, rd.area.size.y / 3);
+	Ref<TextRes> speedTextGraphic = rd.guiRenderer->font->CreateText(speedText, rd.area.size.y / 3);
 	Rect titleRect = rd.area;
-	titleRect.size = titleRect.size * Vector2(1.f, .5f);
 	Rect artistRect = rd.area;
-	artistRect.size = titleRect.size * Vector2(1.f, .33f);
+	Rect speedRect = rd.area;
+
+	titleRect.size = titleRect.size * Vector2(1.f, m_titleSize);
+	artistRect.size = artistRect.size * Vector2(1.f, m_artistSize);
+	speedRect.size = speedRect.size * Vector2(1.f, m_speedSize);
 	artistRect.pos = artistRect.pos + Vector2(0.f, .5f * rd.area.size.y);
+
 
 	titleRect = GUISlotBase::ApplyFill(FillMode::Fit, title->size, titleRect);
 	artistRect = GUISlotBase::ApplyFill(FillMode::Fit, artist->size, artistRect);
+	speedRect = GUISlotBase::ApplyFill(FillMode::Fit, speedTextGraphic->size, speedRect);
 
 	title = rd.guiRenderer->font->CreateText(m_title, titleRect.size.y * 0.75);
 	artist = rd.guiRenderer->font->CreateText(m_artist, artistRect.size.y * 0.75);
+	speedTextGraphic = rd.guiRenderer->font->CreateText(speedText, (speedRect.size.y / 2) * 0.75);
 
+	titleRect.pos.y = rd.area.pos.y + (0.5f * m_titleSize * rd.area.size.y) - (0.5f * title->size.y);
+	artistRect.pos.y = rd.area.pos.y + (m_titleSize * rd.area.size.y) + (0.5f * m_artistSize * rd.area.size.y) - (0.5f * artist->size.y);;
+	Vector2 speedTextPos = Vector2(artistRect.pos.x, rd.area.pos.y + ((m_titleSize + m_artistSize) * rd.area.size.y));
 
-	artistRect.pos.y = rd.area.pos.y + (rd.area.size.y / 2.0);
-	titleRect.pos.y = artistRect.pos.y - title->size.y - 2;
 	rd.guiRenderer->RenderText(title, titleRect.pos, color);
 	rd.guiRenderer->RenderText(artist, artistRect.pos, color);
+	rd.guiRenderer->RenderText(speedTextGraphic, speedTextPos, color);
 	
 	Transform transform;
 	transform *= Transform::Translation(rd.area.pos);

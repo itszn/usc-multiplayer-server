@@ -773,8 +773,6 @@ public:
 		// Update scoring gauge
 		m_scoringGauge->rate = m_scoring.currentGauge;
 
-		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
-		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
 
 		int32 gaugeSampleSlot = playbackPositionMs;
 		gaugeSampleSlot /= m_gaugeSampleRate;
@@ -783,6 +781,14 @@ public:
 
 		// Get the current timing point
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
+
+
+		// Update song info display
+		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
+		m_psi->SetHiSpeed(m_hispeed);
+		m_psi->SetBPM((float)m_currentTiming->GetBPM());
+
 
         // Update hispeed
         if (g_input.GetButton(Input::Button::BT_S))
