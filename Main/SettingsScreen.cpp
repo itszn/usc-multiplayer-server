@@ -20,7 +20,11 @@
 #include "ScoreScreen.hpp"
 #include "Shared/Enum.hpp"
 #include "Input.hpp"
-
+#ifdef _WIN32
+#include "SDL_keyboard.h"
+#else
+#include "SDL2/SDL_keyboard.h"
+#endif
 
 class SettingsScreen_Impl : public SettingsScreen
 {
@@ -33,6 +37,42 @@ private:
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
 	Vector<String> m_buttonModes = { "Keyboard", "Controller" };
 	Vector<String> m_gamePads;
+
+	Vector<GameConfigKeys> m_keyboardKeys = {
+		GameConfigKeys::Key_BTS,
+		GameConfigKeys::Key_BT0,
+		GameConfigKeys::Key_BT1,
+		GameConfigKeys::Key_BT2,
+		GameConfigKeys::Key_BT3,
+		GameConfigKeys::Key_FX0,
+		GameConfigKeys::Key_FX1
+	};
+
+	Vector<GameConfigKeys> m_keyboardLaserKeys = {
+		GameConfigKeys::Key_Laser0Neg,
+		GameConfigKeys::Key_Laser0Pos,
+		GameConfigKeys::Key_Laser1Neg,
+		GameConfigKeys::Key_Laser1Pos,
+	};
+
+	Vector<GameConfigKeys> m_controllerKeys = {
+		GameConfigKeys::Controller_BTS,
+		GameConfigKeys::Controller_BT0,
+		GameConfigKeys::Controller_BT1,
+		GameConfigKeys::Controller_BT2,
+		GameConfigKeys::Controller_BT3,
+		GameConfigKeys::Controller_FX0,
+		GameConfigKeys::Controller_FX1
+	};
+
+	Vector<GameConfigKeys> m_controllerLaserKeys = {
+		GameConfigKeys::Controller_Laser0Axis,
+		GameConfigKeys::Controller_Laser1Axis,
+
+	};
+
+	Button* m_buttonButtons[7];
+	Button* m_laserButtons[2];
 
 	int m_speedMod = 0;
 	int m_laserMode = 0;
@@ -110,7 +150,7 @@ private:
 			{ "Mouse", InputDevice::Mouse },
 			{ "Controller", InputDevice::Controller },
 		};
-
+		
 		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice, inputModeMap[m_buttonModes[m_buttonMode]]);
 		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, inputModeMap[m_laserModes[m_laserMode]]);
 
@@ -220,6 +260,7 @@ public:
 			stBox->layoutDirection = LayoutBox::Horizontal;
 			{
 				Button* stBtn = new Button(m_guiStyle);
+				m_laserButtons[0] = stBtn;
 				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetLL);
 				stBtn->SetText(L"LL");
 				stBtn->SetFontSize(32);
@@ -230,6 +271,7 @@ public:
 			}
 			{
 				Button* stBtn = new Button(m_guiStyle);
+				m_buttonButtons[0] = stBtn;
 				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_ST);
 				stBtn->SetText(L"Start");
 				stBtn->SetFontSize(32);
@@ -239,6 +281,7 @@ public:
 			}
 			{
 				Button* stBtn = new Button(m_guiStyle);
+				m_laserButtons[1] = stBtn;
 				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetRL);
 				stBtn->SetText(L"RL");
 				stBtn->SetFontSize(32);
@@ -258,6 +301,7 @@ public:
 
 			{
 				Button* btaBtn = new Button(m_guiStyle);
+				m_buttonButtons[1] = btaBtn;
 				btaBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTA);
 				btaBtn->SetText(L"BT-A");
 				btaBtn->SetFontSize(32);
@@ -267,6 +311,7 @@ public:
 			}
 			{
 				Button* btbBtn = new Button(m_guiStyle);
+				m_buttonButtons[2] = btbBtn;
 				btbBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTB);
 				btbBtn->SetText(L"BT-B");
 				btbBtn->SetFontSize(32);
@@ -276,6 +321,7 @@ public:
 			}
 			{
 				Button* btcBtn = new Button(m_guiStyle);
+				m_buttonButtons[3] = btcBtn;
 				btcBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTC);
 				btcBtn->SetText(L"BT-C");
 				btcBtn->SetFontSize(32);
@@ -285,6 +331,7 @@ public:
 			}
 			{
 				Button* btdBtn = new Button(m_guiStyle);
+				m_buttonButtons[4] = btdBtn;
 				btdBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTD);
 				btdBtn->SetText(L"BT-D");
 				btdBtn->SetFontSize(32);
@@ -302,6 +349,7 @@ public:
 			fxBox->layoutDirection = LayoutBox::Horizontal;
 			{
 				Button* fxlBtn = new Button(m_guiStyle);
+				m_buttonButtons[5] = fxlBtn;
 				fxlBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXL);
 				fxlBtn->SetText(L"FX-L");
 				fxlBtn->SetFontSize(32);
@@ -312,6 +360,7 @@ public:
 			}
 			{
 				Button* fxrBtn = new Button(m_guiStyle);
+				m_buttonButtons[6] = fxrBtn;
 				fxrBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXR);
 				fxrBtn->SetText(L"FX-R");
 				fxrBtn->SetFontSize(32);
@@ -357,7 +406,35 @@ public:
 		return true;
 	}
 
-
+	void Tick(float deltatime)
+	{
+		for (size_t i = 0; i < 7; i++)
+		{
+			if (m_buttonMode == 1)
+			{
+				m_buttonButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerKeys[i])));
+			}
+			else
+			{
+				m_buttonButtons[i]->SetText(Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardKeys[i]))));
+			}
+		}
+		for (size_t i = 0; i < 2; i++)
+		{
+			if (m_laserMode == 2)
+			{
+				m_laserButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerLaserKeys[i])));
+			}
+			else
+			{
+				m_laserButtons[i]->SetText(Utility::WSprintf(
+					L"%ls/%ls", 
+					Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardLaserKeys[i * 2]))),
+					Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardLaserKeys[i * 2 + 1])))
+					));
+			}
+		}
+	}
 
 	virtual void OnSuspend()
 	{
