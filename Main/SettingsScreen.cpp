@@ -73,6 +73,9 @@ private:
 
 	Button* m_buttonButtons[7];
 	Button* m_laserButtons[2];
+	Panel* m_laserColorPanels[2];
+
+	Texture m_whiteTex;
 
 	int m_speedMod = 0;
 	int m_laserMode = 0;
@@ -82,6 +85,7 @@ private:
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
 	float m_masterVolume = 1.0f;
+	float m_laserColors[2] = { 0.25f, 0.75f };
 
 	//TODO: Use argument instead of many functions if possible.
 	void SetKey_BTA()
@@ -157,6 +161,8 @@ private:
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 		g_gameConfig.Set(GameConfigKeys::ModSpeed, m_modSpeed);
 		g_gameConfig.Set(GameConfigKeys::MasterVolume, m_masterVolume);
+		g_gameConfig.Set(GameConfigKeys::Laser0Color, m_laserColors[0]);
+		g_gameConfig.Set(GameConfigKeys::Laser1Color, m_laserColors[1]);
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
 
 		switch (inputModeMap[m_laserModes[m_laserMode]])
@@ -238,6 +244,8 @@ public:
 		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
 		m_masterVolume = g_gameConfig.GetFloat(GameConfigKeys::MasterVolume);
+		m_laserColors[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
+		m_laserColors[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 
 		//Options select
@@ -391,9 +399,60 @@ public:
 				sb->AddSetting(&m_selectedGamepad, m_gamePads, m_gamePads.size(), "Selected Controller");
 
 			}
+			sb->AddSetting(m_laserColors, 0.0, 360.0f, "Left Laser Color");
+			sb->AddSetting(m_laserColors + 1, 0.0, 360.0f, "Right Laser Color");
+
+
 			LayoutBox::Slot* slot = box->Add(sb->MakeShared());
 			slot->fillX = true;
 		}
+
+		// Laser Colors
+		{
+			Label* laserColorLabel = new Label();
+			laserColorLabel->SetText(L"Laser Colors:");
+			laserColorLabel->SetFontSize(20);
+			box->Add(laserColorLabel->MakeShared());
+
+
+			// Make white square texture
+			m_whiteTex = TextureRes::Create(g_gl);
+			m_whiteTex->Init(Vector2i(50, 50), Graphics::TextureFormat::RGBA8);
+
+			Colori pixels[2500];
+
+			for (size_t i = 0; i < 2500; i++)
+			{
+				pixels[i] = Colori(255,255,255,255);
+			}
+
+			m_whiteTex->SetData(Vector2i(50, 50), pixels);
+
+			LayoutBox* colorBox = new LayoutBox();
+			colorBox->layoutDirection = LayoutBox::Horizontal;
+
+			{
+				Panel* lpanel = new Panel();
+				m_laserColorPanels[0] = lpanel;
+				lpanel->texture = m_whiteTex;
+				LayoutBox::Slot* lslot = colorBox->Add(lpanel->MakeShared());
+
+			}
+
+			{
+				Panel* rpanel = new Panel();
+				m_laserColorPanels[1] = rpanel;
+				rpanel->texture = m_whiteTex;
+				LayoutBox::Slot* rslot = colorBox->Add(rpanel->MakeShared());
+				rslot->padding = Margin(20, 0);
+
+			}
+			LayoutBox::Slot* slot = box->Add(colorBox->MakeShared());
+			slot->fillX = true;
+			slot->fillY = true;
+
+		}
+
 
 		Button* exitBtn = new Button(m_guiStyle);
 		exitBtn->OnPressed.Add(this, &SettingsScreen_Impl::Exit);
@@ -433,6 +492,10 @@ public:
 					Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardLaserKeys[i * 2 + 1])))
 					));
 			}
+
+			m_laserColorPanels[i]->color = Color::FromHSV(m_laserColors[i], 1.f, 1.f);
+
+
 		}
 	}
 

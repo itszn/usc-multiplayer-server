@@ -39,11 +39,22 @@ bool Track::AsyncLoad()
 	loader = new AsyncAssetLoader();
 	String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 	// Load laser colors
+
+	// Old laser coloring
+	/*
 	Image laserColorPalette;
 	CheckedLoad(laserColorPalette = ImageRes::Create("skins/" + skin + "/textures/lasercolors.png"));
 	assert(laserColorPalette->GetSize().x >= 2);
 	for(uint32 i = 0; i < 2; i++)
 		laserColors[i] = laserColorPalette->GetBits()[i];
+	*/
+
+	float laserHues[2] = { 0.f };
+	laserHues[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
+	laserHues[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
+
+	for (uint32 i = 0; i < 2; i++)
+		laserColors[i] = Color::FromHSV(laserHues[i],1.0,1.0);
 
 	// Load hit effect colors
 	Image hitColorPalette;
