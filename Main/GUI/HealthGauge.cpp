@@ -54,5 +54,6 @@ void HealthGauge::Render(GUIRenderData rd)
 
 Vector2 HealthGauge::GetDesiredSize(GUIRenderData rd)
 {
-	return Vector2(g_resolution.x * 0.25, g_resolution.y * 0.5);
+	Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+	return Vector2(rd.area.size.x * 0.4, rd.area.size.y * 0.5);
 }

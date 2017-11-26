@@ -63,7 +63,8 @@ void PlayingSongInfo::Render(GUIRenderData rd)
 
 Vector2 PlayingSongInfo::GetDesiredSize(GUIRenderData rd)
 {
-	return Vector2(g_resolution.y * 0.2 * 3, g_resolution.y * 0.2);
+	Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+	return Vector2(canvasRes.y * 0.16 * 3, canvasRes.y * 0.16);
 }
 
 void PlayingSongInfo::SetProgress(float progress)

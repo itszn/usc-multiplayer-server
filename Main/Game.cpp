@@ -355,7 +355,21 @@ public:
 	{
 		// Add to root canvas to be rendered (this makes the HUD visible)
 		Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		rootSlot->anchor = Anchors::Full;
+		if (g_aspectRatio < 640.f / 480.f)
+		{
+			Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+
+			Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+
+			Vector2 bottomRight = topLeft + canvasRes;
+
+			topLeft /= g_resolution;
+			bottomRight /= g_resolution;
+
+			rootSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
+		}
+		else
+			rootSlot->anchor = Anchors::Full;
 		return true;
 	}
 
@@ -569,7 +583,8 @@ public:
 
 		// Game GUI canvas
 		m_canvas = Utility::MakeRef(new Canvas());
-
+		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		float scale = canvasRes.x / 640.f;
 		{
 			// Gauge
 			m_scoringGauge = Utility::MakeRef(new HealthGauge());
@@ -580,8 +595,8 @@ public:
 			m_scoringGauge->barMargin = Margin(36, 34, 33, 34);
 
 			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
-			slot->anchor = Anchor(0.0f, 0.25f);
-			slot->alignment = Vector2(0.0f, 0.0f);
+			slot->anchor = Anchors::Full;
+			slot->alignment = Vector2(0.0f, 0.5f);
 			slot->autoSizeX = true;
 			slot->autoSizeY = true;
 		}
@@ -612,23 +627,25 @@ public:
 			Panel* scorePanel = new Panel();
 			loader.AddTexture(scorePanel->texture, "scoring_base.png");
 			scorePanel->color = Color::White;
+			scorePanel->imageFillMode = FillMode::Fit;
 
 			Canvas::Slot* scoreSlot = m_canvas->Add(scorePanel->MakeShared());
-			scoreSlot->anchor = Anchors::TopsRight;
+			scoreSlot->anchor = Anchor(0.75, 0.0, 1.0, 1.0);
 			scoreSlot->alignment = Vector2(1.0f, 0.0f);
 			scoreSlot->autoSizeX = true;
 			scoreSlot->autoSizeY = true;
 
 			m_scoreText = Ref<Label>(new Label());
-			m_scoreText->SetFontSize(75);
+			m_scoreText->SetFontSize(32 * scale);
 			m_scoreText->SetText(Utility::WSprintf(L"%08d", 0));
 			m_scoreText->SetFont(m_fontDivlit);
 			m_scoreText->SetTextOptions(FontRes::Monospace);
 			// Padding for this specific font
-			Margin textPadding = Margin(0, -20, 0, 0);
+			Margin textPadding = Margin(0, 10, 0, 0);
 
 			Panel::Slot* slot = scorePanel->SetContent(m_scoreText.As<GUIElementBase>());
-			slot->padding = Margin(30, 0, 10, 30) + textPadding;
+			slot->padding = (Margin(20, 0, 10, 30) + textPadding) * scale;
+
 			slot->alignment = Vector2(0.5f, 0.5f);
 		}
 
