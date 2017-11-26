@@ -104,7 +104,7 @@ namespace Graphics
 						cat.width = requestedSize.x;
 						cat.offset = Vector2i(m_usedSize, 0);
 						m_categoryByWidth.insert(std::make_pair(cat.width, (uint32)m_widths.size()-1));
-						m_usedSize += cat.width;
+						m_usedSize += cat.width + 1;
 					}
 					else
 					{
@@ -146,7 +146,7 @@ namespace Graphics
 			// Set offset for current segment
 			pCurrentSegment->coords.pos = cat.offset;
 			// Add size offset in category
-			cat.offset.y += pCurrentSegment->coords.size.y;
+			cat.offset.y += pCurrentSegment->coords.size.y + 1;
 
 			// Copy image data
 			CopySubImage(m_image, image, pCurrentSegment->coords.pos);
@@ -187,6 +187,7 @@ namespace Graphics
 		virtual Texture GenerateTexture(OpenGL* gl)
 		{
 			Texture tex = TextureRes::Create(gl, m_image);
+			tex->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
 			return tex;
 		}
 	};

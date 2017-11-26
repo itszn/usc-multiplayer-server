@@ -109,6 +109,9 @@ namespace Graphics
 #endif
 
 		Logf("OpenGL Version: %s", Logger::Info, glGetString(GL_VERSION));
+		Logf("OpenGL Shading Language Version: %s", Logger::Info, glGetString(GL_SHADING_LANGUAGE_VERSION));
+		Logf("OpenGL Renderer: %s", Logger::Info, glGetString(GL_RENDERER));
+		Logf("OpenGL Vendor: %s", Logger::Info, glGetString(GL_VENDOR));
 
 		// Disable VSync
 		//	Framerate is to be limited by the application manually
