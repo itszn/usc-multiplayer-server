@@ -19,7 +19,7 @@ void main()
     vec2 avg = (current + next) / 2.0;
     float dist = abs(distance(vec2(fsTex.x,fsTex.y * -1 + 1.),avg));
     
-    if (avg.y >= 0.75f)
+    if (avg.y >= 0.70f)
         col = vec3(0.0f, 1.0f, 0.0f);
     else
         col = vec3(1.0f, 0.0f, 0.0f);
