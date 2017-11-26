@@ -520,6 +520,7 @@ public:
 	{
 		// Clear callbacks
 		m_mapDatabase.OnMapsCleared.Clear();
+		g_input.OnButtonPressed.RemoveAll(this);
 	}
 
 	// When a map is selected in the song wheel
