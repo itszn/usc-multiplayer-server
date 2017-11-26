@@ -589,14 +589,14 @@ public:
 			// Gauge
 			m_scoringGauge = Utility::MakeRef(new HealthGauge());
 			loader.AddTexture(m_scoringGauge->fillTexture, "gauge_fill.png");
-			loader.AddTexture(m_scoringGauge->frameTexture, "gauge_frame.png");
-			loader.AddTexture(m_scoringGauge->bgTexture, "gauge_bg.png");
+			loader.AddTexture(m_scoringGauge->frontTexture, "gauge_front.png");
+			loader.AddTexture(m_scoringGauge->backTexture, "gauge_back.png");
+			loader.AddTexture(m_scoringGauge->maskTexture, "gauge_mask.png");
 			loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
-			m_scoringGauge->barMargin = Margin(36, 34, 33, 34);
 
 			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
-			slot->anchor = Anchors::Full;
-			slot->alignment = Vector2(0.0f, 0.5f);
+			slot->anchor = Anchor(0.0, 0.25, 1.0, 0.8);
+			slot->alignment = Vector2(1.0f, 0.5f);
 			slot->autoSizeX = true;
 			slot->autoSizeY = true;
 		}
@@ -953,7 +953,7 @@ public:
 
 		const BeatmapSettings& bms = m_beatmap->GetMapSettings();
 		const TimingPoint& tp = m_playback.GetCurrentTimingPoint();
-		Vector2 textPos = Vector2(10 + (float)m_scoringGauge->frameTexture->GetSize().x, 10);
+		Vector2 textPos = Vector2(10 + (float)m_scoringGauge->frontTexture->GetSize().x, 10);
 		textPos.y += RenderText(bms.title, textPos).y;
 		textPos.y += RenderText(bms.artist, textPos).y;
 		textPos.y += RenderText(Utility::Sprintf("%.2f FPS", g_application->GetRenderFPS()), textPos).y;
@@ -1023,8 +1023,9 @@ public:
 
 	void OnLaserSlamHit(LaserObjectState* object)
 	{
+		float slamSize = fabs(object->points[1] - object->points[0]);
 		CameraShake shake(0.2f, 0.5f, 170.0f);
-		shake.amplitude = Vector3(0.02f, 0.01f, 0.0f); // Mainly x-axis
+		shake.amplitude = Vector3(0.04f * slamSize, 0.01f, 0.0f); // Mainly x-axis
 		m_camera.AddCameraShake(shake);
 		m_slamSample->Play();
 

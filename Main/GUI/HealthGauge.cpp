@@ -5,31 +5,29 @@
 
 HealthGauge::HealthGauge()
 {
-	barMargin = Margin(20, 38, 20, 38);
 }
 
 void HealthGauge::Render(GUIRenderData rd)
 {
 	// Calculate bar placement to fit parent rectangle
-	Rect barArea = GUISlotBase::ApplyFill(FillMode::Fit, frameTexture->GetSize(), rd.area);
-	float elementScale = barArea.size.x / frameTexture->GetSize().x; // Scale of the original bar
+	Rect barArea = GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area);
+	float elementScale = barArea.size.x / frontTexture->GetSize().x; // Scale of the original bar
 	GUISlotBase::ApplyAlignment(Vector2(0.5f), barArea, rd.area);
 
 	// Optional Bg?
-	if(bgTexture)
-		rd.guiRenderer->RenderRect(barArea, Color::White, bgTexture);
+	if(backTexture)
+		rd.guiRenderer->RenderRect(barArea, Color::White, backTexture);
 
-	// Acquire bar inner area
-	Margin scaledMargin = barMargin * elementScale;
-	Rect fillArea = scaledMargin.Apply(barArea);
-
-	// Draw the fill for the gauge
-	Transform transform;
-	transform *= Transform::Translation(fillArea.pos);
-	transform *= Transform::Scale(Vector3(fillArea.size.x, fillArea.size.y, 1.0f));
 	MaterialParameterSet params;
 	params.SetParameter("mainTex", fillTexture);
+	params.SetParameter("maskTex", maskTexture);
 	params.SetParameter("rate", rate);
+
+	Transform transform;
+	transform *= Transform::Translation(rd.area.pos);
+	transform *= Transform::Scale(Vector3(rd.area.size.x, rd.area.size.y, 1.0f));
+
+
 	Color color;
 	if(rate > 0.75f)
 	{
@@ -49,11 +47,10 @@ void HealthGauge::Render(GUIRenderData rd)
 	rd.rq->Draw(transform, rd.guiRenderer->guiQuad, fillMaterial, params);
 
 	// Draw frame last
-	rd.guiRenderer->RenderRect(barArea, Color::White, frameTexture);
+	rd.guiRenderer->RenderRect(barArea, Color::White, frontTexture);
 }
 
 Vector2 HealthGauge::GetDesiredSize(GUIRenderData rd)
 {
-	Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-	return Vector2(rd.area.size.x * 0.4, rd.area.size.y * 0.5);
+	return GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area).size;
 }
