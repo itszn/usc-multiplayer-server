@@ -132,6 +132,7 @@ bool Track::AsyncFinalize()
 	buttonHoldTexture->SetFilter(true, true, 16.0f);
 	buttonLength = buttonTexture->CalculateHeight(buttonWidth);
 	buttonMesh = MeshGenerators::Quad(g_gl, Vector2(0.0f, 0.0f), Vector2(buttonWidth, buttonLength));
+	buttonMaterial->opaque = false;
 
 	fxbuttonTexture->SetMipmaps(true);
 	fxbuttonTexture->SetFilter(true, true, 16.0f);

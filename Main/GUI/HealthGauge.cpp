@@ -32,16 +32,16 @@ void HealthGauge::Render(GUIRenderData rd)
 	if(rate > 0.70f)
 	{
 		// Fade to max
-		float f2 = (rate - 0.70f) / 0.25f;
-		f2 = powf(f2, 1.2f);
-		color = Colori(90, 225, 58);
-		color *= (0.70f + f2 * 0.25f);
+		//float f2 = (rate - 0.70f) / 0.25f;
+		//f2 = powf(f2, 1.2f);
+		color = Colori(255, 102, 255);
+		//color *= (0.70f + f2 * 0.25f);
 	}
 	else
 	{
-		float f1 = (rate / 0.70f);
-		color = Colori(146, 109, 141);
-		color *= (0.70f + f1 * 0.25f);
+		//float f1 = (rate / 0.70f);
+		color = Colori(0, 204, 255);
+		//color *= (0.70f + f1 * 0.25f);
 	}
 	params.SetParameter("barColor", color);
 	rd.rq->Draw(transform, rd.guiRenderer->guiQuad, fillMaterial, params);

@@ -13,13 +13,11 @@ uniform vec4 barColor;
 void main()
 {
 	vec4 tex = texture2D(mainTex, fsTex);
-    tex.xyz *= 0.5;
-    if(rate >= 0.7)
-        tex.xyz *= 2;
+
     float mask = texture2D(maskTex, fsTex).x;
-    mask -= 1.0 - rate;
+    mask = rate - mask;
     mask *= 100;
     mask = clamp(mask, 0.0, 1.0);
-	target.rgb = tex.rgb;
+	target.rgb = tex.rgb * barColor.rgb;
     target.a = tex.a * mask;
 }
