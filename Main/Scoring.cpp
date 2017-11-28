@@ -451,15 +451,20 @@ void Scoring::m_UpdateTicks()
 					//	except for autoplay, which just hits it.
 					if(!tick->HasFlag(TickFlags::Start) || (autoplay || autoplayButtons))
 					{
+						HoldObjectState* hos = (HoldObjectState*)tick->object;
+
+						MapTime holdStart = 0;
+						while (hos)
+						{
+							holdStart = hos->time;
+							hos = hos->prev;
+						}
+
 						// Check buttons here for holds
-						if((m_input && m_input->GetButton(button)) || autoplay || autoplayButtons)
+						if((m_input && m_input->GetButton(button) && holdStart - goodHitTime < m_buttonHitTime[(uint8)button]) || autoplay || autoplayButtons)
 						{							
-							// Make sure the button wasnt being held long before the hold became active.
-							if (tick->object->time - goodHitTime < m_buttonHitTime[buttonCode] || autoplay || autoplayButtons)
-							{
-								m_TickHit(tick, buttonCode);
-								processed = true;
-							}
+							m_TickHit(tick, buttonCode);
+							processed = true;
 						}
 					}
 				}
