@@ -257,16 +257,16 @@ public:
             for (TimingPoint* tp : timingPoints)
             {
                 double thisBPM = tp->GetBPM();
-                if (!bpmDurations.count(thisBPM))
+                if (!bpmDurations.count(lastBPM))
                 {
-                    bpmDurations[thisBPM] = 0;
+                    bpmDurations[lastBPM] = 0;
                 }
                 MapTime timeSinceLastTP = tp->time - lastMT;
-                bpmDurations[thisBPM] += timeSinceLastTP;
-                if (bpmDurations[thisBPM] > largestMT)
+                bpmDurations[lastBPM] += timeSinceLastTP;
+                if (bpmDurations[lastBPM] > largestMT)
                 {
-                    useBPM = thisBPM;
-                    largestMT = bpmDurations[thisBPM];
+                    useBPM = lastBPM;
+                    largestMT = bpmDurations[lastBPM];
                 }
                 lastMT = tp->time;
                 lastBPM = thisBPM;
@@ -280,6 +280,10 @@ public:
 
             m_hispeed = m_modSpeed / useBPM; 
         }
+		else if (m_usecMod)
+		{
+			m_hispeed = m_modSpeed / m_beatmap->GetLinearTimingPoints().front()->GetBPM();
+		}
 
 		// Initialize input/scoring
 		if(!InitGameplay())
@@ -715,6 +719,7 @@ public:
 		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
 		m_playback.Reset();
 
+		/// TODO: c-mod is broken, might need something in the viewrange calculation stuff
         // If c-mod is used
         if (m_usecMod)
         {

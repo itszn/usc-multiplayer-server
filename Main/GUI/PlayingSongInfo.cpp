@@ -96,14 +96,10 @@ void SongTitleArtist::PreRender(GUIRenderData rd, GUIElementBase *& inputElement
 
 void SongTitleArtist::Render(GUIRenderData rd)
 {
-	float roundedSpeed = Math::Floor(hiSpeed * 10) / 10;
-	int speedBase = roundedSpeed;
-	int speedDecimal = (int)(roundedSpeed * 10) % 10;
-	int roundBpm = BPM;
 	// Make Bpm and Hispeed string
 	WString speedText = Utility::WSprintf(
-		L"BPM: %d\nHiSpeed: %d x %d.%d = %d",
-		roundBpm, roundBpm, speedBase, speedDecimal, (int)(roundedSpeed * roundBpm));
+		L"BPM: %.1f\nHiSpeed: %d x %.1f = %d",
+		BPM, (int)BPM, hiSpeed, (int)Math::Round(hiSpeed * BPM));
 
 
 	/// TODO: Cache stuff and only regen if the resolution changes.
