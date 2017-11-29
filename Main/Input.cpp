@@ -234,6 +234,7 @@ void Input::m_InitKeyboardMapping()
 
 void Input::m_InitControllerMapping()
 {
+	m_controllerMap.clear();
 	if(m_buttonDevice == InputDevice::Controller)
 	{
 		m_controllerMap.Add(g_gameConfig.GetInt(GameConfigKeys::Controller_BTS), Button::BT_S);

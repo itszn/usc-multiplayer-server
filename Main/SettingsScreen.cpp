@@ -195,6 +195,7 @@ private:
 			g_gameConfig.Set(GameConfigKeys::UseMMod, false);
 		}
 
+		g_input.Cleanup();
 		g_input.Init(*g_gameWindow);
 		g_application->RemoveTickable(this);
 	}
