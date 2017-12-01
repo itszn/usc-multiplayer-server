@@ -19,6 +19,29 @@ class AudioStreamMP3_Impl : public AudioStreamBase
 
 	bool m_firstFrame = true;
 
+	// https://en.wikipedia.org/wiki/Synchsafe
+	int m_unsynchsafe(int in)
+	{
+		int out = 0, mask = 0x7F000000;
+
+		while (mask) {
+			out >>= 1;
+			out |= in & mask;
+			mask >>= 8;
+		}
+
+		return out;
+	}
+
+	int m_toLittleEndian(int num)
+	{
+		return ((num >> 24) & 0xff) | // move byte 3 to byte 0
+			((num << 8) & 0xff0000) | // move byte 1 to byte 2
+			((num >> 8) & 0xff00) | // move byte 2 to byte 1
+			((num << 24) & 0xff000000); // byte 0 to byte 3
+
+	}
+
 public:
 	~AudioStreamMP3_Impl()
 	{
@@ -34,9 +57,21 @@ public:
 		m_mp3dataLength = Reader().GetSize();
 		m_dataSource = m_data.data();
 
+		int32 tagSize = 0;
+
+		String tag = "tag";
+		for (size_t i = 0; i < 3; i++)
+		{
+			tag[i] = m_dataSource[i];
+		}
+		if (tag == "ID3")
+		{
+			/// TODO: Check if tag has footer and add another 10 to the size
+			tagSize = m_unsynchsafe(m_toLittleEndian(*(int32*)(m_dataSource + 6))) + 10;
+		}
 		// Scan MP3 frame offsets
 		uint32 sampleOffset = 0;
-		for(size_t i = 0; i < m_mp3dataLength;)
+		for(size_t i = tagSize; i < m_mp3dataLength;)
 		{
 			if(m_dataSource[i] == 0xFF)
 			{
