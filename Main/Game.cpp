@@ -331,6 +331,7 @@ public:
 		if(m_jacketImage)
 		{
 			m_jacketTexture = TextureRes::Create(g_gl, m_jacketImage);
+			m_psi->SetJacket(m_jacketTexture);
 		}
 
 		if(!loader.Finalize())

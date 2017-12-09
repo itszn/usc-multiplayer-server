@@ -2,14 +2,12 @@
 #include "PlayingSongInfo.hpp"
 #include <GUI/GUI.hpp>
 #include "Application.hpp"
-#include "SongSelectStyle.hpp"
 
 #include <Beatmap/Beatmap.hpp>
 
 PlayingSongInfo::PlayingSongInfo(Game& game)
 {
 	m_settings = game.GetBeatmap()->GetMapSettings();
-	Ref<SongSelectStyle> songSelectStyle = SongSelectStyle::Get(g_application);
 
 
 	LayoutBox* layoutBox = new LayoutBox();
@@ -20,14 +18,9 @@ PlayingSongInfo::PlayingSongInfo(Game& game)
 		layoutSlot->anchor = Anchors::Full;
 	}
 
-	m_jacketPath = Path::Normalize(game.GetMapRootPath() + "/" + m_settings.jacketPath);
-	m_jacketImage = songSelectStyle->GetJacketThumnail(m_jacketPath);
-
-
 	// Jacket
 	Panel* jacketPanel = new Panel();
 	m_jacket = Ref<Panel>(jacketPanel);
-	jacketPanel->texture = m_jacketImage;
 	jacketPanel->color = Color::White;
 	jacketPanel->imageFillMode = FillMode::Fit;
 	{
@@ -80,6 +73,12 @@ void PlayingSongInfo::SetBPM(float bpm)
 void PlayingSongInfo::SetHiSpeed(float hiSpeed)
 {
 	m_titleArtist->hiSpeed = hiSpeed;
+}
+
+void PlayingSongInfo::SetJacket(Texture jacket)
+{
+	m_jacketImage = jacket;
+	m_jacket->texture = jacket;
 }
 
 SongTitleArtist::SongTitleArtist(String title, String artist, PlayingSongInfo* info)

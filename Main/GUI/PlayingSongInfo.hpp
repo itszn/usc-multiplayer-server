@@ -51,6 +51,7 @@ public:
 	void SetProgress(float progress);
 	void SetBPM(float bpm);
 	void SetHiSpeed(float hiSpeed);
+	void SetJacket(Texture jacket);
 
 	Material progressMaterial;
 
