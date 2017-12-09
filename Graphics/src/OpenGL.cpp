@@ -73,6 +73,8 @@ namespace Graphics
 		SDL_Window* sdlWnd = (SDL_Window*)m_window->Handle();
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 		// Create a context
 		m_impl->context = SDL_GL_CreateContext(sdlWnd);
