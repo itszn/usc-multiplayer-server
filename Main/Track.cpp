@@ -65,6 +65,7 @@ bool Track::AsyncLoad()
 
 	// mip-mapped and anisotropicaly filtered track textures
 	loader->AddTexture(trackTexture, "track.png");
+	loader->AddTexture(trackDarkTexture, "track_dark.png");
 	loader->AddTexture(trackTickTexture, "tick.png");
 
 	// Scoring texture
@@ -191,7 +192,8 @@ bool Track::AsyncFinalize()
 	}
 
 	// Generate simple planes for the playfield track and elements
-	trackMesh = MeshGenerators::Quad(g_gl, Vector2(-trackWidth * 0.5f, 0.0f), Vector2(trackWidth, trackLength));
+	trackMesh = MeshGenerators::Quad(g_gl, Vector2(-trackWidth * 0.5f, -trackLength), Vector2(trackWidth, trackLength * 2));
+	trackDarkMesh = MeshGenerators::Quad(g_gl, Vector2(-trackWidth, -trackLength), Vector2(trackWidth * 2, trackLength));
 	trackTickMesh = MeshGenerators::Quad(g_gl, Vector2(-buttonTrackWidth * 0.5f, 0.0f), Vector2(buttonTrackWidth, trackTickLength));
 	centeredTrackMesh = MeshGenerators::Quad(g_gl, Vector2(-0.5f, -0.5f), Vector2(1.0f, 1.0f));
 
@@ -455,6 +457,15 @@ void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffse
 	transform *= Transform::Scale({ widthScale, 1.0f, 1.0f });
 	transform *= Transform::Translation({ 0.0f, heightOffset, 0.0f });
 	rq.Draw(transform, trackMesh, trackOverlay, params);
+}
+void Track::DrawDarkTrack(RenderQueue & rq)
+{
+	// Base
+	MaterialParameterSet params;
+	Transform transform;
+	//transform *= Transform::Translation({ 0.0f, 0.0f, 0.1f });
+	params.SetParameter("mainTex", trackDarkTexture);
+	rq.Draw(transform, trackDarkMesh, buttonMaterial, params);
 }
 void Track::DrawSprite(RenderQueue& rq, Vector3 pos, Vector2 size, Texture tex, Color color /*= Color::White*/, float tilt /*= 0.0f*/)
 {

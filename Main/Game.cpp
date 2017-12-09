@@ -490,6 +490,8 @@ public:
 			m_track->DrawObjectState(renderQueue, m_playback, object, m_scoring.IsObjectHeld(object));
 		}
 
+		m_track->DrawDarkTrack(renderQueue);
+
 		// Use new camera for scoring overlay
 		//	this is because otherwise some of the scoring elements would get clipped to
 		//	the track's near and far planes
@@ -512,7 +514,6 @@ public:
 			m_track->laserPositions[i] = m_scoring.laserPositions[i];
 			m_track->laserPointerOpacity[i] = (1.0f - Math::Clamp<float>(m_scoring.timeSinceLaserUsed[i] / 0.5f - 1.0f, 0, 1));
 		}
-
 		m_track->DrawOverlays(scoringRq);
 		float comboZoom = Math::Max(0.0f, (1.0f - (m_comboAnimation.SecondsAsFloat() / 0.2f)) * 0.5f);
 		m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, Color::White, 1.0f + comboZoom);

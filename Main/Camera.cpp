@@ -148,7 +148,8 @@ RenderState Camera::CreateRenderState(bool clipped)
 	/// TODO: Fix d1 and use that instead of fixed 7.0f (?)
 
 	float fov = m_fov[portrait];
-	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), d1 + viewRangeExtension);
+	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, 0.01f, d1 + viewRangeExtension);
+	//rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), d1 + viewRangeExtension);
 
 	m_rsLast = rs;
 
