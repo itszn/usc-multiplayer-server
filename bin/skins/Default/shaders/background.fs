@@ -50,12 +50,9 @@ vec2 rotate_point(vec2 cen,float angle,vec2 p)
 // https://thebookofshaders.com/07/
 
 float GetDistanceShape(vec2 st, int N){
-    st.x /= viewport.x / viewport.y;
     vec3 color = vec3(0.0);
     float d = 0.0;
 
-    // Remap the space to -1. to 1.
-    st.x *= viewport.x / viewport.y;
     // Angle and radius from the current pixel
     float a = atan(st.x,st.y)+PI;
     float r = TWO_PI/float(N);
