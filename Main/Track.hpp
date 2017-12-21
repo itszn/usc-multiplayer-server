@@ -116,8 +116,10 @@ public:
 	Mesh centeredTrackMesh;
 	Material spriteMaterial;
 
-	// For flicking objects, like hold objects that are active
+	// For flickering objects, like hold objects that are active
 	float objectGlow;
+	// 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
+	int objectGlowState;
 
 private:
 	// Laser track generators

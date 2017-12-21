@@ -50,6 +50,7 @@ namespace Graphics
 	{
 	public:
 		using Map<String, MaterialParameter>::Map;
+		void SetParameter(const String& name, int sc);
 		void SetParameter(const String& name, float sc);
 		void SetParameter(const String& name, const Vector4& vec);
 		void SetParameter(const String& name, const Colori& color);

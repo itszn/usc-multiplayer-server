@@ -269,6 +269,7 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	// Set Object glow
 	int32 startBeat = 0;
 	uint32 numBeats = playback.CountBeats(m_lastMapTime, currentTime - m_lastMapTime, startBeat, 4);
+	objectGlowState = currentTime % 100 < 50 ? 0 : 1;
 	m_lastMapTime = currentTime;
 	if(numBeats > 0)
 	{
@@ -334,6 +335,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		float xposition;
 		float length;
 		float currentObjectGlow = active ? objectGlow : 0.0f;
+		int currentObjectGlowState = active ? 2 + objectGlowState : 0;
 		if(mobj->button.index < 4) // Normal button
 		{
 			width = buttonWidth;
@@ -355,8 +357,13 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 
 		if(isHold)
 		{
-			mat = holdButtonMaterial;
+			if(!active && mobj->hold.GetRoot()->time > playback.GetLastTime())
+				params.SetParameter("hitState", 1);
+			else
+				params.SetParameter("hitState", currentObjectGlowState);
+
 			params.SetParameter("objectGlow", currentObjectGlow);
+			mat = holdButtonMaterial;
 		}
 
 		Vector3 buttonPos = Vector3(xposition, trackLength * position, 0.02f);
@@ -384,10 +391,16 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			MaterialParameterSet laserParams;
 
 			// Make not yet hittable lasers slightly glowing
-			if((laser->GetRoot()->time + Scoring::goodHitTime) > playback.GetLastTime())
+			if ((laser->GetRoot()->time + Scoring::goodHitTime) > playback.GetLastTime())
+			{
 				laserParams.SetParameter("objectGlow", 0.2f);
+				laserParams.SetParameter("hitState", 1);
+			}
 			else
+			{
 				laserParams.SetParameter("objectGlow", active ? objectGlow : 0.0f);
+				laserParams.SetParameter("hitState", active ? 2 + objectGlowState : 0);
+			}
 			laserParams.SetParameter("mainTex", texture);
 
 			// Get the length of this laser segment

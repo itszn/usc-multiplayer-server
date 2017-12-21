@@ -7,6 +7,9 @@ layout(location=0) out vec4 target;
 uniform sampler2D mainTex;
 uniform float objectGlow;
 
+// 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
+uniform int hitState;
+
 void main()
 {	
 	vec4 mainColor = texture(mainTex, fsTex.xy);

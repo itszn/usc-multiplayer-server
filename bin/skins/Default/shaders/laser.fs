@@ -8,6 +8,9 @@ uniform sampler2D mainTex;
 uniform vec4 color;
 uniform float objectGlow;
 
+// 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
+uniform int hitState;
+
 void main()
 {	
     float x = fsTex.x;

@@ -206,6 +206,9 @@ namespace Graphics
 			{
 				switch(p.second.parameterType)
 				{
+				case GL_INT:
+					BindAll(p.first, p.second.Get<int>());
+					break;
 				case GL_FLOAT:
 					BindAll(p.first, p.second.Get<float>());
 					break;
@@ -378,6 +381,10 @@ namespace Graphics
 		return GetResourceManager<ResourceType::Material>().Register(impl);
 	}
 
+	void MaterialParameterSet::SetParameter(const String& name, int sc)
+	{
+		Add(name, MaterialParameter::Create(sc, GL_INT));
+	}
 	void MaterialParameterSet::SetParameter(const String& name, float sc)
 	{
 		Add(name, MaterialParameter::Create(sc, GL_FLOAT));
