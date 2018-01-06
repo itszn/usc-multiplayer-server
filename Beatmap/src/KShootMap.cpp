@@ -174,7 +174,10 @@ bool KShootMap::Init(BinaryStream& input, bool metadataOnly)
 			}
 			else if(line.Split("=", &k, &v))
 			{
-				tick.settings.FindOrAdd(k) = v;
+				KShootTickSetting ts;
+				ts.first = k;
+				ts.second = v;
+				tick.settings.Add(ts);
 			}
 			else
 			{

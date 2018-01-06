@@ -2,6 +2,12 @@
 
 using Utility::Sprintf;
 
+struct KShootTickSetting
+{
+	String first;
+	String second;
+};
+
 /*
 	Any division inside a KShootBlock
 */
@@ -11,7 +17,7 @@ public:
 	String ToString() const;
 	void Clear();
 
-	Map<String, String> settings;
+	Vector<KShootTickSetting> settings;
 
 	// Original data for this tick
 	String buttons, fx, laser, add;
@@ -34,6 +40,8 @@ public:
 	uint32_t block;
 	uint32_t tick;
 };
+
+
 
 struct KShootEffectDefinition
 {

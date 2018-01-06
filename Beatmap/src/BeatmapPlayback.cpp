@@ -319,8 +319,23 @@ MapTime BeatmapPlayback::ViewDistanceToDuration(float distance)
 		time += distance * tp[0]->beatDuration;
 		break;
 	}
-	for (auto cs : m_SelectChartStops(currentTime, time))
-		time += cs->duration;
+
+	/// TODO: Optimize?
+	uint32 processedStops = 0;
+	Vector<ChartStop*> ignoreStops;
+	do
+	{
+		processedStops = 0;
+		for (auto cs : m_SelectChartStops(currentTime, time))
+		{
+			if (std::find(ignoreStops.begin(), ignoreStops.end(), cs) != ignoreStops.end())
+				continue;
+			time += cs->duration;
+			processedStops++;
+			ignoreStops.Add(cs);
+		}
+	} while (processedStops);
+
 	return (MapTime)time;
 }
 float BeatmapPlayback::DurationToViewDistance(MapTime duration)
