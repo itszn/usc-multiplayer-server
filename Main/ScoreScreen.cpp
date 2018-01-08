@@ -74,7 +74,7 @@ public:
 
 		m_beatmapSettings = game->GetBeatmap()->GetMapSettings();
 		m_jacketPath = Path::Normalize(game->GetMapRootPath() + Path::sep + m_beatmapSettings.jacketPath);
-		m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
+		m_jacketImage = game->GetJacketImage();
 
 		// Make texture for performance graph samples
 		m_graphTex = TextureRes::Create(g_gl);
@@ -112,12 +112,31 @@ public:
 			slot->anchor = Anchors::Full;
 			slot->SetZOrder(-2);
 		}
+		
+		Canvas* innerCanvas = new Canvas();
+		Canvas::Slot* innerSlot = m_canvas->Add(innerCanvas->MakeShared());
+		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
 
+		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+
+		Vector2 bottomRight = topLeft + canvasRes;
+
+		innerSlot->allowOverflow = true;
+		topLeft /= g_resolution;
+		bottomRight /= g_resolution;
+
+		if (g_aspectRatio < 640.f / 480.f)
+			innerSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
+		else
+			innerSlot->anchor = Anchors::Full;
+
+		
 		// Border
 		Panel* border = new Panel();
 		border->color = Color::Black.WithAlpha(0.25f);
 		{
-			Canvas::Slot* slot = m_canvas->Add(border->MakeShared());
+			Canvas::Slot* slot = innerCanvas->Add(border->MakeShared());
 			slot->anchor = Anchors::Full;
 			slot->padding = Margin(0, 30);
 			slot->SetZOrder(-1);
@@ -132,11 +151,11 @@ public:
 			LayoutBox* songInfoContainer = new LayoutBox();
 			songInfoContainer->layoutDirection = LayoutBox::Horizontal;
 			{
-				Canvas::Slot* slot = m_canvas->Add(songInfoContainer->MakeShared());
+				Canvas::Slot* slot = innerCanvas->Add(songInfoContainer->MakeShared());
 				slot->anchor = Anchor(0.0f, 0.0f, 1.0f, screenSplit);
-				slot->padding = Margin(sidePadding);
-				slot->padding.top = 30 + 20;
-				slot->padding.bottom = 20;
+				slot->padding = Margin(sidePadding * scale);
+				slot->padding.top = (30 + 20) * scale;
+				slot->padding.bottom = (20) * scale;
 				slot->alignment = Vector2(0.0f, 0.5f);
 			}
 
@@ -157,13 +176,13 @@ public:
 			{
 				LayoutBox::Slot* slot = songInfoContainer->Add(metadataContainer->MakeShared());
 				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding.left = 30;
+				slot->padding.left = 30 * scale;
 			}
 			auto AddMetadataLine = [&](const String& text)
 			{
 				Label* label = new Label();
 				label->SetText(Utility::ConvertToWString(text));
-				label->SetFontSize(48);
+				label->SetFontSize(48 * scale);
 				LayoutBox::Slot* slot = metadataContainer->Add(label->MakeShared());
 			};
 			// Title/Artist/Effector/Etc.
@@ -177,7 +196,7 @@ public:
 			Panel* scoreContainerBg = new Panel();
 			scoreContainerBg->color = Color::Black.WithAlpha(0.5f);
 			{
-				Canvas::Slot* slot = m_canvas->Add(scoreContainerBg->MakeShared());
+				Canvas::Slot* slot = innerCanvas->Add(scoreContainerBg->MakeShared());
 				slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f);
 				slot->padding = Margin(0, 0, 0, 50);
 			}
@@ -185,7 +204,7 @@ public:
 			LayoutBox* scoreContainer = new LayoutBox();
 			scoreContainer->layoutDirection = LayoutBox::Horizontal;
 			{
-				Canvas::Slot* slot = m_canvas->Add(scoreContainer->MakeShared());
+				Canvas::Slot* slot = innerCanvas->Add(scoreContainer->MakeShared());
 				slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f); 
 				slot->padding = Margin(0, 0, 0, 50);
 			}
@@ -198,7 +217,7 @@ public:
 			{
 				LayoutBox::Slot* slot = scoreContainer->Add(scoreAndGraph->MakeShared());
 				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding = Margin(20, 10);
+				slot->padding = Margin(20 * scale, 10 * scale);
 				slot->fillX = true;
 				slot->fillY = true;
 				slot->fillAmount = 1.0f;
@@ -207,12 +226,12 @@ public:
 			Label* score = new Label();
 			score->SetText(Utility::WSprintf(L"%08d", m_score));
 			score->SetFont(m_specialFont);
-			score->SetFontSize(140);
+			score->SetFontSize(80 * scale);
 			score->color = Color(0.75f);
 			score->SetTextOptions(FontRes::Monospace);
 			{
 				LayoutBox::Slot* slot = scoreAndGraph->Add(score->MakeShared());
-				slot->padding = Margin(0, 0, 0, 20);
+				slot->padding = Margin(0, 0, 0, 20 * scale);
 				slot->fillX = false;
 				slot->alignment = Vector2(0.5f, 0.0f);
 			}
@@ -220,11 +239,11 @@ public:
 			Label* perfomanceTitle = new Label();
 			perfomanceTitle->SetText(L"Performance");
 			perfomanceTitle->SetFont(m_specialFont);
-			perfomanceTitle->SetFontSize(40);
+			perfomanceTitle->SetFontSize(40 * scale);
 			perfomanceTitle->color = Color(0.6f);
 			{
 				LayoutBox::Slot* slot = scoreAndGraph->Add(perfomanceTitle->MakeShared());
-				slot->padding = Margin(5, 0, 0, 5);
+				slot->padding = Margin(5 * scale, 0, 0, 5 * scale);
 				slot->alignment = Vector2(0.0f, 0.0f);
 			}
 
@@ -247,7 +266,7 @@ public:
 			{
 				LayoutBox::Slot* slot = scoreContainer->Add(gradePanel->MakeShared());
 				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding = Margin(30, 10);
+				slot->padding = Margin(30 * scale, 10 * scale);
 				slot->fillX = true;
 				slot->fillY = true;
 			}
@@ -309,6 +328,9 @@ public:
 		if(!loader.Finalize())
 			return false;
 
+		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
+
 		// Make gauge material transparent
 		m_gauge->fillMaterial->opaque = false;
 
@@ -321,23 +343,26 @@ public:
 			slot4->fillY = false;
 			slot4->alignment = Vector2(0.0f, 0.5f);
 			slot4->padding = Margin(0, 5);
-
+			slot4->allowOverflow = true;
 			Panel* icon = new Panel();
+			icon->color = Color::White;
 			icon->texture = texture;
+			icon->imageFillMode = FillMode::Fit;
+			icon->imageAlignment = Vector2(0.5, 0.5);
 			Canvas::Slot* canvasSlot = canvas->Add(icon->MakeShared());
-			canvasSlot->anchor = Anchor(0.0f, 0.5f);
+			canvasSlot->anchor = Anchor(0.0f, 0.33f, 0.5f, 1.0f); /// TODO: Remove Y offset and center properly
 			canvasSlot->autoSizeX = true;
 			canvasSlot->autoSizeY = true;
 			canvasSlot->alignment = Vector2(0.0f, 0.5f);
 
 			Label* countLabel = new Label();
 			countLabel->SetFont(m_specialFont);
-			countLabel->SetFontSize(64);
+			countLabel->SetFontSize(64 * scale);
 			countLabel->SetTextOptions(FontRes::Monospace);
 			countLabel->color = Color(0.5f);
 			countLabel->SetText(Utility::WSprintf(L"%05d", count));
 			canvasSlot = canvas->Add(countLabel->MakeShared());
-			canvasSlot->anchor = Anchor(0.9f, 0.4f); // Slight y offset because of the font
+			canvasSlot->anchor = Anchor(0.5f, 0.0f, 1.0f, 1.0f); 
 			canvasSlot->autoSizeX = true;
 			canvasSlot->autoSizeY = true;
 			canvasSlot->alignment = Vector2(1.0f, 0.5f);
