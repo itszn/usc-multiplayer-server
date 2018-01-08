@@ -142,6 +142,7 @@ private:
 	ParticleSystem m_particleSystem;
 	Ref<ParticleEmitter> m_laserFollowEmitters[2];
 	Ref<ParticleEmitter> m_holdEmitters[6];
+
 public:
 	Game_Impl(const String& mapPath)
 	{
@@ -367,7 +368,7 @@ public:
 			Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
 
 			Vector2 bottomRight = topLeft + canvasRes;
-
+			rootSlot->allowOverflow = true;
 			topLeft /= g_resolution;
 			bottomRight /= g_resolution;
 
@@ -589,8 +590,53 @@ public:
 
 		// Game GUI canvas
 		m_canvas = Utility::MakeRef(new Canvas());
+
 		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		Vector2 bottomRight = topLeft + canvasRes;
+		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
+		canvasRes.y = bottomRight.y - topLeft.y;
+
 		float scale = canvasRes.x / 640.f;
+
+
+		if (g_aspectRatio < 1.0)
+		{
+			//Top Fill
+			{
+				Panel* topPanel = new Panel();
+				loader.AddTexture(topPanel->texture, "fill_top.png");
+				topPanel->color = Color::White;
+				topPanel->imageFillMode = FillMode::Fit;
+				topPanel->imageAlignment = Vector2(0.5, 0.0);
+				Canvas::Slot* topSlot = m_canvas->Add(topPanel->MakeShared());
+
+				float topPanelTop = topLeft.y / canvasRes.y;
+
+				topSlot->anchor = Anchor(0.0, -topPanelTop, 1.0, 1.0);
+				topSlot->alignment = Vector2(0.5, 1.0);
+				topSlot->allowOverflow = true;
+			}
+
+			//Bottom Fill
+			{
+				Panel* bottomPanel = new Panel();
+				loader.AddTexture(bottomPanel->texture, "fill_bottom.png");
+				bottomPanel->color = Color::White;
+				bottomPanel->imageFillMode = FillMode::Fit;
+				bottomPanel->imageAlignment = Vector2(0.5, 1.0);
+				Canvas::Slot* bottomSlot = m_canvas->Add(bottomPanel->MakeShared());
+
+				float canvasBottom = topLeft.y + canvasRes.y;
+				float pixelsTobottom = g_resolution.y - canvasBottom;
+				float bottomPanelbottom = pixelsTobottom / canvasRes.y;
+
+				bottomSlot->anchor = Anchor(0.0, 0.0, 1.0, 1.0 + bottomPanelbottom);
+				bottomSlot->alignment = Vector2(0.5, 1.0);
+				bottomSlot->allowOverflow = true;
+			}
+		}
+
 		{
 			// Gauge
 			m_scoringGauge = Utility::MakeRef(new HealthGauge());
@@ -654,6 +700,7 @@ public:
 
 			slot->alignment = Vector2(0.5f, 0.5f);
 		}
+
 
 		// Song info
 		{
