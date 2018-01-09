@@ -139,17 +139,16 @@ RenderState Camera::CreateRenderState(bool clipped)
 	Vector3 cameraDir = cameraTransform.TransformDirection(Vector3(0.0f, 0.0f, 1.0f));
 	float offset = VectorMath::Dot(cameraPos, cameraDir);
 
-	// Dot products of start and end of track on the viewing direction to get the near and far clipping planes
-	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
-	float d1 = VectorMath::Dot(Vector3(0.0f, track->trackLength, 0.0f), cameraDir) + offset; // Breaks when doing full spins
-	d1 = track->trackLength;
+	Vector3 toTrackEnd = Vector3(0, 0, track->trackLength) - Vector3(0.0f, -targetHeight, -targetNear);
+	float distToTrackEnd = sqrtf(toTrackEnd.y * toTrackEnd.y + toTrackEnd.z * toTrackEnd.z);
+	float angleToTrackEnd = atan2f(toTrackEnd.y, toTrackEnd.z);
 
+	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
+	float d1 = fabsf(sinf(angleToTrackEnd - Math::degToRad * (base_pitch - m_pitchOffset[portrait])) * distToTrackEnd);
 	rs.cameraTransform = cameraTransform;
-	/// TODO: Fix d1 and use that instead of fixed 7.0f (?)
 
 	float fov = m_fov[portrait];
 	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, 0.01f, d1 + viewRangeExtension);
-	//rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, Math::Max(0.2f, d0 - viewRangeExtension), d1 + viewRangeExtension);
 
 	m_rsLast = rs;
 
