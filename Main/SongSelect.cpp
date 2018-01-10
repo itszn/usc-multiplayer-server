@@ -257,6 +257,7 @@ public:
 
 					if(i == 0)
 					{
+						m_currentlySelectedId = newIndex;
 						m_OnMapSelected(it->second);
 					}
 
@@ -434,6 +435,10 @@ private:
 	// Search field
 	Ref<TextInputField> m_searchField;
 
+	// Score list canvas
+	Ref<Canvas> m_scoreCanvas;
+	Ref<LayoutBox> m_scoreList;
+
 	// Player of preview music
 	PreviewPlayer m_previewPlayer;
 
@@ -449,6 +454,7 @@ private:
 	MouseLockHandle m_lockMouse;
 	bool m_suspended = false;
 	bool m_previewLoaded = true;
+	bool m_showScores = false;
 	uint64_t m_previewDelayTicks = 0;
 
 public:
@@ -495,6 +501,23 @@ public:
 			selectionSlot->fillY = true;
 			m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
 			m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
+		}
+
+
+		{
+			m_scoreCanvas = Ref<Canvas>(new Canvas());
+			Canvas::Slot* slot = m_canvas->Add(m_scoreCanvas->MakeShared());
+			slot->anchor = Anchor(1.0,0.0,2.0,10.0);
+
+			Panel* scoreBg = new Panel();
+			scoreBg->color = Color(Vector3(0.5), 1.0);
+			slot = m_scoreCanvas->Add(scoreBg->MakeShared());
+			slot->anchor = Anchors::Full;
+
+			m_scoreList = Ref<LayoutBox>(new LayoutBox());
+			m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
+			slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
+			slot->anchor = Anchors::Full;
 		}
 
 		// Select interface sound
@@ -558,6 +581,49 @@ public:
 	// When a difficulty is selected in the song wheel
 	void OnDifficultySelected(DifficultyIndex* diff)
 	{
+		m_scoreList->Clear();
+		uint32 place = 1;
+
+		WString gradeStrings[] =
+		{
+			L"AAA",
+			L"AA",
+			L"A",
+			L"B",
+			L"C",
+			L"D",
+		};
+
+		for (auto& it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
+		{
+			ScoreIndex s = **it;
+
+			// Calculate grade
+			uint32 value = (uint32)(s.score * 0.9 + s.gauge * 1000000.0);
+			uint8 grade = 5;
+			if (value > 9800000) // AAA
+				grade = 0;
+			else if (value > 9400000) // AA
+				grade = 1;
+			else if (value > 8900000) // A
+				grade = 2;
+			else if (value > 8000000) // B
+				grade = 3;
+			else if (value > 7000000) // C
+				grade = 4;
+
+			Label* text = new Label();
+			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%%\n%ls",place, s.score, (int)(s.gauge * 100), gradeStrings[grade]));
+			text->SetFontSize(32);
+			LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
+			slot->fillX = true;
+			slot->padding = Margin(10, 5, 0, 0);
+			
+			if (place++ > 9)
+				break;
+		}
+
+
 	}
 	void OnSearchTermChanged(const WString& search)
 	{
@@ -598,6 +664,29 @@ public:
 				g_application->AddTickable(transistion);
             }
         }
+		else
+		{
+			switch (buttonCode)
+			{
+			case Input::Button::FX_1:
+				if (!m_showScores)
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, -200.0f, 0.2f)), true);
+					m_showScores = !m_showScores;
+				}
+				else
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, 0.0f, 0.2f)), true);
+					m_showScores = !m_showScores;
+				}
+				break;
+			default:
+				break;
+			}
+
+		}
     }
 
 	virtual void OnKeyPressed(int32 key)
@@ -692,8 +781,10 @@ public:
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
-        m_selectionWheel->AdvanceDifficultySelection((int)m_advanceDiff);
-        m_selectionWheel->AdvanceSelection((int)m_advanceSong);
+		if((int)m_advanceDiff != 0)
+			m_selectionWheel->AdvanceDifficultySelection((int)m_advanceDiff);
+		if ((int)m_advanceSong != 0)
+			m_selectionWheel->AdvanceSelection((int)m_advanceSong);
         
         m_advanceDiff -= (int)m_advanceDiff;
         m_advanceSong -= (int)m_advanceSong; 
