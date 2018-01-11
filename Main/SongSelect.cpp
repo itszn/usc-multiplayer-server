@@ -594,7 +594,7 @@ public:
 			L"D",
 		};
 
-		for (auto& it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
+		for (auto it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
 		{
 			ScoreIndex s = **it;
 
