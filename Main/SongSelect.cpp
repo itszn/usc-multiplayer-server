@@ -11,6 +11,7 @@
 #include "Game.hpp"
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
+#include "SongFilter.hpp"
 #include <Audio/Audio.hpp>
 #ifdef _WIN32
 #include "SDL_keycode.h"
@@ -347,6 +348,12 @@ public:
 		m_filterSet = true;
 		AdvanceSelection(0);
 	}
+	void SetFilter(SongFilter* filter)
+	{
+		m_mapFilter = filter->GetFiltered(m_maps);
+		m_filterSet = !filter->IsAll();
+		AdvanceSelection(0);
+	}
 	void ClearFilter()
 	{
 		if(m_filterSet)
@@ -415,6 +422,84 @@ private:
 	}
 };
 
+
+/*
+	Filter selection element
+*/
+class FilterSelection : public Canvas
+{
+public:
+	FilterSelection(Ref<SelectionWheel> selectionWheel) : m_selectionWheel(selectionWheel)
+	{
+		AddFilter(new SongFilter());
+		for (size_t i = 1; i <= 20; i++)
+		{
+			AddFilter(new LevelFilter(i));
+		}
+	}
+
+	bool Active = false;
+
+	bool IsAll()
+	{
+		return m_currentFilter->IsAll();
+	}
+
+	void AddFilter(SongFilter* filter)
+	{
+		m_filters.Add(filter);
+		Label* label = new Label();
+		label->SetFontSize(30);
+		label->SetText(Utility::ConvertToWString(filter->GetName()));
+		m_guiElements[filter] = label;
+		Canvas::Slot* labelSlot = Add(label->MakeShared());
+		labelSlot->allowOverflow = true;
+		labelSlot->autoSizeX = true;
+		labelSlot->autoSizeY = true;
+		labelSlot->anchor = Anchors::MiddleLeft;
+		labelSlot->alignment = Vector2(0.f, 0.5f);
+		m_currentSelection = 0;
+		SelectFilter(m_filters[0]);
+	}
+
+	void SelectFilter(SongFilter* filter)
+	{
+		m_selectionWheel->SetFilter(filter);
+		if (m_currentFilter)
+			m_guiElements[m_currentFilter]->SetText(Utility::ConvertToWString(m_currentFilter->GetName()));
+		m_guiElements[filter]->SetText(Utility::ConvertToWString(Utility::Sprintf("->%s", filter->GetName())));
+
+		for (size_t i = 0; i < m_filters.size(); i++)
+		{
+			Vector2 coordinate = Vector2(50, 0);
+			SongFilter* songFilter = m_filters[i];
+
+			coordinate.y = ((int)i - (int)m_currentSelection) * 40.f;
+			coordinate.x -= ((int)m_currentSelection - i) * ((int)m_currentSelection - i) * 1.5;
+			Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
+			AddAnimation(Ref<IGUIAnimation>(
+				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+			labelSlot->offset = Rect(coordinate, Vector2(0));
+		}
+		m_currentFilter = filter;
+	}
+
+	void AdvanceSelection(int32 offset)
+	{
+		m_currentSelection = ((int)m_currentSelection + offset) % (int)m_filters.size();
+		if (m_currentSelection < 0)
+			m_currentSelection = m_filters.size() + m_currentSelection;
+		SelectFilter(m_filters[m_currentSelection]);
+	}
+
+private:
+	Ref<SelectionWheel> m_selectionWheel;
+	Vector<SongFilter*> m_filters;
+	int32 m_currentSelection = 0;
+	Map<SongFilter*, Label*> m_guiElements;
+	SongFilter* m_currentFilter = nullptr;
+};
+
 /*
 	Song select window/screen
 */
@@ -432,8 +517,13 @@ private:
 	Ref<SongStatistics> m_statisticsWindow;
 	// Map selection wheel
 	Ref<SelectionWheel> m_selectionWheel;
+	// Filter selection
+	Ref<FilterSelection> m_filterSelection;
 	// Search field
 	Ref<TextInputField> m_searchField;
+	// Panel to fade out selection wheel
+	Ref<Panel> m_fadePanel;
+
 
 	// Score list canvas
 	Ref<Canvas> m_scoreCanvas;
@@ -503,6 +593,13 @@ public:
 			m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
 		}
 
+		{
+			m_fadePanel = Ref<Panel>(new Panel());
+			m_fadePanel->color = Color(0.f);
+			m_fadePanel->color.w = 0.0f;
+			Canvas::Slot* panelSlot = m_canvas->Add(m_fadePanel->MakeShared());
+			panelSlot->anchor = Anchors::Full;
+		}
 
 		{
 			m_scoreCanvas = Ref<Canvas>(new Canvas());
@@ -518,6 +615,12 @@ public:
 			m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
 			slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
 			slot->anchor = Anchors::Full;
+		}
+
+		{
+			m_filterSelection = Ref<FilterSelection>(new FilterSelection(m_selectionWheel));
+			Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
+			slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
 		}
 
 		// Select interface sound
@@ -625,10 +728,12 @@ public:
 
 
 	}
+
+	/// TODO: Fix some conflicts between search field and filter selection
 	void OnSearchTermChanged(const WString& search)
 	{
 		if(search.empty())
-			m_selectionWheel->ClearFilter();
+			m_filterSelection->AdvanceSelection(0);
 		else
 		{
 			String utf8Search = Utility::ConvertToUTF8(search);
@@ -666,6 +771,7 @@ public:
         }
 		else
 		{
+			List<SongFilter*> filters;
 			switch (buttonCode)
 			{
 			case Input::Button::FX_1:
@@ -682,6 +788,30 @@ public:
 					m_showScores = !m_showScores;
 				}
 				break;
+			case Input::Button::FX_0:
+				if (!m_filterSelection->Active)
+				{
+					g_guiRenderer->SetInputFocus(nullptr);
+
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)),true);
+					m_filterSelection->Active = !m_filterSelection->Active;
+				}
+				else
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)),true);
+					m_filterSelection->Active = !m_filterSelection->Active;
+				}
+				break;
 			default:
 				break;
 			}
@@ -691,49 +821,74 @@ public:
 
 	virtual void OnKeyPressed(int32 key)
 	{
-		if(key == SDLK_DOWN)
+		if (m_filterSelection->Active)
 		{
-			m_selectionWheel->AdvanceSelection(1);
+			if (key == SDLK_DOWN)
+			{
+				m_filterSelection->AdvanceSelection(1);
+
+			}
+			else if (key == SDLK_UP)
+			{
+				m_filterSelection->AdvanceSelection(-1);
+			}
+			else if (key == SDLK_ESCAPE)
+			{
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+				m_filterSelection->Active = !m_filterSelection->Active;
+			}
 		}
-		else if(key == SDLK_UP)
+		else
 		{
-			m_selectionWheel->AdvanceSelection(-1);
-		}
-		else if(key == SDLK_PAGEDOWN)
-		{
-			m_selectionWheel->AdvanceSelection(5);
-		}
-		else if(key == SDLK_PAGEUP)
-		{
-			m_selectionWheel->AdvanceSelection(-5);
-		}
-		else if(key == SDLK_LEFT)
-		{
-			m_selectionWheel->AdvanceDifficultySelection(-1);
-		}
-		else if(key == SDLK_RIGHT)
-		{
-			m_selectionWheel->AdvanceDifficultySelection(1);
-		}
-		else if(key == SDLK_F5)
-		{
-			m_mapDatabase.StartSearching();
-		}
-		else if(key == SDLK_F2)
-		{
-			m_selectionWheel->SelectRandom();
-		}
-		else if (key == SDLK_ESCAPE)
-		{
-			m_suspended = true;
-			g_application->RemoveTickable(this);
-		}
-		else if (key == SDLK_TAB)
-		{
-			if (m_searchField->HasInputFocus())
-				g_guiRenderer->SetInputFocus(nullptr);
-			else
-				g_guiRenderer->SetInputFocus(m_searchField.GetData());
+			if (key == SDLK_DOWN)
+			{
+				m_selectionWheel->AdvanceSelection(1);
+			}
+			else if (key == SDLK_UP)
+			{
+				m_selectionWheel->AdvanceSelection(-1);
+			}
+			else if (key == SDLK_PAGEDOWN)
+			{
+				m_selectionWheel->AdvanceSelection(5);
+			}
+			else if (key == SDLK_PAGEUP)
+			{
+				m_selectionWheel->AdvanceSelection(-5);
+			}
+			else if (key == SDLK_LEFT)
+			{
+				m_selectionWheel->AdvanceDifficultySelection(-1);
+			}
+			else if (key == SDLK_RIGHT)
+			{
+				m_selectionWheel->AdvanceDifficultySelection(1);
+			}
+			else if (key == SDLK_F5)
+			{
+				m_mapDatabase.StartSearching();
+			}
+			else if (key == SDLK_F2)
+			{
+				m_selectionWheel->SelectRandom();
+			}
+			else if (key == SDLK_ESCAPE)
+			{
+				m_suspended = true;
+				g_application->RemoveTickable(this);
+			}
+			else if (key == SDLK_TAB)
+			{
+				if (m_searchField->HasInputFocus())
+					g_guiRenderer->SetInputFocus(nullptr);
+				else
+					g_guiRenderer->SetInputFocus(m_searchField.GetData());
+			}
 		}
 	}
 	virtual void OnKeyReleased(int32 key)
@@ -781,10 +936,18 @@ public:
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
-		if((int)m_advanceDiff != 0)
-			m_selectionWheel->AdvanceDifficultySelection((int)m_advanceDiff);
-		if ((int)m_advanceSong != 0)
-			m_selectionWheel->AdvanceSelection((int)m_advanceSong);
+		if (!m_filterSelection->Active)
+		{
+			if ((int)m_advanceDiff != 0)
+				m_selectionWheel->AdvanceDifficultySelection((int)m_advanceDiff);
+			if ((int)m_advanceSong != 0)
+				m_selectionWheel->AdvanceSelection((int)m_advanceSong);
+		}
+		else
+		{
+			if ((int)m_advanceDiff != 0)
+				m_filterSelection->AdvanceSelection((int)m_advanceSong);
+		}
         
         m_advanceDiff -= (int)m_advanceDiff;
         m_advanceSong -= (int)m_advanceSong; 
