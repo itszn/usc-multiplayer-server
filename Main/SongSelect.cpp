@@ -946,6 +946,8 @@ public:
 		else
 		{
 			if ((int)m_advanceDiff != 0)
+				m_filterSelection->AdvanceSelection((int)m_advanceDiff);
+			if ((int)m_advanceSong != 0)
 				m_filterSelection->AdvanceSelection((int)m_advanceSong);
 		}
         
