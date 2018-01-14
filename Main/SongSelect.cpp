@@ -907,6 +907,11 @@ public:
 		if (!IsSuspended())
             TickNavigation(deltaTime);
 
+		// Ugly hack to get previews working with the delaty
+		/// TODO: Move the ticking of the fade timer or whatever outside of onsongselected
+		OnMapSelected(m_currentPreviewAudio);
+
+
 		// Background
 		m_previewPlayer.Update(deltaTime);
 	}
@@ -926,33 +931,36 @@ public:
 				m_lockMouse.Release();
 			g_gameWindow->SetCursorVisible(true);
 		}
-
-		
 		
         // Song navigation using laser inputs
+		/// TODO: Investigate strange behaviour further and clean up.
+
         float diff_input = g_input.GetInputLaserDir(0);
         float song_input = g_input.GetInputLaserDir(1);
         
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
+		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff));
+		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong));
+
 		if (!m_filterSelection->Active)
 		{
-			if ((int)m_advanceDiff != 0)
-				m_selectionWheel->AdvanceDifficultySelection((int)m_advanceDiff);
-			if ((int)m_advanceSong != 0)
-				m_selectionWheel->AdvanceSelection((int)m_advanceSong);
+			if (advanceDiffActual != 0)
+				m_selectionWheel->AdvanceDifficultySelection(advanceDiffActual * Math::Sign(m_advanceDiff));
+			if (advanceSongActual != 0)
+				m_selectionWheel->AdvanceSelection(advanceSongActual * Math::Sign(m_advanceSong));
 		}
 		else
 		{
-			if ((int)m_advanceDiff != 0)
-				m_filterSelection->AdvanceSelection((int)m_advanceDiff);
-			if ((int)m_advanceSong != 0)
-				m_filterSelection->AdvanceSelection((int)m_advanceSong);
+			if (advanceDiffActual != 0)
+				m_filterSelection->AdvanceSelection(advanceDiffActual * Math::Sign(m_advanceDiff));
+			if (advanceSongActual != 0)
+				m_filterSelection->AdvanceSelection(advanceSongActual * Math::Sign(m_advanceSong));
 		}
         
-        m_advanceDiff -= (int)m_advanceDiff;
-        m_advanceSong -= (int)m_advanceSong; 
+		m_advanceDiff -= advanceDiffActual * Math::Sign(m_advanceDiff);
+        m_advanceSong -= advanceSongActual * Math::Sign(m_advanceSong);
     }
 
 	virtual void OnSuspend()
