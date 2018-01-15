@@ -3,6 +3,7 @@
 #include <GUI/GUI.hpp>
 #include "Application.hpp"
 
+#include <Scoring.hpp>
 #include <Beatmap/Beatmap.hpp>
 #include <Beatmap/MapDatabase.hpp>
 
@@ -275,20 +276,10 @@ void SongSelectItem::SetSelectedDifficulty(int32 selectedIndex)
 		{
 			int score = m_diffSelectors[selectedIndex]->GetScore();
 			double gauge = m_diffSelectors[selectedIndex]->GetGauge();
-			int grade = m_diffSelectors[selectedIndex]->CalculateGrade();
+			WString grade = Utility::ConvertToWString(Scoring::CalculateGrade(score));
 			int gaugeDisplay = gauge * 100;
 
-			WString gradeStrings[] =
-			{
-				L"AAA",
-				L"AA",
-				L"A",
-				L"B",
-				L"C",
-				L"D",
-			};
-
-			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%ls", score, gaugeDisplay, gradeStrings[grade]));
+			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%ls", score, gaugeDisplay, grade));
 		}
 		else
 		{

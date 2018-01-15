@@ -36,7 +36,6 @@ private:
 	bool m_autoButtons;
 	bool m_startPressed;
 	uint32 m_score;
-	uint32 m_grade;
 	uint32 m_maxCombo;
 	uint32 m_categorizedHits[3];
 	float m_finalGaugeValue;
@@ -57,7 +56,6 @@ public:
 		m_autoplay = scoring.autoplay;
 		m_autoButtons = scoring.autoplayButtons;
 		m_score = scoring.CalculateCurrentScore();
-		m_grade = scoring.CalculateCurrentGrade();
 		m_maxCombo = scoring.maxComboCounter;
 		m_finalGaugeValue = scoring.currentGauge;
 		m_gaugeSamples = game->GetGaugeSamples();
@@ -271,16 +269,7 @@ public:
 				slot->fillY = true;
 			}
 
-			String gradeImages[] =
-			{
-				"AAA",
-				"AA",
-				"A",
-				"B",
-				"C",
-				"D",
-			};
-			String gradeImagePath = String("score") + Path::sep + gradeImages[m_grade] + ".png";
+			String gradeImagePath = String("score") + Path::sep + Scoring::CalculateGrade(m_score) + ".png";
 			Panel* gradeImage = new Panel();
 			loader.AddTexture(gradeImage->texture, gradeImagePath);
 			gradeImage->imageFillMode = FillMode::Fit;

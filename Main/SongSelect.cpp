@@ -687,36 +687,14 @@ public:
 		m_scoreList->Clear();
 		uint32 place = 1;
 
-		WString gradeStrings[] =
-		{
-			L"AAA",
-			L"AA",
-			L"A",
-			L"B",
-			L"C",
-			L"D",
-		};
-
 		for (auto it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
 		{
 			ScoreIndex s = **it;
 
-			// Calculate grade
-			uint32 value = (uint32)(s.score * 0.9 + s.gauge * 1000000.0);
-			uint8 grade = 5;
-			if (value > 9800000) // AAA
-				grade = 0;
-			else if (value > 9400000) // AA
-				grade = 1;
-			else if (value > 8900000) // A
-				grade = 2;
-			else if (value > 8000000) // B
-				grade = 3;
-			else if (value > 7000000) // C
-				grade = 4;
+			WString grade = Utility::ConvertToWString(Scoring::CalculateGrade(s.score));
 
 			Label* text = new Label();
-			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%%\n%ls",place, s.score, (int)(s.gauge * 100), gradeStrings[grade]));
+			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%%\n%ls",place, s.score, (int)(s.gauge * 100), grade));
 			text->SetFontSize(32);
 			LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
 			slot->fillX = true;

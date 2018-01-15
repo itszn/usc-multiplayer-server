@@ -65,6 +65,9 @@ public:
 	Scoring();
 	~Scoring();
 
+	static String CalculateGrade(uint32 score);
+
+
 	// Needs to be set to find out which objects are active/hittable
 	void SetPlayback(BeatmapPlayback& playback);
 

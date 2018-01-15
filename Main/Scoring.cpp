@@ -19,6 +19,29 @@ Scoring::~Scoring()
 	m_CleanupTicks();
 }
 
+String Scoring::CalculateGrade(uint32 score)
+{
+	if (score >= 9900000) // S
+		return "S";
+	if (score >= 9800000) // AAA+
+		return "AAA+";
+	if (score >= 9700000) // AAA
+		return "AAA";
+	if (score >= 9500000) // AA+
+		return "AA+";
+	if (score >= 9300000) // AA
+		return "AA";
+	if (score >= 9000000) // A+
+		return "A+";
+	if (score >= 8700000) // A
+		return "A";
+	if (score >= 7500000) // B
+		return "B";
+	if (score >= 6500000) // C
+		return "C";
+	return "D"; // D
+}
+
 void Scoring::SetPlayback(BeatmapPlayback& playback)
 {
 	if(m_playback)
