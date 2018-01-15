@@ -302,6 +302,10 @@ namespace Graphics
 						outer.OnMouseScroll.Call(-evt.wheel.y);
 					}
 				}
+				else if (evt.type == SDL_EventType::SDL_MOUSEMOTION)
+				{
+					outer.OnMouseMotion.Call(evt.motion.xrel, evt.motion.yrel);
+				}
 				else if(evt.type == SDL_EventType::SDL_QUIT)
 				{
 					m_closed = true;
@@ -551,6 +555,19 @@ namespace Graphics
 	{
 		SDL_WarpMouseInWindow(m_impl->m_window, pos.x, pos.y);
 	}
+
+	void Window::SetRelativeMouseMode(bool enabled)
+	{
+		if (SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE) != 0)
+			Logf("SetRelativeMouseMode failed: %s", Logger::Severity::Warning, SDL_GetError());
+	}
+
+	bool Window::GetRelativeMouseMode()
+	{
+		return SDL_GetRelativeMouseMode() == SDL_TRUE;
+	}
+
+
 
 }
 

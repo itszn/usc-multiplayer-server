@@ -15,8 +15,11 @@ void Input::Init(Graphics::Window& wnd)
 	m_window = &wnd;
 	m_window->OnKeyPressed.Add(this, &Input::OnKeyPressed);
 	m_window->OnKeyReleased.Add(this, &Input::OnKeyReleased);
+	m_window->OnMouseMotion.Add(this, &Input::OnMouseMotion);
 
-	m_lastMousePos = m_window->GetMousePos();
+
+	m_lastMousePos[0] = m_window->GetMousePos().x;
+	m_lastMousePos[1] = m_window->GetMousePos().y;
 
 	m_laserDevice = g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice);
 	m_buttonDevice = g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice);
@@ -84,19 +87,16 @@ void Input::Update(float deltaTime)
 		it++;
 	}
 
-	Vector2i mousePos = m_window->GetMousePos();
-	Vector2 mouseDelta = mousePos - m_lastMousePos;
-	m_lastMousePos = mousePos;
-	float* mouseAxes = &mouseDelta.x;
-
-	// Reset mouse to edge of screen
 	if(!m_mouseLocks.empty())
 	{
-		Vector2 mouseCenter = m_window->GetWindowSize() / 2;
-		m_window->SetMousePos(mouseCenter);
-		m_lastMousePos = mouseCenter;
+		if (!m_window->GetRelativeMouseMode())
+			m_window->SetRelativeMouseMode(true);
 	}
-	
+	else if (m_window->GetRelativeMouseMode())
+	{
+		m_window->SetRelativeMouseMode(false);
+	}
+
 	if(m_laserDevice == InputDevice::Mouse)
 	{
 		for(uint32 i = 0; i < 2; i++)
@@ -108,7 +108,8 @@ void Input::Update(float deltaTime)
 				continue;
 			}
 			
-			m_laserStates[i] = mouseAxes[m_mouseAxisMapping[i]] * m_mouseSensitivity;
+			m_laserStates[i] = m_mouseSensitivity * m_mousePos[m_mouseAxisMapping[i]];
+			m_mousePos[i] = 0;
 		}
 	}
 
@@ -310,4 +311,10 @@ void Input::OnKeyReleased(int32 key)
 	auto it = m_buttonMap.equal_range(key);
 	for(auto it1 = it.first; it1 != it.second; it1++)
 		m_OnButtonInput(it1->second, false);
+}
+
+void Input::OnMouseMotion(int32 x, int32 y)
+{
+	m_mousePos[0] += x;
+	m_mousePos[1] += y;
 }

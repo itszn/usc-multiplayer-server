@@ -47,6 +47,7 @@ public:
 	// Event handlers
 	virtual void OnKeyPressed(int32 key);
 	virtual void OnKeyReleased(int32 key);
+	virtual void OnMouseMotion(int32 x, int32 y);
 
 	// Request laser input state
 	float GetInputLaserDir(uint32 laserIdx);
@@ -82,7 +83,8 @@ private:
 	// Mouse bindings
 	uint32 m_mouseAxisMapping[2] = { 0,1 };
 	float m_mouseSensitivity;
-	Vector2 m_lastMousePos;
+	int32 m_lastMousePos[2];
+	int32 m_mousePos[2];
 
 	// Controller bindings
 	Multimap<uint32, Button> m_controllerMap;

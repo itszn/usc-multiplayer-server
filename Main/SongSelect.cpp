@@ -918,12 +918,12 @@ public:
 
     void TickNavigation(float deltaTime)
     {
-
 		// Lock mouse to screen when active 
 		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse && g_gameWindow->IsActive())
 		{
-			m_lockMouse = g_input.LockMouse();
-		    g_gameWindow->SetCursorVisible(false);
+			if(!m_lockMouse)
+				m_lockMouse = g_input.LockMouse();
+		    //g_gameWindow->SetCursorVisible(false);
 		}
 		else
 		{
@@ -941,26 +941,26 @@ public:
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
-		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff));
-		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong));
+		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff)) * Math::Sign(m_advanceDiff);;
+		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong)) * Math::Sign(m_advanceSong);;
 
 		if (!m_filterSelection->Active)
 		{
 			if (advanceDiffActual != 0)
-				m_selectionWheel->AdvanceDifficultySelection(advanceDiffActual * Math::Sign(m_advanceDiff));
+				m_selectionWheel->AdvanceDifficultySelection(advanceDiffActual);
 			if (advanceSongActual != 0)
-				m_selectionWheel->AdvanceSelection(advanceSongActual * Math::Sign(m_advanceSong));
+				m_selectionWheel->AdvanceSelection(advanceSongActual);
 		}
 		else
 		{
 			if (advanceDiffActual != 0)
-				m_filterSelection->AdvanceSelection(advanceDiffActual * Math::Sign(m_advanceDiff));
+				m_filterSelection->AdvanceSelection(advanceDiffActual);
 			if (advanceSongActual != 0)
-				m_filterSelection->AdvanceSelection(advanceSongActual * Math::Sign(m_advanceSong));
+				m_filterSelection->AdvanceSelection(advanceSongActual);
 		}
         
-		m_advanceDiff -= advanceDiffActual * Math::Sign(m_advanceDiff);
-        m_advanceSong -= advanceSongActual * Math::Sign(m_advanceSong);
+		m_advanceDiff -= advanceDiffActual;
+        m_advanceSong -= advanceSongActual;
     }
 
 	virtual void OnSuspend()

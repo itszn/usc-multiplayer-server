@@ -43,7 +43,8 @@ namespace Graphics
 
 		Vector2i GetMousePos();
 		void SetMousePos(const Vector2i& pos);
-
+		void SetRelativeMouseMode(bool enabled);
+		bool GetRelativeMouseMode();
 
 		// Sets cursor to use
 		void SetCursor(Ref<class ImageRes> image, Vector2i hotspot = Vector2i(0,0));
@@ -93,6 +94,7 @@ namespace Graphics
 		Delegate<int32> OnKeyReleased;
 		Delegate<MouseButton> OnMousePressed;
 		Delegate<MouseButton> OnMouseReleased;
+		Delegate<int32, int32> OnMouseMotion;
 		// Mouse scroll wheel 
 		//	Positive for scroll down
 		//	Negative for scroll up
