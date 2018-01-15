@@ -725,7 +725,7 @@ public:
     {
 		if (m_suspended)
 			return;
-	    if(buttonCode == Input::Button::BT_S && !IsSuspended())
+	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !IsSuspended())
         {
             
 			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
