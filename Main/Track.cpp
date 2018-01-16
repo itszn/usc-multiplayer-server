@@ -438,10 +438,11 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 }
 void Track::DrawOverlays(class RenderQueue& rq)
 {
+	/// TODO: Move crit line and maybe cursors to UI layer 
 	Vector2 barSize = Vector2(trackWidth * 1.4f, 1.0f);
 	barSize.y = scoreBarTexture->CalculateHeight(barSize.x);
 
-	DrawSprite(rq, Vector3(0.0f, 0.0f, 0.0f), barSize, scoreBarTexture, Color::White, 5.0f);
+	DrawSprite(rq, Vector3(0.0f, 0.0f, 0.0f), barSize, scoreBarTexture, Color::White, 0.0f);
 
 	// Draw button hit effect sprites
 	for(auto& hfx : m_hitEffects)

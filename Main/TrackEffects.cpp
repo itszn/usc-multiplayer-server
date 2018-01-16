@@ -24,6 +24,7 @@ void ButtonHitEffect::Draw(class RenderQueue& rq)
 {
 	float x = 0.0f;
 	float w = track->buttonWidth;
+	float yMult = 2.0f;
 	if(buttonCode < 4)
 	{
 		w = track->buttonWidth;
@@ -31,14 +32,16 @@ void ButtonHitEffect::Draw(class RenderQueue& rq)
 	}
 	else
 	{
+		yMult = 1.0f;
 		w = track->buttonWidth * 2.0f;
 		x = -track->buttonWidth + w * (buttonCode - 4);
 	}
 
-	Vector2 hitEffectSize = Vector2(w * 1.2f, 0.0f);
-	hitEffectSize.y = track->scoreHitTexture->CalculateHeight(hitEffectSize.x);
+	Vector2 hitEffectSize = Vector2(w, 0.0f);
+	hitEffectSize.y = track->scoreHitTexture->CalculateHeight(hitEffectSize.x) * yMult;
 	Color c = color.WithAlpha(GetRate());
-	track->DrawSprite(rq, Vector3(x, 0.05f + hitEffectSize.y * 0.5f, -0.03f), hitEffectSize, track->scoreHitTexture, c);
+	c.w *= yMult / 2.f;
+	track->DrawSprite(rq, Vector3(x, hitEffectSize.y * 0.5f, 0.0f), hitEffectSize, track->scoreHitTexture, c);
 }
 
 ButtonHitRatingEffect::ButtonHitRatingEffect(uint32 buttonCode, ScoreHitRating rating) : TimedEffect(0.3f), buttonCode(buttonCode), rating(rating)
