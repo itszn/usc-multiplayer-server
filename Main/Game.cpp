@@ -441,7 +441,6 @@ public:
 		// 8 beats (2 measures) in view at 1x hi-speed
 		m_track->SetViewRange(8.0f / (m_hispeed)); 
 
-		m_track->Tick(m_playback, deltaTime);
 
 		// Get render state from the camera
 		float rollA = m_scoring.GetLaserRollOutput(0);
@@ -452,11 +451,15 @@ public:
 		// Set track zoom
 		if(!m_settingsBar->IsShown()) // Overridden settings?
 		{
+			m_track->zoomBottom = m_playback.GetZoom(0);
+			m_track->zoomTop = m_playback.GetZoom(1);
 			m_camera.zoomBottom = m_playback.GetZoom(0);
 			m_camera.zoomTop = m_playback.GetZoom(1);
+			m_track->roll = m_camera.GetRoll();
 		}
 		m_camera.track = m_track;
 		m_camera.Tick(deltaTime,m_playback);
+		m_track->Tick(m_playback, deltaTime);
 		RenderState rs = m_camera.CreateRenderState(true);
 
 		// Draw BG first
@@ -537,7 +540,7 @@ public:
 				if (m_scoring.lasersAreExtend[i])
 					followPos = followPos * 2.0f - 0.5f; 
 
-				m_laserFollowEmitters[i]->position.x = m_track->trackWidth * followPos - m_track->trackWidth * 0.5f;
+				m_laserFollowEmitters[i]->position = m_track->TransformPoint(Vector3(m_track->trackWidth * followPos - m_track->trackWidth * 0.5f, 0.f, 0.f));
 			}
 			else
 			{
@@ -659,10 +662,7 @@ public:
 			m_settingsBar = Ref<SettingsBar>(sb);
 			sb->AddSetting(&m_camera.zoomBottom, -1.0f, 1.0f, "Bottom Zoom");
 			sb->AddSetting(&m_camera.zoomTop, -1.0f, 1.0f, "Top Zoom");
-			sb->AddSetting(&m_camera.cameraNearBase, 0.01f, 1.0f, "Camera Near Base");
-			sb->AddSetting(&m_camera.cameraNearMult, 0.0f, 2.0f, "Camera Near Mult");
-			sb->AddSetting(&m_camera.cameraHeightBase, 0.01f, 1.0f, "Camera Height Base");
-			sb->AddSetting(&m_camera.cameraHeightMult, 0.0f, 2.0f, "Camera Height Mult");
+			sb->AddSetting(&(m_track->roll), 0.0f, 1.0f, "Track roll");
 			sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
 			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f/32.0f, 1.0f, "Laser Distance Leniency");
 			m_settingsBar->SetShow(false);
@@ -924,11 +924,12 @@ public:
 		emitter->SetFadeOverTime(PPRangeFadeIn<float>(1.0f, 0.0f, 0.4f));
 		emitter->SetLifetime(PPRandomRange<float>(0.17f, 0.2f));
 		emitter->SetStartDrag(PPConstant<float>(0.0f));
-		emitter->SetStartVelocity(PPConstant<Vector3>({ 0, 0.0f, 2.0f }));
+		emitter->SetStartVelocity(PPConstant<Vector3>({ 0, -4.0f, 2.0f }));
 		emitter->SetSpawnVelocityScale(PPRandomRange<float>(0.9f, 2));
 		emitter->SetStartColor(PPConstant<Color>((Color)(color * 0.7f)));
 		emitter->SetGravity(PPConstant<Vector3>(Vector3(0.0f, 0.0f, -9.81f)));
 		emitter->position.y = 0.0f;
+		emitter->position = m_track->TransformPoint(emitter->position);
 		emitter->scale = 0.3f;
 		return emitter;
 	}
@@ -950,7 +951,8 @@ public:
 		emitter->SetSpawnVelocityScale(PPRandomRange<float>(0.2f, 0.2f));
 		emitter->SetStartColor(PPConstant<Color>((Color)(color*0.6f)));
 		emitter->SetGravity(PPConstant<Vector3>(Vector3(0.0f, 0.0f, -4.81f)));
-		emitter->position.y = 0.01f;
+		emitter->position.y = 0.0f;
+		emitter->position = m_track->TransformPoint(emitter->position);
 		emitter->scale = 1.0f;
 		return emitter;
 	}
@@ -972,6 +974,8 @@ public:
 		emitter->SetStartVelocity(PPConstant<Vector3>(dir * 5.0f));
 		emitter->SetStartColor(PPConstant<Color>(color));
 		emitter->SetGravity(PPConstant<Vector3>(Vector3(0.0f, 0.0f, -9.81f)));
+		emitter->position.y = 0.0f;
+		emitter->position = m_track->TransformPoint(emitter->position);
 		emitter->scale = 0.4f;
 		return emitter;
 	}
@@ -992,6 +996,7 @@ public:
 		emitter->SetScaleOverTime(PPRange<float>(1.0f, 0.4f));
 		emitter->SetStartVelocity(PPCone(Vector3(0,0,-1), 90.0f, 1.0f, 4.0f));
 		emitter->SetStartColor(PPConstant<Color>(color));
+		emitter->position.y = 0.0f;
 		return emitter;
 	}
 
@@ -1094,6 +1099,7 @@ public:
 		float laserPos = m_track->trackWidth * object->points[1] - m_track->trackWidth * 0.5f;
 		Ref<ParticleEmitter> ex = CreateExplosionEmitter(m_track->laserColors[object->index], Vector3(dir, 0, 0));
 		ex->position = Vector3(laserPos, 0.0f, -0.05f);
+		ex->position = m_track->TransformPoint(ex->position);
 	}
 	void OnButtonHit(Input::Button button, ScoreHitRating rating, ObjectState* hitObject)
 	{
@@ -1121,6 +1127,7 @@ public:
 			emitter->position.x = m_track->GetButtonPlacement(buttonIdx);
 			emitter->position.z = -0.05f;
 			emitter->position.y = 0.0f;
+			emitter->position = m_track->TransformPoint(emitter->position);
 		}
 
 	}

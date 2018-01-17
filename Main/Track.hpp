@@ -53,6 +53,8 @@ public:
 	void DrawSprite(RenderQueue& rq, Vector3 pos, Vector2 size, Texture tex, Color color = Color::White, float tilt = 0.0f);
 	void DrawCombo(RenderQueue& rq, uint32 score, Color color, float scale = 1.0f);
 
+	Vector3 TransformPoint(const Vector3& p);
+
 	// Adds a sprite effect to the track
 	struct TimedEffect* AddEffect(struct TimedEffect* effect);
 	void ClearEffects();
@@ -73,6 +75,11 @@ public:
 	float laserAlertOpacity[2] = { 1.0f };
 
 	float laserSpeedOffset = 0.90;
+
+	float zoomTop = .0f;
+	float zoomBottom = .0f;
+	float roll = .0f;
+	Vector3 shakeOffset;
 
 	// Visible time elements on the playfield track
 	// a single unit is 1 beat in distance
@@ -139,6 +146,15 @@ private:
 	MapTime m_lastMapTime = 0;
 
 	float m_alertTimer[2] = { 10.0f, 10.0f };
+
+	// Track Origin position
+	Transform m_trackOrigin;
+	// Camera variables Landscape, Portrait
+	float m_basePitch[2] = { -35.f, -47.f };
+	float m_baseRadius[2] = { 0.3f, 0.275f };
+	float m_pitchOffset[2] = { 0.05f, 0.265f }; // how far from the bottom of the screen should the crit line be
+	float m_fov[2] = { 70.f, 90.f };
+
 
 	// How much the track is hidden. 1.0 = fully hidden, 0.0 = fully visible
 	float m_trackHide = 0.0f;

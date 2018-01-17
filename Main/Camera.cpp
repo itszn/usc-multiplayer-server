@@ -121,34 +121,41 @@ RenderState Camera::CreateRenderState(bool clipped)
 	RenderState rs = g_application->GetRenderStateBase();
 	
 	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
+	float fov = m_fov[portrait];
+	float pitchOffset = ( 0.5 - m_pitchOffset[portrait]) * fov / 1.0f;
+
 
 	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = m_basePitch[portrait] * pow(1.33f, -zoomTop);
-	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.1f, -zoomBottom * 3.0f);
+	float base_pitch = m_basePitch[portrait] * pow(1.5f, -zoomTop);
+	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.2f, -zoomBottom * 3.0f);
 
 	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
 
 	Transform cameraTransform;
-	cameraTransform *= Transform::Rotation({ 0.0f, 0.0f, m_roll * 360.0f});
-	cameraTransform *= Transform::Rotation({base_pitch - m_pitchOffset[portrait], 0.0f, 0.0f });
-	cameraTransform *= Transform::Translation(m_shakeOffset + Vector3( 0.0f, -targetHeight, -targetNear));
 
 	// Calculate clipping distances
 	Vector3 cameraPos = cameraTransform.TransformDirection(-Vector3(cameraTransform.GetPosition()));
 	Vector3 cameraDir = cameraTransform.TransformDirection(Vector3(0.0f, 0.0f, 1.0f));
 	float offset = VectorMath::Dot(cameraPos, cameraDir);
 
-	Vector3 toTrackEnd = Vector3(0, 0, track->trackLength) - Vector3(0.0f, -targetHeight, -targetNear);
-	float distToTrackEnd = sqrtf(toTrackEnd.y * toTrackEnd.y + toTrackEnd.z * toTrackEnd.z);
+	Vector3 toTrackEnd = Vector3(0, 0, 0) - Vector3(0.0f, -targetHeight, targetNear + track->trackLength);
+	Vector3 toHorizon = Vector3(0, 0, 0.) - Vector3(0.0f, -targetHeight, -targetNear - 25.0f);
+	float distToTrackEnd = sqrtf(toTrackEnd.x * toTrackEnd.x * toTrackEnd.y * toTrackEnd.y + toTrackEnd.z * toTrackEnd.z);
 	float angleToTrackEnd = atan2f(toTrackEnd.y, toTrackEnd.z);
 
+	cameraTransform *= Transform::Rotation({base_pitch - pitchOffset,
+											0.0f,
+											0.0f });
+	cameraTransform *= Transform::Translation(m_shakeOffset);
+
+	m_pitch = base_pitch - pitchOffset;
+
 	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
-	float d1 = fabsf(sinf(angleToTrackEnd - Math::degToRad * (base_pitch - m_pitchOffset[portrait])) * distToTrackEnd);
+	float d1 = fabsf(sinf(angleToTrackEnd - Math::degToRad * (base_pitch - pitchOffset)) * distToTrackEnd);
 	rs.cameraTransform = cameraTransform;
 
-	float fov = m_fov[portrait];
-	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, 0.01f, d1 + viewRangeExtension);
+	rs.projectionTransform = ProjectionMatrix::CreatePerspective(fov, g_aspectRatio, 0.5f, d1 + viewRangeExtension);
 
 	m_rsLast = rs;
 
@@ -197,6 +204,16 @@ void Camera::SetLasersActive(bool lasersActive)
 float Camera::GetRoll() const
 {
 	return m_roll;
+}
+
+float Camera::GetHorizonHeigth()
+{
+	return (0.5 + ((-90.f - m_pitch) / m_fov[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
+}
+
+Vector3 Camera::GetShakeOffset()
+{
+	return m_shakeOffset;
 }
 
 float Camera::m_ClampRoll(float in) const

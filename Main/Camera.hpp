@@ -35,6 +35,8 @@ public:
 	void SetTargetRoll(float target);
 	void SetSpin(float direction, uint32 duration, uint8 type, class BeatmapPlayback& playback);
 	float GetRoll() const;
+	float GetHorizonHeigth();
+	Vector3 GetShakeOffset();
 
 	Vector2 Project(const Vector3& pos);
 
@@ -51,7 +53,7 @@ public:
 	float zoomBottom = 0.0f;
 	float zoomTop = 0.0f;
 
-	float cameraHeightBase = 0.35f;
+	float cameraHeightBase = 0.25f;
 	float cameraHeightMult = 1.0f;
 	float cameraNearBase = 0.53f;
 	float cameraNearMult = 1.0f;
@@ -78,10 +80,12 @@ private:
 	float m_spinRoll = 0.0f;
 
 	// Camera variables Landscape, Portrait
-	float m_basePitch[2] = { -20.f, -18.f };
-	float m_baseRadius[2] = { 0.25f, 0.225f };
-	float m_pitchOffset[2] = { 40.f, 43.f };
-	float m_fov[2] = { 90.f, 120.f };
+	float m_basePitch[2] = { -35.f, -47.f };
+	float m_baseRadius[2] = { 0.3f, 0.275f };
+	float m_pitchOffset[2] = { 0.05f, 0.27f }; // how far from the bottom of the screen should the crit line be
+	float m_fov[2] = { 70.f, 90.f };
+
+	float m_pitch = 0.0f;
 
 	RenderState m_rsLast;
 

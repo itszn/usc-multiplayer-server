@@ -93,9 +93,8 @@ class TestBackground : public FullscreenBackground
 		clearTransition = Math::Clamp(clearTransition, 0.0f, 1.0f);
 
 
-
 		Vector3 trackEndWorld = Vector3(0.0f, 25.0f, 0.0f);
-		Vector2i screenCenter = game->GetCamera().Project(trackEndWorld);
+		Vector2i screenCenter = Vector2i(g_resolution.x / 2 + game->GetCamera().GetShakeOffset().x * 50, game->GetCamera().GetHorizonHeigth());
 		float tilt = game->GetCamera().GetRoll();
 		fullscreenMaterialParams.SetParameter("clearTransition", clearTransition);
 		fullscreenMaterialParams.SetParameter("tilt", tilt);
