@@ -451,12 +451,12 @@ public:
 		// Set track zoom
 		if(!m_settingsBar->IsShown()) // Overridden settings?
 		{
-			m_track->zoomBottom = m_playback.GetZoom(0);
-			m_track->zoomTop = m_playback.GetZoom(1);
 			m_camera.zoomBottom = m_playback.GetZoom(0);
 			m_camera.zoomTop = m_playback.GetZoom(1);
 			m_track->roll = m_camera.GetRoll();
 		}
+		m_track->zoomBottom = m_camera.zoomBottom;
+		m_track->zoomTop = m_camera.zoomTop;
 		m_camera.track = m_track;
 		m_camera.Tick(deltaTime,m_playback);
 		m_track->Tick(m_playback, deltaTime);

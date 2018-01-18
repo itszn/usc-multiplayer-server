@@ -35,7 +35,7 @@ public:
 	void SetTargetRoll(float target);
 	void SetSpin(float direction, uint32 duration, uint8 type, class BeatmapPlayback& playback);
 	float GetRoll() const;
-	float GetHorizonHeigth();
+	float GetHorizonHeight();
 	Vector3 GetShakeOffset();
 
 	Vector2 Project(const Vector3& pos);

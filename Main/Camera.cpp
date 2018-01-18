@@ -206,7 +206,7 @@ float Camera::GetRoll() const
 	return m_roll;
 }
 
-float Camera::GetHorizonHeigth()
+float Camera::GetHorizonHeight()
 {
 	return (0.5 + ((-90.f - m_pitch) / m_fov[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
