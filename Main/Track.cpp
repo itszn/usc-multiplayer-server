@@ -327,7 +327,7 @@ void Track::DrawBase(class RenderQueue& rq)
 	{
 		float fLocal = f / m_viewRange;
 		Vector3 tickPosition = Vector3(0.0f, trackLength * fLocal - trackTickLength * 0.5f, 0.01f);
-		Transform tickTransform;
+		Transform tickTransform = m_trackOrigin;
 		tickTransform *= Transform::Translation(tickPosition);
 		rq.Draw(tickTransform, trackTickMesh, buttonMaterial, params);
 	}
