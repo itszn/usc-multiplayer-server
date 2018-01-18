@@ -3,8 +3,9 @@ A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://re
 
 ### [**Download latest Windows build**](https://drewol.me/Downloads/Game.zip)
 
-#### Demo Video:
-[![Gameplay Video](http://img.youtube.com/vi/RDG3Dpmqh0Y/2.jpg)](https://www.youtube.com/watch?v=RDG3Dpmqh0Y)
+#### Demo Videos:
+[![Gameplay Video](http://img.youtube.com/vi/uMlAj9xfSEA/2.jpg)](https://youtu.be/uMlAj9xfSEA)
+[![Laser Color Settings](http://img.youtube.com/vi/tJXVr1KdZsc/2.jpg)](https://youtu.be/tJXVr1KdZsc)
 
 ### Current features:
 - Basic GUI (Buttons, Sliders, Scroll Boxes)
