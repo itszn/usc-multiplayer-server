@@ -168,6 +168,9 @@ public:
 	// Current combo
 	uint32 currentComboCounter;
 
+	// Combo state (0 = regular, 1 = full combo, 2 = perfect)
+	uint8 comboState = 2;
+
 	// Highest combo in current run
 	uint32 maxComboCounter;
 

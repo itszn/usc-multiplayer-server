@@ -81,6 +81,7 @@ void Scoring::Reset()
 	currentHitScore = 0;
 	currentComboCounter = 0;
 	maxComboCounter = 0;
+	comboState = 2;
 
 	// Reset laser positions
 	laserTargetPositions[0] = 0.0f;
@@ -705,6 +706,8 @@ void Scoring::m_CleanupTicks()
 void Scoring::m_AddScore(uint32 score)
 {
 	assert(score > 0 && score <= 2);
+	if (score == 1 && comboState == 2)
+		comboState = 1;
 	currentHitScore += score;
 	currentGauge = std::min(1.0f, currentGauge);
 	currentComboCounter += 1;
@@ -713,6 +716,7 @@ void Scoring::m_AddScore(uint32 score)
 }
 void Scoring::m_ResetCombo()
 {
+	comboState = 0;
 	currentComboCounter = 0;
 	OnComboChanged.Call(currentComboCounter);
 }

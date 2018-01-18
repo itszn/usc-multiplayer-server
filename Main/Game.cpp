@@ -91,6 +91,9 @@ private:
 	Image m_jacketImage;
 	Texture m_jacketTexture;
 
+	// Combo colors
+	Color m_comboColors[3];
+
 	// The beatmap
 	Ref<Beatmap> m_beatmap;
 	// Scoring system object
@@ -239,6 +242,12 @@ public:
 			lastObjectTime += lastHold->duration;
 		}
 		
+		// Load combo colors
+		Image comboColorPalette;
+		comboColorPalette = g_application->LoadImage("combocolors.png");
+		assert(comboColorPalette->GetSize().x >= 3);
+		for (uint32 i = 0; i < 3; i++)
+			m_comboColors[i] = comboColorPalette->GetBits()[i];
 
 		m_gaugeSampleRate = lastObjectTime / 256;
 
@@ -521,7 +530,7 @@ public:
 		}
 		m_track->DrawOverlays(scoringRq);
 		float comboZoom = Math::Max(0.0f, (1.0f - (m_comboAnimation.SecondsAsFloat() / 0.2f)) * 0.5f);
-		m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, Color::White, 1.0f + comboZoom);
+		m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
 
 		// Render queues
 		renderQueue.Process();
