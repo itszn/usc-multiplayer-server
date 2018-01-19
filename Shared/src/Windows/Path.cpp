@@ -103,3 +103,27 @@ bool Path::IsAbsolute(const String& path)
 		return true;
 	return false;
 }
+
+Vector<String> Path::GetSubDirs(const String& path)
+{
+	Vector<String> res;
+	WString searchPathW = Utility::ConvertToWString(path + "\\*");
+	WIN32_FIND_DATA findDataW;
+	HANDLE searchHandle = FindFirstFile(*searchPathW, &findDataW);
+	if (searchHandle == INVALID_HANDLE_VALUE)
+		return res;
+
+	do
+	{
+		String filename = Utility::ConvertToUTF8(findDataW.cFileName);
+		if (filename == ".")
+			continue;
+		if (filename == "..")
+			continue;
+		if (findDataW.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			res.Add(filename);
+	} while (FindNextFile(searchHandle, &findDataW));
+	FindClose(searchHandle);
+
+	return res;
+}

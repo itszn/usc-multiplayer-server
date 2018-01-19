@@ -219,6 +219,28 @@ public:
 		return res;
 	}
 
+	Map<int32, MapIndex*> FindMapsByFolder(const String& folder)
+	{
+		char csep[2];
+		csep[0] = Path::sep;
+		csep[1] = 0;
+		String sep(csep);
+		String stmt = "SELECT rowid FROM Maps WHERE path LIKE \"%" + sep + folder + sep + "%\"";
+
+		Map<int32, MapIndex*> res;
+		DBStatement search = m_database.Query(stmt);
+		while (search.StepRow())
+		{
+			int32 id = search.IntColumn(0);
+			MapIndex** map = m_maps.Find(id);
+			if (map)
+			{
+				res.Add(id, *map);
+			}
+		}
+
+		return res;
+	}
 	// Processes pending database changes
 	void Update()
 	{
@@ -699,6 +721,10 @@ void MapDatabase::StopSearching()
 Map<int32, MapIndex*> MapDatabase::FindMaps(const String& search)
 {
 	return m_impl->FindMaps(search);
+}
+Map<int32, MapIndex*> MapDatabase::FindMapsByFolder(const String & folder)
+{
+	return m_impl->FindMapsByFolder(folder);
 }
 MapIndex* MapDatabase::GetMap(int32 idx)
 {

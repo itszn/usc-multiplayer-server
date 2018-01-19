@@ -47,6 +47,8 @@ public:
 	// This file is always a non-existing file
 	static String GetTemporaryFileName(const String& path, const String& prefix = String());
 
+	static Vector<String> GetSubDirs(const String& path);
+
 	// Check if the given path points to a directory
 	static bool IsDirectory(const String& path);
 	// Check if a file/folder exists at given location

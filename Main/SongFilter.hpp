@@ -29,3 +29,17 @@ public:
 private:
 	uint16 m_level;
 };
+
+class FolderFilter : public SongFilter
+{
+public:
+	FolderFilter(String folder, MapDatabase* database) : m_folder(folder), m_mapDatabase(database) {}
+	virtual Map<int32, MapIndex*> GetFiltered(const Map<int32, MapIndex*>& source);
+	virtual String GetName() override;
+	virtual bool IsAll() override;
+
+private:
+	String m_folder;
+	MapDatabase* m_mapDatabase;
+
+};

@@ -24,3 +24,18 @@ bool LevelFilter::IsAll()
 {
 	return false;
 }
+
+Map<int32, MapIndex*> FolderFilter::GetFiltered(const Map<int32, MapIndex*>& source)
+{
+	return m_mapDatabase->FindMapsByFolder(m_folder);
+}
+
+String FolderFilter::GetName()
+{
+	return "Folder: " + m_folder;
+}
+
+bool FolderFilter::IsAll()
+{
+	return false;
+}

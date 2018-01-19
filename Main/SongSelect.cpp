@@ -492,12 +492,24 @@ public:
 		SelectFilter(m_filters[m_currentSelection]);
 	}
 
+	void SetMapDB(MapDatabase* db)
+	{
+		m_mapDB = db;
+		for (String p : Path::GetSubDirs(g_gameConfig.GetString(GameConfigKeys::SongFolder)))
+		{
+			SongFilter* filter = new FolderFilter(p, m_mapDB);
+			if(filter->GetFiltered(Map<int32, MapIndex*>()).size() > 0)
+				AddFilter(filter);
+		}
+	}
+
 private:
 	Ref<SelectionWheel> m_selectionWheel;
 	Vector<SongFilter*> m_filters;
 	int32 m_currentSelection = 0;
 	Map<SongFilter*, Label*> m_guiElements;
 	SongFilter* m_currentFilter = nullptr;
+	MapDatabase* m_mapDB;
 };
 
 /*
@@ -622,6 +634,7 @@ public:
 			Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
 			slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
 		}
+		m_filterSelection->SetMapDB(&m_mapDatabase);
 
 		// Select interface sound
 		m_selectSound = g_audio->CreateSample("audio/menu_click.wav");
