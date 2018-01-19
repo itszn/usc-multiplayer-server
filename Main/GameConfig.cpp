@@ -56,8 +56,8 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::Key_BT3Alt, -1);
 	Set(GameConfigKeys::Key_FX0, SDLK_c);
 	Set(GameConfigKeys::Key_FX1, SDLK_m);
-	Set(GameConfigKeys::Key_FX0Alt, SDLK_n);
-	Set(GameConfigKeys::Key_FX1Alt, SDLK_v);
+	Set(GameConfigKeys::Key_FX0Alt, -1);
+	Set(GameConfigKeys::Key_FX1Alt, -1);
 	Set(GameConfigKeys::Key_Laser0Neg, SDLK_w);
 	Set(GameConfigKeys::Key_Laser0Pos, SDLK_e);
 	Set(GameConfigKeys::Key_Laser1Neg, SDLK_o);
@@ -67,15 +67,15 @@ void GameConfig::InitDefaults()
 
 	// Default controller settings
 	Set(GameConfigKeys::Controller_DeviceID, 0); // First device
-	Set(GameConfigKeys::Controller_BTS, 0); // TODO: Find good default
-	Set(GameConfigKeys::Controller_BT0, 1); // D-Pad Left
-	Set(GameConfigKeys::Controller_BT1, 2); // D-Pad Down
-	Set(GameConfigKeys::Controller_BT2, 3); // A / X
-	Set(GameConfigKeys::Controller_BT3, 4); // B / O
-	Set(GameConfigKeys::Controller_FX0, 5); // Left Shoulder
-	Set(GameConfigKeys::Controller_FX1, 6); // Right Shoulder
-	Set(GameConfigKeys::Controller_Laser0Axis, 0); // First axis
-	Set(GameConfigKeys::Controller_Laser1Axis, 1); // Second axis
+	Set(GameConfigKeys::Controller_BTS, 0);
+	Set(GameConfigKeys::Controller_BT0, 1);
+	Set(GameConfigKeys::Controller_BT1, 2);
+	Set(GameConfigKeys::Controller_BT2, 3);
+	Set(GameConfigKeys::Controller_BT3, 4);
+	Set(GameConfigKeys::Controller_FX0, 5);
+	Set(GameConfigKeys::Controller_FX1, 6);
+	Set(GameConfigKeys::Controller_Laser0Axis, 0);
+	Set(GameConfigKeys::Controller_Laser1Axis, 1);
 	Set(GameConfigKeys::Controller_Sensitivity, 1.0f);
 	Set(GameConfigKeys::Controller_Deadzone, 0.f);
 

@@ -738,6 +738,9 @@ public:
     {
 		if (m_suspended)
 			return;
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
+			return;
+
 	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !IsSuspended())
         {
             
