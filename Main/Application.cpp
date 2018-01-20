@@ -274,16 +274,23 @@ bool Application::m_Init()
 		}
 	}
 
-	// GUI Rendering
-	g_guiRenderer = new GUIRenderer();
-	if(!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
 	{
-		Logf("Failed to initialize GUI renderer", Logger::Error);
-		return false;
+		ProfilerScope $1("GUI Init");
+
+		// GUI Rendering
+		g_guiRenderer = new GUIRenderer();
+		if (!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
+		{
+			Logf("Failed to initialize GUI renderer", Logger::Error);
+			return false;
+		}
 	}
 
-	// Load GUI style for common elements
-	g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
+	{
+		ProfilerScope $1("Loading common GUI elements");
+		// Load GUI style for common elements
+		g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
+	}
 
 	// Create root canvas
 	g_rootCanvas = Ref<Canvas>(new Canvas());
