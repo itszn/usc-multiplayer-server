@@ -4,9 +4,9 @@
 #include <math.h>
 #include "GameConfig.hpp"
 
-const MapTime Scoring::missHitTime = 150;
+const MapTime Scoring::missHitTime = 275;
 const MapTime Scoring::goodHitTime = 100;
-const MapTime Scoring::perfectHitTime = 35;
+const MapTime Scoring::perfectHitTime = 42;
 const float Scoring::idleLaserSpeed = 1.0f;
 
 Scoring::Scoring()
