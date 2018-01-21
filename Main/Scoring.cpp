@@ -562,24 +562,21 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 	{
 		ScoreTick* tick = ticks[i];
 		MapTime delta = currentTime - ticks[i]->time + m_inputOffset;
-		if(abs(delta) < tick->GetHitWindow())
+		ObjectState* hitObject = tick->object;
+
+		if(tick->HasFlag(TickFlags::Laser))
 		{
-			ObjectState* hitObject = tick->object;
-
-			if(tick->HasFlag(TickFlags::Laser))
-			{
-				// Ignore laser ticks
-				continue;
-			}
-			if(delta < Scoring::goodHitTime)
-				m_TickHit(tick, buttonCode, delta);
-			else
-				m_TickMiss(tick, buttonCode, delta);
-			delete tick;
-			ticks.Remove(tick, false);
-
-			return hitObject;
+			// Ignore laser ticks
+			continue;
 		}
+		if(abs(delta) < Scoring::goodHitTime)
+			m_TickHit(tick, buttonCode, delta);
+		else
+			m_TickMiss(tick, buttonCode, delta);
+		delete tick;
+		ticks.Remove(tick, false);
+
+		return hitObject;
 	}
 	return nullptr;
 }
@@ -599,7 +596,6 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 		stat->delta = delta;
 		stat->rating = tick->GetHitRatingFromDelta(delta);
 		OnButtonHit.Call((Input::Button)index, stat->rating, tick->object);
-
 
 		if (stat->rating == ScoreHitRating::Perfect)
 		{
@@ -666,7 +662,7 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 	stat->hasMissed = true;
 	if(tick->HasFlag(TickFlags::Button))
 	{
-		OnButtonMiss.Call((Input::Button)index); 
+		OnButtonMiss.Call((Input::Button)index, abs(delta) <= missHitTime); 
 		stat->rating = ScoreHitRating::Miss;
 		stat->delta = delta;
 		currentGauge -= 0.02f;
@@ -978,11 +974,11 @@ ScoreHitRating ScoreTick::GetHitRatingFromDelta(MapTime delta) const
 	if(HasFlag(TickFlags::Button))
 	{
 		// Button hit judgeing
-		if(delta > Scoring::goodHitTime)
-			return ScoreHitRating::Miss;
 		if(delta < Scoring::perfectHitTime)
 			return ScoreHitRating::Perfect;
-		return ScoreHitRating::Good;
+		if(delta < Scoring::goodHitTime)
+			return ScoreHitRating::Good;
+		return ScoreHitRating::Miss;
 	}
 	return ScoreHitRating::Perfect;
 }

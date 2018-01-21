@@ -792,7 +792,7 @@ public:
 		m_scoring.OnObjectReleased.Add(this, &Game_Impl::OnObjectReleased);
 		m_scoring.OnScoreChanged.Add(this, &Game_Impl::OnScoreChanged);
 
-		m_playback.hittableObjectTreshold = Scoring::goodHitTime;
+		m_playback.hittableObjectTreshold = Scoring::missHitTime;
 
 		if(g_application->GetAppCommandLine().Contains("-autobuttons"))
 		{
@@ -1140,9 +1140,14 @@ public:
 		}
 
 	}
-	void OnButtonMiss(Input::Button button)
+	void OnButtonMiss(Input::Button button, bool hitEffect)
 	{
 		uint32 buttonIdx = (uint32)button;
+		if (hitEffect)
+		{
+			Color c = m_track->hitColors[0];
+			m_track->AddEffect(new ButtonHitEffect(buttonIdx, c));
+		}
 		m_track->AddEffect(new ButtonHitRatingEffect(buttonIdx, ScoreHitRating::Miss));
 	}
 	void OnComboChanged(uint32 newCombo)

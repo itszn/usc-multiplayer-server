@@ -22,7 +22,7 @@ public:
 
 	// Modifyable array of all hittable objects, within -+'hittableObjectTreshold' of current time
 	Set<ObjectState*>& GetHittableObjects();
-	MapTime hittableObjectTreshold = 300;
+	MapTime hittableObjectTreshold = 500;
 	MapTime alertLaserThreshold = 1500;
 
 	// Gets all linear objects that fall within the given time range:

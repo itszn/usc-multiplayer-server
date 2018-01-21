@@ -39,15 +39,8 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 		}
 		else if (m_spinType == SpinStruct::SpinType::Quarter)
 		{
-			if (spinProgress <= 1.0f)
-			{
-				float amplitude = (80.0f / 360.0f) / ((spinProgress * 2) + 1);
-				m_spinRoll = sin(spinProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
-			}
-			else
-			{
-				m_spinRoll = 0.0f;
-			}
+			float amplitude = (80.0f / 360.0f) / ((spinProgress) + 1);
+			m_spinRoll = sin(spinProgress * Math::pi) * amplitude * m_spinDirection;
 		}
 	}
 	else
