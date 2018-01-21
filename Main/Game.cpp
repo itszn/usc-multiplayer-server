@@ -1110,7 +1110,7 @@ public:
 		ex->position = Vector3(laserPos, 0.0f, -0.05f);
 		ex->position = m_track->TransformPoint(ex->position);
 	}
-	void OnButtonHit(Input::Button button, ScoreHitRating rating, ObjectState* hitObject)
+	void OnButtonHit(Input::Button button, ScoreHitRating rating, ObjectState* hitObject, bool late)
 	{
 		ButtonObjectState* st = (ButtonObjectState*)hitObject;
 		uint32 buttonIdx = (uint32)button;
@@ -1128,6 +1128,9 @@ public:
 		{
 			// Floating text effect
 			m_track->AddEffect(new ButtonHitRatingEffect(buttonIdx, rating));
+
+			if (rating == ScoreHitRating::Good)
+				m_track->AddEffect(new TimedHitEffect(late));
 
 			// Create hit effect particle
 			Color hitColor = (buttonIdx < 4) ? Color::White : Color::FromHSV(20, 0.7f, 1.0f);

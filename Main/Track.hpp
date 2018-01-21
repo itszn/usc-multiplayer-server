@@ -116,6 +116,7 @@ public:
 	Texture scoreHitTexture;
 	Texture laserPointerTexture;
 	Texture scoreHitTextures[3]; // Ok, Miss, Perfect
+	Texture scoreTimeTextures[2]; // Early, Late
 	// Combo counter sprite sheet
 	Texture comboSpriteSheet;
 	Mesh comboSpriteMeshes[10];
@@ -193,4 +194,12 @@ struct ButtonHitRatingEffect : public TimedEffect
 
 	uint32 buttonCode;
 	ScoreHitRating rating;
+};
+
+struct TimedHitEffect : public TimedEffect
+{
+	TimedHitEffect(bool late);
+	virtual void Draw(class RenderQueue& rq) override;
+
+	bool late;
 };

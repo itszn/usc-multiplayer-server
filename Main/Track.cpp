@@ -78,6 +78,11 @@ bool Track::AsyncLoad()
 	{
 		loader->AddTexture(scoreHitTextures[i], Utility::Sprintf("score%d.png", i));
 	}
+	for (uint32 i = 0; i < 2; i++)
+	{
+		loader->AddTexture(scoreTimeTextures[i], Utility::Sprintf("timed%d.png", i));
+	}
+
 
 	// Load Button object
 	loader->AddTexture(buttonTexture, "button.png");
