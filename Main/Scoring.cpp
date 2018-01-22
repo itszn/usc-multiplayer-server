@@ -531,7 +531,7 @@ void Scoring::m_UpdateTicks()
 					}
 				}
 
-				if(shouldMiss && !processed)
+				if(delta > Scoring::goodHitTime && !processed)
 				{
 					m_TickMiss(tick, buttonCode, delta);
 					processed = true;
@@ -569,7 +569,7 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 			// Ignore laser ticks
 			continue;
 		}
-		if(abs(delta) < Scoring::goodHitTime)
+		if(abs(delta) <= Scoring::goodHitTime)
 			m_TickHit(tick, buttonCode, delta);
 		else
 			m_TickMiss(tick, buttonCode, delta);
@@ -662,7 +662,7 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 	stat->hasMissed = true;
 	if(tick->HasFlag(TickFlags::Button))
 	{
-		OnButtonMiss.Call((Input::Button)index, abs(delta) <= missHitTime); 
+		OnButtonMiss.Call((Input::Button)index, delta < 0 && abs(delta) > goodHitTime); 
 		stat->rating = ScoreHitRating::Miss;
 		stat->delta = delta;
 		currentGauge -= 0.02f;
@@ -974,9 +974,9 @@ ScoreHitRating ScoreTick::GetHitRatingFromDelta(MapTime delta) const
 	if(HasFlag(TickFlags::Button))
 	{
 		// Button hit judgeing
-		if(delta < Scoring::perfectHitTime)
+		if(delta <= Scoring::perfectHitTime)
 			return ScoreHitRating::Perfect;
-		if(delta < Scoring::goodHitTime)
+		if(delta <= Scoring::goodHitTime)
 			return ScoreHitRating::Good;
 		return ScoreHitRating::Miss;
 	}

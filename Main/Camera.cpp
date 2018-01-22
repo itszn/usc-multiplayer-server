@@ -119,8 +119,8 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 
 	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = m_basePitch[portrait] * pow(1.5f, -zoomTop);
-	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.2f, -zoomBottom * 3.0f);
+	float base_pitch = m_basePitch[portrait] * pow(1.4f, -zoomTop);
+	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.15f, -zoomBottom * 3.0f);
 
 	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);

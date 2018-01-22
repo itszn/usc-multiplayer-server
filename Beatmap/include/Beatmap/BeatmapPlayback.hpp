@@ -22,7 +22,8 @@ public:
 
 	// Modifyable array of all hittable objects, within -+'hittableObjectTreshold' of current time
 	Set<ObjectState*>& GetHittableObjects();
-	MapTime hittableObjectTreshold = 500;
+	MapTime hittableObjectEnter = 500;
+	MapTime hittableObjectLeave = 500;
 	MapTime alertLaserThreshold = 1500;
 	MapTime audioOffset = 0;
 

@@ -83,7 +83,7 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Advance objects
-	ObjectState** objEnd = m_SelectHitObject(m_playbackTime + hittableObjectTreshold);
+	ObjectState** objEnd = m_SelectHitObject(m_playbackTime + hittableObjectEnter);
 	if (objEnd != nullptr && objEnd != m_currentObj)
 	{
 		for (auto it = m_currentObj; it < objEnd; it++)
@@ -143,7 +143,7 @@ void BeatmapPlayback::Update(MapTime newTime)
 	}
 
 	// Check passed hittable objects
-	MapTime objectPassTime = m_playbackTime - hittableObjectTreshold;
+	MapTime objectPassTime = m_playbackTime - hittableObjectLeave;
 	for (auto it = m_hittableObjects.begin(); it != m_hittableObjects.end();)
 	{
 		MultiObjectState* obj = **it;

@@ -794,7 +794,8 @@ public:
 		m_scoring.OnObjectReleased.Add(this, &Game_Impl::OnObjectReleased);
 		m_scoring.OnScoreChanged.Add(this, &Game_Impl::OnScoreChanged);
 
-		m_playback.hittableObjectTreshold = Scoring::missHitTime;
+		m_playback.hittableObjectEnter = Scoring::missHitTime;
+		m_playback.hittableObjectLeave = Scoring::goodHitTime;
 
 		if(g_application->GetAppCommandLine().Contains("-autobuttons"))
 		{
