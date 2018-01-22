@@ -33,6 +33,7 @@ Track::~Track()
 	{
 		delete *it;
 	}
+	delete timedHitEffect;
 }
 bool Track::AsyncLoad()
 {
@@ -202,6 +203,10 @@ bool Track::AsyncFinalize()
 	trackTickMesh = MeshGenerators::Quad(g_gl, Vector2(-buttonTrackWidth * 0.5f, 0.0f), Vector2(buttonTrackWidth, trackTickLength));
 	centeredTrackMesh = MeshGenerators::Quad(g_gl, Vector2(-0.5f, -0.5f), Vector2(1.0f, 1.0f));
 
+	timedHitEffect = new TimedHitEffect(false);
+	timedHitEffect->time = 0;
+	timedHitEffect->track = this;
+
 	return success;
 }
 void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
@@ -239,6 +244,7 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 		}
 		it++;
 	}
+	timedHitEffect->Tick(deltaTime);
 
 	MapTime currentTime = playback.GetLastTime();
 
@@ -469,6 +475,8 @@ void Track::DrawOverlays(class RenderQueue& rq)
 	{
 		hfx->Draw(rq);
 	}
+	if(timedHitEffect->time > 0.0f)
+		timedHitEffect->Draw(rq);
 
 	// Draw laser pointers
 	for(uint32 i = 0; i < 2; i++)

@@ -129,6 +129,8 @@ public:
 	// 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
 	int objectGlowState;
 
+	struct TimedHitEffect* timedHitEffect;
+
 private:
 	// Laser track generators
 	class LaserTrackBuilder* m_laserTrackBuilder[2] = { 0 };

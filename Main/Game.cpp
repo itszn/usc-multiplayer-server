@@ -1133,7 +1133,10 @@ public:
 			m_track->AddEffect(new ButtonHitRatingEffect(buttonIdx, rating));
 
 			if (rating == ScoreHitRating::Good)
-				m_track->AddEffect(new TimedHitEffect(late));
+			{
+				m_track->timedHitEffect->late = late;
+				m_track->timedHitEffect->Reset(0.75f);
+			}
 
 			// Create hit effect particle
 			Color hitColor = (buttonIdx < 4) ? Color::White : Color::FromHSV(20, 0.7f, 1.0f);
