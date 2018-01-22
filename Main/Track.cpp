@@ -220,18 +220,6 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	// Calculate track origin transform
 	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
 
-	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = m_basePitch[portrait] * pow(1.5f, -zoomTop);
-	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.2f, -zoomBottom * 3.0f);
-
-	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
-	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
-
-	m_trackOrigin = Transform();
-
-	m_trackOrigin *= Transform::Rotation({ 0.0f, -roll * 360.0f,0.0f});
-	m_trackOrigin *= Transform::Translation(Vector3(0.0f, -targetHeight, -targetNear));
-
 	// Button Hit FX
 	for(auto it = m_hitEffects.begin(); it != m_hitEffects.end();)
 	{
@@ -325,7 +313,7 @@ void Track::DrawBase(class RenderQueue& rq)
 {
 	// Base
 	MaterialParameterSet params;
-	Transform transform = m_trackOrigin;
+	Transform transform = trackOrigin;
 	transform *= Transform::Translation({ 0.0f, -m_trackHide * trackLength * 1.1f, 0.0f });
 	params.SetParameter("mainTex", trackTexture);
 	params.SetParameter("lCol", laserColors[0]);
@@ -338,7 +326,7 @@ void Track::DrawBase(class RenderQueue& rq)
 	{
 		float fLocal = f / m_viewRange;
 		Vector3 tickPosition = Vector3(0.0f, trackLength * fLocal - trackTickLength * 0.5f, 0.01f);
-		Transform tickTransform = m_trackOrigin;
+		Transform tickTransform = trackOrigin;
 		tickTransform *= Transform::Translation(tickPosition);
 		rq.Draw(tickTransform, trackTickMesh, buttonMaterial, params);
 	}
@@ -394,7 +382,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 
 		Vector3 buttonPos = Vector3(xposition, trackLength * position, 0.02f);
 
-		Transform buttonTransform = m_trackOrigin;
+		Transform buttonTransform = trackOrigin;
 		buttonTransform *= Transform::Translation(buttonPos);
 		float scale = 1.0f;
 		if(isHold) // Hold Note?
@@ -430,7 +418,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			laserParams.SetParameter("mainTex", texture);
 
 			// Get the length of this laser segment
-			Transform laserTransform = m_trackOrigin;
+			Transform laserTransform = trackOrigin;
 			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position,
 				0.007f + 0.003f * laser->index }); // Small amount of elevation
 
@@ -495,7 +483,7 @@ void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffse
 {
 	MaterialParameterSet params;
 	params.SetParameter("mainTex", texture);
-	Transform transform = m_trackOrigin;
+	Transform transform = trackOrigin;
 	transform *= Transform::Scale({ widthScale, 1.0f, 1.0f });
 	transform *= Transform::Translation({ 0.0f, heightOffset, 0.0f });
 	rq.Draw(transform, trackMesh, trackOverlay, params);
@@ -504,14 +492,14 @@ void Track::DrawDarkTrack(RenderQueue & rq)
 {
 	// Base
 	MaterialParameterSet params;
-	Transform transform = m_trackOrigin;
+	Transform transform = trackOrigin;
 	//transform *= Transform::Translation({ 0.0f, 0.0f, 0.1f });
 	params.SetParameter("mainTex", trackDarkTexture);
 	rq.Draw(transform, trackDarkMesh, buttonMaterial, params);
 }
 void Track::DrawSprite(RenderQueue& rq, Vector3 pos, Vector2 size, Texture tex, Color color /*= Color::White*/, float tilt /*= 0.0f*/)
 {
-	Transform spriteTransform = m_trackOrigin;
+	Transform spriteTransform = trackOrigin;
 	spriteTransform *= Transform::Translation(pos);
 	spriteTransform *= Transform::Scale({ size.x, size.y, 1.0f });
 	if(tilt != 0.0f)
@@ -545,7 +533,7 @@ void Track::DrawCombo(RenderQueue& rq, uint32 score, Color color, float scale)
 	for(uint32 i = 0; i < meshes.size(); i++)
 	{
 		float xpos = -halfSize + seperation * (meshes.size()-1-i);
-		Transform t = m_trackOrigin;
+		Transform t = trackOrigin;
 		t *= Transform::Translation({ xpos, 0.3f, -0.004f});
 		t *= Transform::Scale({charWidth, charWidth, 1.0f});
 		rq.Draw(t, meshes[i], spriteMaterial, params);
@@ -554,7 +542,7 @@ void Track::DrawCombo(RenderQueue& rq, uint32 score, Color color, float scale)
 
 Vector3 Track::TransformPoint(const Vector3 & p)
 {
-	return m_trackOrigin.TransformPoint(p);
+	return trackOrigin.TransformPoint(p);
 }
 
 TimedEffect* Track::AddEffect(TimedEffect* effect)

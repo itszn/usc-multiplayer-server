@@ -129,7 +129,11 @@ public:
 	// 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
 	int objectGlowState;
 
+	// Early/Late indicator
 	struct TimedHitEffect* timedHitEffect;
+
+	// Track Origin position
+	Transform trackOrigin;
 
 private:
 	// Laser track generators
@@ -150,8 +154,6 @@ private:
 
 	float m_alertTimer[2] = { 10.0f, 10.0f };
 
-	// Track Origin position
-	Transform m_trackOrigin;
 	// Camera variables Landscape, Portrait
 	float m_basePitch[2] = { -35.f, -47.f };
 	float m_baseRadius[2] = { 0.3f, 0.275f };

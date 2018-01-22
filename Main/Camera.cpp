@@ -127,6 +127,11 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	Transform cameraTransform;
 
+	// Set track origin
+	track->trackOrigin = Transform();
+	track->trackOrigin *= Transform::Rotation({ 0.0f, -m_roll * 360.0f,0.0f });
+	track->trackOrigin *= Transform::Translation(Vector3(0.0f, -targetHeight, -targetNear));
+
 	// Calculate clipping distances
 	Vector3 cameraPos = cameraTransform.TransformDirection(-Vector3(cameraTransform.GetPosition()));
 	Vector3 cameraDir = cameraTransform.TransformDirection(Vector3(0.0f, 0.0f, 1.0f));
