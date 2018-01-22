@@ -24,6 +24,8 @@ public:
 	Set<ObjectState*>& GetHittableObjects();
 	MapTime hittableObjectTreshold = 500;
 	MapTime alertLaserThreshold = 1500;
+	MapTime audioOffset = 0;
+
 
 	// Gets all linear objects that fall within the given time range:
 	//	<curr - keepObjectDuration, curr + range>

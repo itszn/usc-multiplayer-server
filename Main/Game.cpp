@@ -310,6 +310,8 @@ public:
 
 		// Load audio offset
 		m_audioOffset = g_gameConfig.GetInt(GameConfigKeys::GlobalOffset);
+		m_playback.audioOffset = m_audioOffset;
+
 
 		/// TODO: Check if debugmute is enabled
 		g_audio->SetGlobalVolume(g_gameConfig.GetFloat(GameConfigKeys::MasterVolume));
