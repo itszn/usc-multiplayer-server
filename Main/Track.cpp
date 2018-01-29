@@ -9,7 +9,6 @@
 #include "AsyncAssetLoader.hpp"
 
 const float Track::trackWidth = 1.0f;
-const float Track::trackLength = 8.0f;
 const float Track::buttonWidth = 1.0f / 6;
 const float Track::laserWidth = buttonWidth * 0.7f;
 const float Track::fxbuttonWidth = buttonWidth * 2;
@@ -18,6 +17,10 @@ const float Track::buttonTrackWidth = buttonWidth * 4;
 Track::Track()
 {
 	m_viewRange = 2.0f;
+	if (g_aspectRatio < 1.0f)
+		trackLength = 12.0f;
+	else
+		trackLength = 8.0f;
 }
 Track::~Track()
 {

@@ -10,12 +10,12 @@ class Track : Unique, public IAsyncLoadable
 public:
 	// Size constants of various elements
 	static const float trackWidth;
-	static const float trackLength;
 	static const float buttonWidth;
 	static const float laserWidth;
 	static const float fxbuttonWidth;
 	static const float buttonTrackWidth;
 
+	float trackLength;
 	float trackTickLength;
 	float buttonLength;
 	float fxbuttonLength;
