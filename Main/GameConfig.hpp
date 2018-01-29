@@ -11,6 +11,7 @@ DefineEnum(GameConfigKeys,
 	Fullscreen,
 	FullscreenMonitorIndex,
 	MasterVolume,
+	VSync,
 
 	// Game settings
 	HiSpeed,

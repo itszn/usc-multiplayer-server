@@ -61,6 +61,9 @@ namespace Graphics
 		// Window Client area size
 		Vector2i GetWindowSize() const;
 
+		// Set vsync setting
+		void SetVSync(int8 setting);
+
 		// Window is active
 		bool IsActive() const;
 		// Set window client area size

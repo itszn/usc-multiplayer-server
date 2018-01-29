@@ -223,7 +223,7 @@ bool Application::m_Init()
 	g_gameWindow->OnKeyPressed.Add(this, &Application::m_OnKeyPressed);
 	g_gameWindow->OnKeyReleased.Add(this, &Application::m_OnKeyReleased);
 	g_gameWindow->OnResized.Add(this, &Application::m_OnWindowResized);
-
+	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
 	// Initialize Input
 	g_input.Init(*g_gameWindow);
 

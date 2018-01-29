@@ -132,6 +132,12 @@ namespace Graphics
 			return res;
 		}
 
+		void SetVSync(int8 setting)
+		{
+			if(SDL_GL_SetSwapInterval(setting) == -1)
+				Logf("Failed to set VSync: %s", Logger::Error, SDL_GetError());
+		}
+
 		void SetWindowStyle(WindowStyle style)
 		{
 		}
@@ -449,6 +455,10 @@ namespace Graphics
 	Vector2i Window::GetWindowSize() const
 {
 		return m_impl->GetWindowSize();
+	}
+	void Window::SetVSync(int8 setting)
+	{
+		m_impl->SetVSync(setting);
 	}
 	void Window::SetWindowSize(const Vector2i& size)
 	{

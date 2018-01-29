@@ -26,6 +26,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::MasterVolume, 1.0f);
 	Set(GameConfigKeys::ScreenX, -1);
 	Set(GameConfigKeys::ScreenY, -1);
+	Set(GameConfigKeys::VSync, 0);
 	Set(GameConfigKeys::HiSpeed, 1.0f);
 	Set(GameConfigKeys::GlobalOffset, 0);
 	Set(GameConfigKeys::InputOffset, 0);

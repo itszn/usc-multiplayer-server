@@ -104,6 +104,7 @@ namespace Graphics
 		// Setup GL debug messages to go to the console
 		if(glDebugMessageCallback && glDebugMessageControl)
 		{
+			Log("OpenGL Logging on.", Logger::Info);
 			glDebugMessageCallback(GLDebugProc, 0);
 			glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
 			glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, 0, GL_FALSE);
@@ -114,10 +115,6 @@ namespace Graphics
 		Logf("OpenGL Shading Language Version: %s", Logger::Info, glGetString(GL_SHADING_LANGUAGE_VERSION));
 		Logf("OpenGL Renderer: %s", Logger::Info, glGetString(GL_RENDERER));
 		Logf("OpenGL Vendor: %s", Logger::Info, glGetString(GL_VENDOR));
-
-		// Disable VSync
-		//	Framerate is to be limited by the application manually
-		SDL_GL_SetSwapInterval(0);
 
 		InitResourceManagers();
 
