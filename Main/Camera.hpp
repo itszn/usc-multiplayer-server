@@ -58,6 +58,13 @@ public:
 	float cameraNearBase = 0.53f;
 	float cameraNearMult = 1.0f;
 
+	// Camera variables Landscape, Portrait
+	float basePitch[2] = { -35.f, -47.f };
+	float baseRadius[2] = { 0.3f, 0.275f };
+	float pitchOffsets[2] = { 0.05f, 0.27f }; // how far from the bottom of the screen should the crit line be
+	float fovs[2] = { 70.f, 90.f };
+
+
 private:
 	float m_baseRollBlend = 0.0f;
 	float m_ClampRoll(float in) const;
@@ -79,11 +86,7 @@ private:
 	float m_spinDirection = 0.0f;
 	float m_spinRoll = 0.0f;
 
-	// Camera variables Landscape, Portrait
-	float m_basePitch[2] = { -35.f, -47.f };
-	float m_baseRadius[2] = { 0.3f, 0.275f };
-	float m_pitchOffset[2] = { 0.05f, 0.27f }; // how far from the bottom of the screen should the crit line be
-	float m_fov[2] = { 70.f, 90.f };
+
 
 	float m_pitch = 0.0f;
 

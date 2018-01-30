@@ -114,13 +114,13 @@ RenderState Camera::CreateRenderState(bool clipped)
 	RenderState rs = g_application->GetRenderStateBase();
 	
 	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
-	float fov = m_fov[portrait];
-	float pitchOffset = ( 0.5 - m_pitchOffset[portrait]) * fov / 1.0f;
+	float fov = fovs[portrait];
+	float pitchOffset = ( 0.5 - pitchOffsets[portrait]) * fov / 1.0f;
 
 
 	// Tilt, Height and Near calculated from zoom values
-	float base_pitch = m_basePitch[portrait] * pow(1.4f, -zoomTop);
-	float base_radius = 4.f * m_baseRadius[portrait] * pow(1.15f, -zoomBottom * 3.0f);
+	float base_pitch = basePitch[portrait] * pow(1.4f, -zoomTop);
+	float base_radius = 4.f * baseRadius[portrait] * pow(1.15f, -zoomBottom * 3.0f);
 
 	float targetHeight = base_radius * sin(Math::degToRad * base_pitch);
 	float targetNear = base_radius * cos(Math::degToRad * base_pitch);
@@ -205,7 +205,7 @@ float Camera::GetRoll() const
 
 float Camera::GetHorizonHeight()
 {
-	return (0.5 + ((-90.f - m_pitch) / m_fov[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
+	return (0.5 + ((-90.f - m_pitch) / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
 Vector3 Camera::GetShakeOffset()

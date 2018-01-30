@@ -223,7 +223,6 @@ bool Application::m_Init()
 	g_gameWindow->OnKeyPressed.Add(this, &Application::m_OnKeyPressed);
 	g_gameWindow->OnKeyReleased.Add(this, &Application::m_OnKeyReleased);
 	g_gameWindow->OnResized.Add(this, &Application::m_OnWindowResized);
-	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
 	// Initialize Input
 	g_input.Init(*g_gameWindow);
 
@@ -273,6 +272,8 @@ bool Application::m_Init()
 			return false;
 		}
 	}
+
+	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
 
 	{
 		ProfilerScope $1("GUI Init");
@@ -380,7 +381,7 @@ void Application::m_MainLoop()
 			// Calculate actual deltatime for timing calculations
 			currentTime = appTimer.SecondsAsFloat();
 			float actualDeltaTime = currentTime - m_lastRenderTime;
-			g_avgRenderDelta = g_avgRenderDelta * 0.99f + actualDeltaTime * 0.01f; // Calculate avg
+			g_avgRenderDelta = g_avgRenderDelta * 0.75f + actualDeltaTime * 0.25f; // Calculate avg
 
 			m_deltaTime = actualDeltaTime;
 			m_lastRenderTime = currentTime;

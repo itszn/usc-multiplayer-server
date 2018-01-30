@@ -669,11 +669,18 @@ public:
 
 		// Setting bar
 		{
+			uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
+
 			SettingsBar* sb = new SettingsBar(m_guiStyle);
 			m_settingsBar = Ref<SettingsBar>(sb);
 			sb->AddSetting(&m_camera.zoomBottom, -1.0f, 1.0f, "Bottom Zoom");
 			sb->AddSetting(&m_camera.zoomTop, -1.0f, 1.0f, "Top Zoom");
 			sb->AddSetting(&(m_track->roll), 0.0f, 1.0f, "Track roll");
+			sb->AddSetting(m_camera.pitchOffsets + portrait, 0.0f, 1.0f, "Crit Line Height");
+			sb->AddSetting(m_camera.fovs + portrait, 0.0f, 180.0f, "FOV");
+			sb->AddSetting(m_camera.baseRadius + portrait, 0.0f, 2.0f, "Base distance to track");
+			sb->AddSetting(m_camera.basePitch + portrait, 0.0f, -180.0f, "Base pitch");
+			sb->AddSetting(&(m_track->trackLength), 4.0f, 20.0f, "Track Length");
 			sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
 			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f/32.0f, 1.0f, "Laser Distance Leniency");
 			m_settingsBar->SetShow(false);
@@ -1022,9 +1029,14 @@ public:
 			return g_guiRenderer->RenderText(text, pos, color);
 		};
 
+		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		Vector2 bottomRight = topLeft + canvasRes;
+		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
+
 		const BeatmapSettings& bms = m_beatmap->GetMapSettings();
 		const TimingPoint& tp = m_playback.GetCurrentTimingPoint();
-		Vector2 textPos = Vector2(10 + (float)m_scoringGauge->frontTexture->GetSize().x, 10);
+		Vector2 textPos = topLeft + Vector2i(5, 0);
 		textPos.y += RenderText(bms.title, textPos).y;
 		textPos.y += RenderText(bms.artist, textPos).y;
 		textPos.y += RenderText(Utility::Sprintf("%.2f FPS", g_application->GetRenderFPS()), textPos).y;
