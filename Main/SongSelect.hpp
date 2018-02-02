@@ -1,5 +1,7 @@
 #pragma once
+
 #include "ApplicationTickable.hpp"
+#include "SongSelectItem.hpp"
 
 /*
 	Song select screen
