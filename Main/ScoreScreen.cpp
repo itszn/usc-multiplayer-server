@@ -91,6 +91,7 @@ public:
 			graphPixels[i].x = 255.0f * Math::Clamp(m_gaugeSamples[i], 0.0f, 1.0f);
 		}
 		m_graphTex->SetData(Vector2i(256, 1), graphPixels);
+		m_graphTex->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
 
 	}
 	~ScoreScreen_Impl()
