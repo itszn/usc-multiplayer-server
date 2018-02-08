@@ -152,8 +152,7 @@ void GameAudioEffect::SetParams(DSP* dsp, AudioPlayback& playback, HoldObjectSta
 	case EffectType::TapeStop:
 	{
 		TapeStopDSP* tapestopDSP = (TapeStopDSP*)dsp;
-		double speed = 1.0 - (double)object->effectParams[0] / 100.0;
-		tapestopDSP->SetLength((uint32)(speed * (float)object->duration));
+		tapestopDSP->SetLength((uint32)(1000 * ((double)16 / Math::Max(object->effectParams[0], (int16)1))));
 		break;
 	}
 	case EffectType::Retrigger:
