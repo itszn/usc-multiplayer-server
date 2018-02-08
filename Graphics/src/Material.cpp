@@ -89,7 +89,10 @@ namespace Graphics
 
 			uint32 handle = shader->Handle();
 
+#ifdef _DEBUG
 			Logf("Listing shader uniforms for %s", Logger::Info, shader->GetOriginalName());
+#endif // _DEBUG
+
 			int32 numUniforms;
 			glGetProgramiv(handle, GL_ACTIVE_UNIFORMS, &numUniforms);
 			for(int32 i = 0; i < numUniforms; i++)
@@ -146,8 +149,10 @@ namespace Graphics
 
 				BoundParameterInfo& param = m_boundParameters.FindOrAdd(targetID).Add(BoundParameterInfo(t, type, loc));
 
+#ifdef _DEBUG
 				Logf("Uniform [%d, loc=%d, %s] = %s", Logger::Info,
 					i, loc, Utility::Sprintf("Unknown [%d]", type), name);
+#endif // _DEBUG
 			}
 
 			glUseProgramStages(m_pipeline, shaderStageMap[(size_t)t], shader->Handle());
