@@ -445,6 +445,12 @@ void Scoring::m_OnObjectEntered(ObjectState* obj)
 		LaserObjectState* laser = (LaserObjectState*)obj;
 		if(!laser->prev) // Only register root laser objects
 		{
+			// Can cause problems if the previous laser segment hasnt ended yet for whatever reason
+			/// TODO: Check if there's a laser segment still active
+			timeSinceLaserUsed[laser->index] = 0;
+			laserPositions[laser->index] = laser->points[0];
+			laserTargetPositions[laser->index] = laser->points[0];
+			lasersAreExtend[laser->index] = laser->flags & LaserObjectState::flag_Extended;
 			// All laser ticks, including slam segments
 			Vector<ScoreTick> laserTicks;
 			m_CalculateLaserTicks(laser, laserTicks);
