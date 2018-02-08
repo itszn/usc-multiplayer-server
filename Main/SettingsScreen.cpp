@@ -37,6 +37,7 @@ private:
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
 	Vector<String> m_buttonModes = { "Keyboard", "Controller" };
 	Vector<String> m_gamePads;
+	Vector<String> m_skins;
 
 	Vector<GameConfigKeys> m_keyboardKeys = {
 		GameConfigKeys::Key_BTS,
@@ -81,6 +82,7 @@ private:
 	int m_laserMode = 0;
 	int m_buttonMode = 0;
 	int m_selectedGamepad = 0;
+	int m_selectedSkin = 0;
 	float m_modSpeed = 400.f;
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
@@ -164,6 +166,8 @@ private:
 		g_gameConfig.Set(GameConfigKeys::Laser0Color, m_laserColors[0]);
 		g_gameConfig.Set(GameConfigKeys::Laser1Color, m_laserColors[1]);
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
+		if(m_skins.size() > 0)
+			g_gameConfig.Set(GameConfigKeys::Skin, m_skins[m_selectedSkin]);
 
 		switch (inputModeMap[m_laserModes[m_laserMode]])
 		{
@@ -208,6 +212,7 @@ public:
 		m_guiStyle = g_commonGUIStyle;
 		m_canvas = Utility::MakeRef(new Canvas());
 		m_gamePads = g_gameWindow->GetGamepadDeviceNames();
+		m_skins = Path::GetSubDirs("./skins/");
 
 		if (g_gameConfig.GetBool(GameConfigKeys::UseCMod))
 			m_speedMod = 2;
@@ -248,6 +253,12 @@ public:
 		m_laserColors[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
 		m_laserColors[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
+		auto skinSearch = std::find(m_skins.begin(), m_skins.end(), g_gameConfig.GetString(GameConfigKeys::Skin));
+		if (skinSearch == m_skins.end())
+			m_selectedSkin = 0;
+		else
+			m_selectedSkin = skinSearch - m_skins.begin();
+
 
 		//Options select
 		ScrollBox* scroller = new ScrollBox(m_guiStyle);
@@ -400,6 +411,8 @@ public:
 				sb->AddSetting(&m_selectedGamepad, m_gamePads, m_gamePads.size(), "Selected Controller");
 
 			}
+			if (m_skins.size() > 0)
+				sb->AddSetting(&m_selectedSkin, m_skins, m_skins.size(), "Selected Skin");
 			sb->AddSetting(m_laserColors, 0.0, 360.0f, "Left Laser Color");
 			sb->AddSetting(m_laserColors + 1, 0.0, 360.0f, "Right Laser Color");
 
