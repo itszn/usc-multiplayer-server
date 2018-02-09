@@ -145,6 +145,22 @@ float Scoring::GetLaserRollOutput(uint32 index)
 		if(index == 1)
 			return (1.0f - laserTargetPositions[index]);
 	}
+	else // Check if any upcoming lasers are within 2 beats
+	{
+		for (auto l : m_laserSegmentQueue)
+		{
+			if (l->index == index && !l->prev)
+			{
+				if (l->time - m_playback->GetLastTime() <= m_playback->GetCurrentTimingPoint().beatDuration * 2)
+				{
+					if (index == 0)
+						return -l->points[0];
+					if (index == 1)
+						return (1.0f - l->points[0]);
+				}
+			}
+		}
+	}
 	return 0.0f;
 }
 
@@ -446,11 +462,25 @@ void Scoring::m_OnObjectEntered(ObjectState* obj)
 		if(!laser->prev) // Only register root laser objects
 		{
 			// Can cause problems if the previous laser segment hasnt ended yet for whatever reason
-			/// TODO: Check if there's a laser segment still active
-			timeSinceLaserUsed[laser->index] = 0;
-			laserPositions[laser->index] = laser->points[0];
-			laserTargetPositions[laser->index] = laser->points[0];
-			lasersAreExtend[laser->index] = laser->flags & LaserObjectState::flag_Extended;
+			if (!m_currentLaserSegments[laser->index])
+			{
+				bool anyInQueue = false;
+				for (auto l : m_laserSegmentQueue)
+				{
+					if (l->index == laser->index)
+					{
+						anyInQueue = true;
+						break;
+					}
+				}
+				if (!anyInQueue)
+				{
+					timeSinceLaserUsed[laser->index] = 0;
+					laserPositions[laser->index] = laser->points[0];
+					laserTargetPositions[laser->index] = laser->points[0];
+					lasersAreExtend[laser->index] = laser->flags & LaserObjectState::flag_Extended;
+				}
+			}
 			// All laser ticks, including slam segments
 			Vector<ScoreTick> laserTicks;
 			m_CalculateLaserTicks(laser, laserTicks);
@@ -666,9 +696,6 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 			// Set laser pointer position after hitting slam
 			laserTargetPositions[object->index] = object->points[1];
 			laserPositions[object->index] = object->points[1];
-
-			
-
 		}
 		if(m_holdObjects[object->index + 6] != *rootObject)
 		{
@@ -813,6 +840,15 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			{
 				currentSegment = nullptr;
 				m_currentLaserSegments[i] = nullptr;
+				for (auto o : m_laserSegmentQueue)
+				{
+					if (o->index == i)
+					{
+						laserTargetPositions[i] = o->points[0];
+						lasersAreExtend[i] = o->flags & LaserObjectState::flag_Extended;
+						break;
+					}
+				}
 			}
 			else
 			{

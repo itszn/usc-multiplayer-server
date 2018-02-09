@@ -23,6 +23,7 @@ public:
 	// Modifyable array of all hittable objects, within -+'hittableObjectTreshold' of current time
 	Set<ObjectState*>& GetHittableObjects();
 	MapTime hittableObjectEnter = 500;
+	MapTime hittableLaserEnter = 500;
 	MapTime hittableObjectLeave = 500;
 	MapTime alertLaserThreshold = 1500;
 	MapTime audioOffset = 0;
@@ -122,6 +123,7 @@ private:
 
 	TimingPoint** m_currentTiming = nullptr;
 	ObjectState** m_currentObj = nullptr;
+	ObjectState** m_currentLaserObj = nullptr;
 	ObjectState** m_currentAlertObj = nullptr;
 	LaneHideTogglePoint** m_currentLaneTogglePoint = nullptr;
 	ZoomControlPoint** m_currentZoomPoint = nullptr;

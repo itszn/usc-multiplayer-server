@@ -22,10 +22,13 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_playbackTime = startTime;
 	m_currentObj = &m_objects.front();
 	m_currentAlertObj = &m_objects.front();
+	m_currentLaserObj = &m_objects.front();
 	m_currentTiming = &m_timingPoints.front();
 	m_currentZoomPoint = m_zoomPoints.empty() ? nullptr : &m_zoomPoints.front();
 	m_currentLaneTogglePoint = m_laneTogglePoints.empty() ? nullptr : &m_laneTogglePoints.front();
 
+	hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
+	alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
 	m_hittableObjects.clear();
 	m_holdObjects.clear();
 
@@ -71,6 +74,8 @@ void BeatmapPlayback::Update(MapTime newTime)
 	if (timingEnd != nullptr && timingEnd != m_currentTiming)
 	{
 		m_currentTiming = timingEnd;
+		hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
+		alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
 		OnTimingPointChanged.Call(*m_currentTiming);
 	}
 
@@ -89,15 +94,37 @@ void BeatmapPlayback::Update(MapTime newTime)
 		for (auto it = m_currentObj; it < objEnd; it++)
 		{
 			MultiObjectState* obj = **it;
-			if (obj->type == ObjectType::Hold || obj->type == ObjectType::Laser || obj->type == ObjectType::Single)
+			if (obj->type != ObjectType::Laser)
 			{
-				m_holdObjects.Add(*obj);
+				if (obj->type == ObjectType::Hold || obj->type == ObjectType::Single)
+				{
+					m_holdObjects.Add(*obj);
+				}
+				m_hittableObjects.Add(*it);
+				OnObjectEntered.Call(*it);
 			}
-			m_hittableObjects.Add(*it);
-			OnObjectEntered.Call(*it);
 		}
 		m_currentObj = objEnd;
 	}
+
+
+	// Advance lasers
+	objEnd = m_SelectHitObject(m_playbackTime + hittableLaserEnter);
+	if (objEnd != nullptr && objEnd != m_currentLaserObj)
+	{
+		for (auto it = m_currentLaserObj; it < objEnd; it++)
+		{
+			MultiObjectState* obj = **it;
+			if (obj->type == ObjectType::Laser)
+			{
+				m_holdObjects.Add(*obj);
+				m_hittableObjects.Add(*it);
+				OnObjectEntered.Call(*it);
+			}
+		}
+		m_currentLaserObj = objEnd;
+	}
+
 
 	// Check for lasers within the alert time
 	objEnd = m_SelectHitObject(m_playbackTime + alertLaserThreshold);
