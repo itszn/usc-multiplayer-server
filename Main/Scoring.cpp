@@ -99,7 +99,7 @@ void Scoring::Reset()
 	// Get input offset
 	m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
 	// Get laser assist level
-	m_assistLevel = g_gameConfig.GetInt(GameConfigKeys::LaserAssistLevel);
+	m_assistLevel = g_gameConfig.GetFloat(GameConfigKeys::LaserAssistLevel);
 	// Recalculate maximum score
 	mapTotals = CalculateMapTotals();
 
@@ -578,7 +578,7 @@ void Scoring::m_UpdateTicks()
 						if (tick->HasFlag(TickFlags::Start))
 						{
 							laserPositions[laserObject->index] = laserTargetPositions[laserObject->index];
-							m_autoLaserTick[laserObject->index] = m_assistLevel;
+							m_autoLaserTime[laserObject->index] = m_assistTime;
 						}
 
 						// Check laser input
@@ -587,8 +587,6 @@ void Scoring::m_UpdateTicks()
 						if(laserDelta < laserDistanceLeniency)
 						{
 							m_TickHit(tick, buttonCode);
-							if(m_autoLaserTick[laserObject->index] > 0)
-								m_autoLaserTick[laserObject->index] -= 1;
 							processed = true;
 						}
 					}
@@ -735,8 +733,10 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 	}
 	else if(tick->HasFlag(TickFlags::Laser))
 	{
+		LaserObjectState* obj = (LaserObjectState*)tick->object;
 		m_ReleaseHoldObject(index);
 		currentGauge -= 0.005f;
+		m_autoLaserTime[obj->index] = -1;
 		stat->rating = ScoreHitRating::Miss;
 	}
 
@@ -813,6 +813,9 @@ void Scoring::m_ReleaseHoldObject(uint32 index)
 
 void Scoring::m_UpdateLasers(float deltaTime)
 {
+	/// TODO: Change to only re-calculate on bpm change
+	m_assistTime = m_assistLevel * m_playback->GetCurrentTimingPoint().beatDuration / 4000.0f;
+
 	MapTime mapTime = m_playback->GetLastTime();
 	for(uint32 i = 0; i < 2; i++)
 	{
@@ -877,8 +880,8 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			else if (laserDir == 0.0f && fabs(positionDelta) < laserDistanceLeniency)
 			{
 				laserPositions[i] = laserTargetPositions[i];
-				if (m_autoLaserTick[i] < m_assistLevel)
-					m_autoLaserTick[i] += 1;
+				if (m_autoLaserTime[i] < m_assistTime)
+					m_autoLaserTime[i] = m_assistTime;
 			}
 			else if(inputDir != 0.0f)
 			{
@@ -902,9 +905,9 @@ void Scoring::m_UpdateLasers(float deltaTime)
 						laserPositions[i] = Math::Max(laserPositions[i] + input, laserTargetPositions[i]);
 				}
 				notAffectingGameplay = false;
-				if (inputDir == moveDir && fabs(positionDelta) < laserDistanceLeniency && m_autoLaserTick[i] < m_assistLevel)
+				if (inputDir == moveDir && fabs(positionDelta) < laserDistanceLeniency && m_autoLaserTime[i] < m_assistTime)
 				{
-					m_autoLaserTick[i] += 1;
+					m_autoLaserTime[i] = m_assistTime;
 				}
 			}
 			timeSinceLaserUsed[i] = 0.0f;
@@ -913,13 +916,16 @@ void Scoring::m_UpdateLasers(float deltaTime)
 		{
 			timeSinceLaserUsed[i] += deltaTime;
 		}
-		if (autoplay || m_autoLaserTick[i] > 0)
+		if (autoplay || m_autoLaserTime[i] >= 0)
 		{
 			laserPositions[i] = laserTargetPositions[i];
 		}
 		// Clamp cursor between 0 and 1
 		laserPositions[i] = Math::Clamp(laserPositions[i], 0.0f, 1.0f);
 	}
+
+	m_autoLaserTime[0] -= deltaTime;
+	m_autoLaserTime[1] -= deltaTime;
 
 	// Interpolate laser output
 	m_UpdateLaserOutput(deltaTime);

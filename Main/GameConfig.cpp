@@ -31,7 +31,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::GlobalOffset, 0);
 	Set(GameConfigKeys::InputOffset, 0);
 	Set(GameConfigKeys::FPSTarget, 0);
-	Set(GameConfigKeys::LaserAssistLevel, 2);
+	Set(GameConfigKeys::LaserAssistLevel, 1.5f);
 	Set(GameConfigKeys::UseMMod, false);
 	Set(GameConfigKeys::UseCMod, false);
 	Set(GameConfigKeys::ModSpeed, 300.0f);

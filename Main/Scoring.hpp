@@ -259,11 +259,12 @@ private:
 	// Keeps being set to the last direction the laser was moving in to create laser intertia
 	float m_lastLaserInputDirection[2] = { 0.0f };
 	// Decides if the coming tick should be auto completed
-	uint32 m_autoLaserTick[2] = { 0,0 };
+	float m_autoLaserTime[2] = { 0,0 };
 	// Saves the time when a button was hit, used to decide if a button was held before a hold object was active
 	MapTime m_buttonHitTime[6] = { -1,-1,-1,-1,-1,-1 };
 	// Max number of ticks to assist
-	uint32 m_assistLevel = 2;
+	float m_assistLevel = 1.5f;
+	float m_assistTime = 0.0f;
 	// Offet to use for calculating judge (ms)
 	uint32 m_inputOffset = 0;
 
