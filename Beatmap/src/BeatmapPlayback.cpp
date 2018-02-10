@@ -27,8 +27,8 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_currentZoomPoint = m_zoomPoints.empty() ? nullptr : &m_zoomPoints.front();
 	m_currentLaneTogglePoint = m_laneTogglePoints.empty() ? nullptr : &m_laneTogglePoints.front();
 
-	hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
-	alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
+	//hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
+	//alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
 	m_hittableObjects.clear();
 	m_holdObjects.clear();
 
@@ -74,8 +74,9 @@ void BeatmapPlayback::Update(MapTime newTime)
 	if (timingEnd != nullptr && timingEnd != m_currentTiming)
 	{
 		m_currentTiming = timingEnd;
-		hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
-		alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
+		/// TODO: Investigate why this causes score to be too high
+		//hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
+		//alertLaserThreshold = (*m_currentTiming)->beatDuration * 6.0;
 		OnTimingPointChanged.Call(*m_currentTiming);
 	}
 
