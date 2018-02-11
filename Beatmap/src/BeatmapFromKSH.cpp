@@ -388,6 +388,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			m_settings.jacketPath = s.second;
 		else if (s.first == "bg")
 			m_settings.backgroundPath = s.second;
+		else if (s.first == "layer")
+			m_settings.foregroundPath = s.second;
 		else if (s.first == "m")
 		{
 			if (s.second.find(';') != -1)

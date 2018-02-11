@@ -115,6 +115,7 @@ private:
 
 	// Current background visualization
 	Background* m_background = nullptr;
+	Background* m_foreground = nullptr;
 
 	// Currently active timing point
 	const TimingPoint* m_currentTiming;
@@ -182,7 +183,8 @@ public:
 			delete m_track;
 		if(m_background)
 			delete m_background;
-
+		if (m_foreground)
+			delete m_foreground;
 
 		// Save hispeed
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
@@ -360,6 +362,7 @@ public:
 		// Background 
 		/// TODO: Load this async
 		CheckedLoad(m_background = CreateBackground(this));
+		CheckedLoad(m_foreground = CreateBackground(this, true));
 
 		// Do this here so we don't get input events while still loading
 		m_scoring.SetPlayback(m_playback);
@@ -587,6 +590,9 @@ public:
 
 		// Render particle effects last
 		RenderParticles(rs, deltaTime);
+
+		// Render foreground
+		m_foreground->Render(deltaTime);
 
 		// Render debug hud if enabled
 		if(m_renderDebugHUD)

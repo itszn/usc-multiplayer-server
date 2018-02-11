@@ -11,7 +11,7 @@
 class FullscreenBackground : public Background
 {
 public:
-	virtual bool Init() override
+	virtual bool Init(bool foreground) override
 	{
 		fullscreenMesh = MeshGenerators::Quad(g_gl, Vector2(-1.0f), Vector2(2.0f));
 		return true;
@@ -40,31 +40,51 @@ public:
 
 class TestBackground : public FullscreenBackground
 {
-	virtual bool Init() override
+	virtual bool Init(bool foreground) override
 	{
-		if(!FullscreenBackground::Init())
+		if(!FullscreenBackground::Init(foreground))
 			return false;
 
 		/// TODO: Handle invalid background configurations properly
 		/// e.g. missing bg_texture.png and such
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
-		String matPath = game->GetBeatmap()->GetMapSettings().backgroundPath;
-		String texPath = "textures/bg_texture.png";
-		if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+		String matPath = "";
+		if (foreground)
 		{
-			matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
-			texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "bg_texture.png");
-			CheckedLoad(backgroundTexture = g_application->LoadTexture(texPath, true));
+			matPath = game->GetBeatmap()->GetMapSettings().foregroundPath;
+			String texPath = "textures/fg_texture.png";
+			if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+			{
+				matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
+				texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "fg_texture.png");
+				CheckedLoad(backgroundTexture = g_application->LoadTexture(texPath, true));
+			}
+			else
+			{
+				matPath = "skins/" + skin + "/shaders/foreground.fs";
+				CheckedLoad(backgroundTexture = g_application->LoadTexture("fg_texture.png"));
+			}
 		}
 		else
 		{
-			matPath = "skins/" + skin + "/shaders/background.fs";
-			CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
+			matPath = game->GetBeatmap()->GetMapSettings().backgroundPath;
+			String texPath = "textures/bg_texture.png";
+			if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+			{
+				matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
+				texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "bg_texture.png");
+				CheckedLoad(backgroundTexture = g_application->LoadTexture(texPath, true));
+			}
+			else
+			{
+				matPath = "skins/" + skin + "/shaders/background.fs";
+				CheckedLoad(backgroundTexture = g_application->LoadTexture("bg_texture.png"));
+			}
 		}
 
 
-
 		CheckedLoad(fullscreenMaterial = LoadBackgroundMaterial(matPath));
+		fullscreenMaterial->opaque = !foreground;
 
 		return true;
 	}
@@ -137,11 +157,11 @@ class TestBackground : public FullscreenBackground
 
 
 
-Background* CreateBackground(class Game* game)
+Background* CreateBackground(class Game* game, bool foreground /* = false*/)
 {
 	Background* bg = new TestBackground();
 	bg->game = game;
-	if(!bg->Init())
+	if(!bg->Init(foreground))
 	{
 		delete bg;
 		return nullptr;
