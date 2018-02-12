@@ -694,6 +694,7 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 			// Set laser pointer position after hitting slam
 			laserTargetPositions[object->index] = object->points[1];
 			laserPositions[object->index] = object->points[1];
+			m_autoLaserTime[object->index] = m_assistTime;
 		}
 		if(m_holdObjects[object->index + 6] != *rootObject)
 		{
@@ -922,10 +923,8 @@ void Scoring::m_UpdateLasers(float deltaTime)
 		}
 		// Clamp cursor between 0 and 1
 		laserPositions[i] = Math::Clamp(laserPositions[i], 0.0f, 1.0f);
+		m_autoLaserTime[i] -= deltaTime;
 	}
-
-	m_autoLaserTime[0] -= deltaTime;
-	m_autoLaserTime[1] -= deltaTime;
 
 	// Interpolate laser output
 	m_UpdateLaserOutput(deltaTime);
