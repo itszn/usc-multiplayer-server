@@ -131,8 +131,8 @@ void Scoring::Reset()
 
 void Scoring::Tick(float deltaTime)
 {
-	m_UpdateLasers(deltaTime);
 	m_UpdateTicks();
+	m_UpdateLasers(deltaTime);
 }
 
 float Scoring::GetLaserRollOutput(uint32 index)
@@ -563,9 +563,13 @@ void Scoring::m_UpdateTicks()
 						// Check if slam hit
 						float dirSign = Math::Sign(laserObject->GetDirection());
 						float inputSign = Math::Sign(m_input->GetInputLaserDir(buttonCode - 6));
-						if(autoplay)
+						float posDelta = (laserObject->points[1] - laserPositions[buttonCode - 6]) * dirSign;
+						if (autoplay)
+						{
 							inputSign = dirSign;
-						if(dirSign == inputSign && delta > 0)
+							posDelta = 1;
+						}
+						if(dirSign == inputSign && delta > -10 && posDelta >= 0)
 						{
 							m_TickHit(tick, buttonCode);
 							processed = true;
@@ -735,8 +739,12 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 	else if(tick->HasFlag(TickFlags::Laser))
 	{
 		LaserObjectState* obj = (LaserObjectState*)tick->object;
+		
+		if(tick->HasFlag(TickFlags::Slam))
+			currentGauge -= 0.02f;
+		else
+			currentGauge -= 0.005f;
 		m_ReleaseHoldObject(index);
-		currentGauge -= 0.005f;
 		m_autoLaserTime[obj->index] = -1;
 		stat->rating = ScoreHitRating::Miss;
 	}
@@ -830,6 +838,12 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			{
 				// Replace the currently active segment
 				m_currentLaserSegments[(*it)->index] = *it;
+				if (m_currentLaserSegments[(*it)->index]->prev && m_currentLaserSegments[(*it)->index]->GetDirection() != m_currentLaserSegments[(*it)->index]->prev->GetDirection())
+				{
+					//Direction change
+					m_autoLaserTime[(*it)->index] = -1;
+				}
+
 				it = m_laserSegmentQueue.erase(it);
 				continue;
 			}
