@@ -32,6 +32,7 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
 	Ref<SettingsBar> m_settings;
+	SettingBarSetting* m_sensSetting;
 
 	Vector<String> m_speedMods = { "XMod", "MMod", "CMod" };
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
@@ -147,6 +148,18 @@ private:
 	void SetRL()
 	{
 		g_application->AddTickable(ButtonBindingScreen::Create(GameConfigKeys::Controller_Laser1Axis, m_laserMode == 2, m_selectedGamepad));
+	}
+
+	void CalibrateSens()
+	{
+		LaserSensCalibrationScreen* sensScreen = LaserSensCalibrationScreen::Create();
+		sensScreen->SensSet.Add(this, &SettingsScreen_Impl::SetSens);
+		g_application->AddTickable(sensScreen);
+	}
+
+	void SetSens(float sens)
+	{
+		m_settings->SetValue(m_sensSetting, sens);
 	}
 
 	void Exit()
@@ -393,6 +406,17 @@ public:
 			fxSlot->alignment = Vector2(0.5f, 0.f);
 		}
 
+		// Laser sens calibration button
+		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) != InputDevice::Keyboard)
+		{
+			Button* calButton = new Button(m_guiStyle);
+			calButton->OnPressed.Add(this, &SettingsScreen_Impl::CalibrateSens);
+			calButton->SetText(L"Calibrate Laser Sensitivity");
+			calButton->SetFontSize(32);
+			btnSlot = box->Add(calButton->MakeShared());
+			btnSlot->alignment = Vector2(0.5f, 0.f);
+		}
+
 		// Setting bar
 		{
 			SettingsBar* sb = new SettingsBar(m_guiStyle);
@@ -403,7 +427,7 @@ public:
 			sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
 			sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
 			sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");
-			sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
+			m_sensSetting = sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
 			sb->AddSetting(&m_hispeed, 0.25f, 10.0f, "HiSpeed");
 			sb->AddSetting(&m_modSpeed, 50.0f, 1500.0f, "ModSpeed");
 			if (m_gamePads.size() > 0)
@@ -685,5 +709,116 @@ public:
 ButtonBindingScreen* ButtonBindingScreen::Create(GameConfigKeys key, bool gamepad, int controllerIndex)
 {
 	ButtonBindingScreen_Impl* impl = new ButtonBindingScreen_Impl(key, gamepad, controllerIndex);
+	return impl;
+}
+
+class LaserSensCalibrationScreen_Impl : public LaserSensCalibrationScreen
+{
+private:
+	Ref<CommonGUIStyle> m_guiStyle;
+	Ref<Canvas> m_canvas;
+	Ref<Gamepad> m_gamepad;
+	Label* m_prompt;
+	bool m_state = false;
+	float m_delta = 0.f;
+	float m_currentSetting = 0.f;
+	bool m_firstStart = false;
+public:
+	LaserSensCalibrationScreen_Impl()
+	{
+
+	}
+
+	~LaserSensCalibrationScreen_Impl()
+	{
+		g_input.OnButtonPressed.RemoveAll(this);
+	}
+
+	bool Init()
+	{
+		m_guiStyle = g_commonGUIStyle;
+		m_canvas = Utility::MakeRef(new Canvas());
+
+		//Prompt Text
+		LayoutBox* box = new LayoutBox();
+		Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
+		slot->anchor = Anchor(0.5f, 0.5f);
+		slot->autoSizeX = true;
+		slot->autoSizeY = true;
+		slot->alignment = Vector2(0.5f, 0.5f);
+		g_input.GetInputLaserDir(0); //poll because there might be something idk
+		m_prompt = new Label();
+		m_prompt->SetText(L"Press Start Twice"); //Need to press twice because controller polling weirdness
+		m_prompt->SetFontSize(100);
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Controller)
+			m_currentSetting = g_gameConfig.GetFloat(GameConfigKeys::Controller_Sensitivity);
+		else
+			m_currentSetting = g_gameConfig.GetFloat(GameConfigKeys::Mouse_Sensitivity);
+
+		box->Add(m_prompt->MakeShared());
+		g_input.OnButtonPressed.Add(this, &LaserSensCalibrationScreen_Impl::OnButtonPressed);
+		return true;
+	}
+
+	void Tick(float deltatime)
+	{
+		m_delta += g_input.GetInputLaserDir(0);
+		if (m_state)
+		{	
+			float sens = 6.0 / (m_delta / m_currentSetting);
+			m_prompt->SetText(Utility::WSprintf(L"Turn left knob one revolution clockwise \nand then press start.\nCurrent Sens: %.2f", sens));
+		}
+		else
+		{
+			m_delta = 0;
+		}
+	}
+
+	void OnButtonPressed(Input::Button button)
+	{
+		if (button == Input::Button::BT_S)
+		{
+			if (m_firstStart)
+			{
+				if (m_state)
+				{
+					// calc sens and then call delagate
+					SensSet.Call(6.0 / (m_delta / m_currentSetting));
+					g_application->RemoveTickable(this);
+				}
+				else
+				{
+					m_prompt->SetText(L"Turn left knob one revolution clockwise \nand then press start.");
+					m_delta = 0;
+					m_state = !m_state;
+				}
+			}
+			else
+			{
+				m_firstStart = true;
+			}
+		}
+	}
+
+	virtual void OnKeyPressed(int32 key)
+	{
+		if (key == SDLK_ESCAPE)
+			g_application->RemoveTickable(this);
+	}
+
+	virtual void OnSuspend()
+	{
+		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+	}
+	virtual void OnRestore()
+	{
+		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		slot->anchor = Anchors::Full;
+	}
+};
+
+LaserSensCalibrationScreen* LaserSensCalibrationScreen::Create()
+{
+	LaserSensCalibrationScreen* impl = new LaserSensCalibrationScreen_Impl();
 	return impl;
 }

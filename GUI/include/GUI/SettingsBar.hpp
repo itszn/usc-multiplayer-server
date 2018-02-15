@@ -48,8 +48,10 @@ public:
 	virtual void PreRender(GUIRenderData rd, GUIElementBase*& inputElement) override;
 	virtual void Render(GUIRenderData rd) override;
 
-	void AddSetting(float* target, float min, float max, const String& name);
-	void AddSetting(int* target, Vector<String> options, int optionsCount, const String& name);
+	SettingBarSetting* AddSetting(float* target, float min, float max, const String& name);
+	SettingBarSetting* AddSetting(int* target, Vector<String> options, int optionsCount, const String& name);
+	void SetValue(SettingBarSetting* setting, float value);
+	void SetValue(SettingBarSetting* setting, int value);
 	void ClearSettings();
 	
 	void SetShow(bool shown);
@@ -59,8 +61,9 @@ public:
 
 private:
 	bool m_shown = true;
-
 	class LayoutBox* m_container;
 	Ref<CommonGUIStyle> m_style;
 	Map<SettingBarSetting*, GUIElement> m_settings;
+	Map<SettingBarSetting*, Slider*> m_sliders;
+
 };

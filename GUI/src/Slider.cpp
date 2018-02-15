@@ -148,6 +148,8 @@ float Slider::GetValue() const
 void Slider::SetValue(float val, bool callHandlers)
 {
 	m_value = val;
+	m_newValue = val;
+	m_CalculateButtonRect(val);
 	if(callHandlers)
 	{
 		OnSliding.Call(m_newValue);

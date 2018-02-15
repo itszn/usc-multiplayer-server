@@ -45,7 +45,7 @@ void SettingsBar::Render(GUIRenderData rd)
 	}
 }
 
-void SettingsBar::AddSetting(float* target, float min, float max, const String& name)
+SettingBarSetting* SettingsBar::AddSetting(float* target, float min, float max, const String& name)
 {
 	SettingBarSetting* setting = new SettingBarSetting();
 	setting->name = Utility::ConvertToWString(name);
@@ -70,14 +70,16 @@ void SettingsBar::AddSetting(float* target, float min, float max, const String& 
 		Slider* slider = new Slider(m_style);
 		slider->SetValue(v);
 		slider->OnSliding.Add(setting, &SettingBarSetting::m_SliderUpdate);
+		slider->OnValueSet.Add(setting, &SettingBarSetting::m_SliderUpdate);
 		LayoutBox::Slot* sliderSlot = box->Add(slider->MakeShared());
 		sliderSlot->fillX = true;
+		m_sliders.Add(setting, slider);
 	}
-
 	m_settings.Add(setting, box->MakeShared());
 	setting->m_SliderUpdate(v); // Initial update
+	return setting;
 }
-void SettingsBar::AddSetting(int* target, Vector<String> options, int optionsCount, const String& name)
+SettingBarSetting* SettingsBar::AddSetting(int* target, Vector<String> options, int optionsCount, const String& name)
 {
 	SettingBarSetting* setting = new SettingBarSetting();
 	setting->name = Utility::ConvertToWString(name);
@@ -128,6 +130,19 @@ void SettingsBar::AddSetting(int* target, Vector<String> options, int optionsCou
 	m_settings.Add(setting, box->MakeShared());
 
 	setting->m_UpdateTextSetting(0);
+	return setting;
+}
+
+void SettingsBar::SetValue(SettingBarSetting * setting, float value)
+{
+	float v = (value - setting->floatSetting.min) / (setting->floatSetting.max - setting->floatSetting.min);
+	m_sliders[setting]->SetValue(v);
+}
+
+void SettingsBar::SetValue(SettingBarSetting * setting, int value)
+{
+	int offset = value - (*setting->textSetting.target);
+	setting->m_UpdateTextSetting(offset);
 }
 
 void SettingsBar::ClearSettings()
