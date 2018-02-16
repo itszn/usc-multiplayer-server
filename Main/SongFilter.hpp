@@ -3,6 +3,13 @@
 #include "SongSelect.hpp"
 #include <Beatmap/MapDatabase.hpp>
 
+enum FilterType
+{
+	All,
+	Folder,
+	Level
+};
+
 class SongFilter
 {
 public:
@@ -12,6 +19,7 @@ public:
 	virtual Map<int32, SongSelectIndex> GetFiltered(const Map<int32, SongSelectIndex>& source) { return source; }
 	virtual String GetName() { return m_name; }
 	virtual bool IsAll() { return true; }
+	virtual FilterType GetType() { return FilterType::All; }
 
 private:
 	String m_name = "All";
@@ -25,6 +33,8 @@ public:
 	virtual Map<int32, SongSelectIndex> GetFiltered(const Map<int32, SongSelectIndex>& source) override;
 	virtual String GetName() override;
 	virtual bool IsAll() override;
+	virtual FilterType GetType() { return FilterType::Level; }
+
 
 private:
 	uint16 m_level;
@@ -37,6 +47,8 @@ public:
 	virtual Map<int32, SongSelectIndex> GetFiltered(const Map<int32, SongSelectIndex>& source);
 	virtual String GetName() override;
 	virtual bool IsAll() override;
+	virtual FilterType GetType() { return FilterType::Folder; }
+
 
 private:
 	String m_folder;

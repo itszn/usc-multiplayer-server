@@ -370,10 +370,19 @@ public:
 		m_filterSet = true;
 		AdvanceSelection(0);
 	}
-	void SetFilter(SongFilter* filter)
+	void SetFilter(SongFilter* filter[2])
 	{
-		m_mapFilter = filter->GetFiltered(m_maps);
-		m_filterSet = !filter->IsAll();
+		bool isFiltered = false;
+		m_mapFilter = m_maps;
+		for (size_t i = 0; i < 2; i++)
+		{
+			if (!filter[i])
+				continue;
+			m_mapFilter = filter[i]->GetFiltered(m_mapFilter);
+			if (!filter[i]->IsAll())
+				isFiltered = true;
+		}
+		m_filterSet = isFiltered;
 		AdvanceSelection(0);
 	}
 	void ClearFilter()
@@ -452,10 +461,14 @@ class FilterSelection : public Canvas
 public:
 	FilterSelection(Ref<SelectionWheel> selectionWheel) : m_selectionWheel(selectionWheel)
 	{
-		AddFilter(new SongFilter());
+		SongFilter* lvFilter = new SongFilter();
+		SongFilter* flFilter = new SongFilter();
+
+		AddFilter(lvFilter, FilterType::Level);
+		AddFilter(flFilter, FilterType::Folder);
 		for (size_t i = 1; i <= 20; i++)
 		{
-			AddFilter(new LevelFilter(i));
+			AddFilter(new LevelFilter(i), FilterType::Level);
 		}
 	}
 
@@ -463,15 +476,28 @@ public:
 
 	bool IsAll()
 	{
-		return m_currentFilter->IsAll();
+		bool isFiltered = false;
+		for (size_t i = 0; i < 2; i++)
+		{
+			if (!m_currentFilters[i]->IsAll())
+				return true;
+		}
+		return false;
 	}
 
-	void AddFilter(SongFilter* filter)
+	void AddFilter(SongFilter* filter, FilterType type)
 	{
-		m_filters.Add(filter);
+		if (type == FilterType::Level)
+			m_levelFilters.Add(filter);
+		else
+			m_folderFilters.Add(filter);
 		Label* label = new Label();
 		label->SetFontSize(30);
 		label->SetText(Utility::ConvertToWString(filter->GetName()));
+		if (!m_selectingFolders && type == FilterType::Folder)
+			label->color.w = 0.0f;
+		else if (m_selectingFolders && type == FilterType::Level)
+			label->color.w = 0.0f;
 		m_guiElements[filter] = label;
 		Canvas::Slot* labelSlot = Add(label->MakeShared());
 		labelSlot->allowOverflow = true;
@@ -479,38 +505,77 @@ public:
 		labelSlot->autoSizeY = true;
 		labelSlot->anchor = Anchors::MiddleLeft;
 		labelSlot->alignment = Vector2(0.f, 0.5f);
-		m_currentSelection = 0;
-		SelectFilter(m_filters[0]);
+		if (type == FilterType::Level)
+		{
+			m_currentLevelSelection = 0;
+			SelectFilter(m_levelFilters[0], FilterType::Level);
+		}
+		else
+		{
+			m_currentFolderSelection = 0;
+			SelectFilter(m_folderFilters[0], FilterType::Folder);
+		}
 	}
 
-	void SelectFilter(SongFilter* filter)
+	void SelectFilter(SongFilter* filter, FilterType type)
 	{
-		m_selectionWheel->SetFilter(filter);
-		if (m_currentFilter)
-			m_guiElements[m_currentFilter]->SetText(Utility::ConvertToWString(m_currentFilter->GetName()));
+		uint8 t = type == FilterType::Folder ? 0 : 1;
+
+		if (m_currentFilters[t])
+			m_guiElements[m_currentFilters[t]]->SetText(Utility::ConvertToWString(m_currentFilters[t]->GetName()));
 		m_guiElements[filter]->SetText(Utility::ConvertToWString(Utility::Sprintf("->%s", filter->GetName())));
 
-		for (size_t i = 0; i < m_filters.size(); i++)
+		if (type == FilterType::Folder)
 		{
-			Vector2 coordinate = Vector2(50, 0);
-			SongFilter* songFilter = m_filters[i];
+			for (size_t i = 0; i < m_folderFilters.size(); i++)
+			{
+				Vector2 coordinate = Vector2(50, 0);
+				SongFilter* songFilter = m_folderFilters[i];
 
-			coordinate.y = ((int)i - (int)m_currentSelection) * 40.f;
-			coordinate.x -= ((int)m_currentSelection - i) * ((int)m_currentSelection - i) * 1.5;
-			Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
-			AddAnimation(Ref<IGUIAnimation>(
-				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-			labelSlot->offset = Rect(coordinate, Vector2(0));
+				coordinate.y = ((int)i - (int)m_currentFolderSelection) * 40.f;
+				coordinate.x -= ((int)m_currentFolderSelection - i) * ((int)m_currentFolderSelection - i) * 1.5;
+				Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
+				AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+				labelSlot->offset = Rect(coordinate, Vector2(0));
+			}
 		}
-		m_currentFilter = filter;
+		else
+		{
+			for (size_t i = 0; i < m_levelFilters.size(); i++)
+			{
+				Vector2 coordinate = Vector2(50, 0);
+				SongFilter* songFilter = m_levelFilters[i];
+
+				coordinate.y = ((int)i - (int)m_currentLevelSelection) * 40.f;
+				coordinate.x -= ((int)m_currentLevelSelection - i) * ((int)m_currentLevelSelection - i) * 1.5;
+				Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
+				AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+				labelSlot->offset = Rect(coordinate, Vector2(0));
+			}
+		}
+
+		m_currentFilters[t] = filter;
+		m_selectionWheel->SetFilter(m_currentFilters);
 	}
 
 	void AdvanceSelection(int32 offset)
 	{
-		m_currentSelection = ((int)m_currentSelection + offset) % (int)m_filters.size();
-		if (m_currentSelection < 0)
-			m_currentSelection = m_filters.size() + m_currentSelection;
-		SelectFilter(m_filters[m_currentSelection]);
+		if (m_selectingFolders)
+		{
+			m_currentFolderSelection = ((int)m_currentFolderSelection + offset) % (int)m_folderFilters.size();
+			if (m_currentFolderSelection < 0)
+				m_currentFolderSelection = m_folderFilters.size() + m_currentFolderSelection;
+			SelectFilter(m_folderFilters[m_currentFolderSelection], FilterType::Folder);
+		}
+		else
+		{
+			m_currentLevelSelection = ((int)m_currentLevelSelection + offset) % (int)m_levelFilters.size();
+			if (m_currentLevelSelection < 0)
+				m_currentLevelSelection = m_levelFilters.size() + m_currentLevelSelection;
+			SelectFilter(m_levelFilters[m_currentLevelSelection], FilterType::Level);
+		}
 	}
 
 	void SetMapDB(MapDatabase* db)
@@ -520,16 +585,43 @@ public:
 		{
 			SongFilter* filter = new FolderFilter(p, m_mapDB);
 			if(filter->GetFiltered(Map<int32, SongSelectIndex>()).size() > 0)
-				AddFilter(filter);
+				AddFilter(filter, FilterType::Folder);
 		}
+	}
+
+	void ToggleSelectionMode()
+	{
+		m_selectingFolders = !m_selectingFolders;
+		for (auto flFilter : m_folderFilters)
+		{
+			if (m_selectingFolders)
+				m_guiElements[flFilter]->color.w = 1.0f;
+			else
+				m_guiElements[flFilter]->color.w = 0.0f;
+		}
+		for (auto lvFilter : m_levelFilters)
+		{
+			if (!m_selectingFolders)
+				m_guiElements[lvFilter]->color.w = 1.0f;
+			else
+				m_guiElements[lvFilter]->color.w = 0.0f;
+		}
+	}
+
+	String GetStatusText()
+	{
+		return Utility::Sprintf("%s / %s", m_currentFilters[0]->GetName(), m_currentFilters[1]->GetName());
 	}
 
 private:
 	Ref<SelectionWheel> m_selectionWheel;
-	Vector<SongFilter*> m_filters;
-	int32 m_currentSelection = 0;
+	Vector<SongFilter*> m_folderFilters;
+	Vector<SongFilter*> m_levelFilters;
+	int32 m_currentFolderSelection = 0;
+	int32 m_currentLevelSelection = 0;
+	bool m_selectingFolders = true;
 	Map<SongFilter*, Label*> m_guiElements;
-	SongFilter* m_currentFilter = nullptr;
+	SongFilter* m_currentFilters[2] = { nullptr };
 	MapDatabase* m_mapDB;
 };
 
@@ -556,7 +648,8 @@ private:
 	Ref<TextInputField> m_searchField;
 	// Panel to fade out selection wheel
 	Ref<Panel> m_fadePanel;
-
+	
+	Ref<Label> m_filterStatus;
 
 	// Score list canvas
 	Ref<Canvas> m_scoreCanvas;
@@ -619,11 +712,19 @@ public:
 			searchFieldSlot->fillX = true;
 			m_searchField->OnTextUpdated.Add(this, &SongSelect_Impl::OnSearchTermChanged);
 
+			m_filterStatus = Ref<Label>(new Label());
+			m_filterStatus->SetFontSize(40);
+			m_filterStatus->SetText(L"All / All");
+			LayoutBox::Slot* filterLabelSlot = box->Add(m_filterStatus->MakeShared());
+
 			m_selectionWheel = Ref<SelectionWheel>(new SelectionWheel(m_style));
 			LayoutBox::Slot* selectionSlot = box->Add(m_selectionWheel.As<GUIElementBase>());
 			selectionSlot->fillY = true;
 			m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
 			m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
+
+
+			
 		}
 
 		{
@@ -827,6 +928,9 @@ public:
 					m_filterSelection->Active = !m_filterSelection->Active;
 				}
 				break;
+			case Input::Button::BT_S:
+				if (m_filterSelection->Active)
+					m_filterSelection->ToggleSelectionMode();
 			default:
 				break;
 			}
@@ -918,6 +1022,8 @@ public:
 			m_dbUpdateTimer.Restart();
 		}
         
+		m_filterStatus->SetText(Utility::ConvertToWString(m_filterSelection->GetStatusText()));
+
         // Tick navigation
 		if (!IsSuspended())
             TickNavigation(deltaTime);
