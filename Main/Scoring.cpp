@@ -82,6 +82,7 @@ void Scoring::Reset()
 	currentComboCounter = 0;
 	maxComboCounter = 0;
 	comboState = 2;
+	m_assistTime = m_assistLevel * 0.1f;
 
 	// Reset laser positions
 	laserTargetPositions[0] = 0.0f;
@@ -131,8 +132,8 @@ void Scoring::Reset()
 
 void Scoring::Tick(float deltaTime)
 {
-	m_UpdateTicks();
 	m_UpdateLasers(deltaTime);
+	m_UpdateTicks();
 }
 
 float Scoring::GetLaserRollOutput(uint32 index)
@@ -569,7 +570,7 @@ void Scoring::m_UpdateTicks()
 							inputSign = dirSign;
 							posDelta = 1;
 						}
-						if(dirSign == inputSign && delta > -10 && posDelta >= 0)
+						if(dirSign == inputSign && delta > -10 && posDelta >= -laserDistanceLeniency)
 						{
 							m_TickHit(tick, buttonCode);
 							processed = true;
@@ -823,7 +824,7 @@ void Scoring::m_ReleaseHoldObject(uint32 index)
 void Scoring::m_UpdateLasers(float deltaTime)
 {
 	/// TODO: Change to only re-calculate on bpm change
-	m_assistTime = m_assistLevel * m_playback->GetCurrentTimingPoint().beatDuration / 4000.0f;
+	m_assistTime = m_assistLevel * 0.1f;
 
 	MapTime mapTime = m_playback->GetLastTime();
 	for(uint32 i = 0; i < 2; i++)
@@ -841,7 +842,7 @@ void Scoring::m_UpdateLasers(float deltaTime)
 				if (m_currentLaserSegments[(*it)->index]->prev && m_currentLaserSegments[(*it)->index]->GetDirection() != m_currentLaserSegments[(*it)->index]->prev->GetDirection())
 				{
 					//Direction change
-					m_autoLaserTime[(*it)->index] = -1;
+					//m_autoLaserTime[(*it)->index] = -1;
 				}
 
 				it = m_laserSegmentQueue.erase(it);
@@ -923,6 +924,11 @@ void Scoring::m_UpdateLasers(float deltaTime)
 				if (inputDir == moveDir && fabs(positionDelta) < laserDistanceLeniency && m_autoLaserTime[i] < m_assistTime)
 				{
 					m_autoLaserTime[i] = m_assistTime;
+				}
+				if (inputDir != 0 && inputDir != laserDir)
+				{
+					m_autoLaserTime[i] -=  deltaTime * 1.5f;
+					//m_autoLaserTime[i] = Math::Min(m_autoLaserTime[i], m_assistTime * 0.2f);
 				}
 			}
 			timeSinceLaserUsed[i] = 0.0f;
