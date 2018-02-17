@@ -182,14 +182,13 @@ void Camera::SetTargetRoll(float target)
 	}
 	else
 	{
-		m_targetRoll = m_roll;
-		if (m_roll == 0.0f || Math::Sign(m_roll) == Math::Sign(actualTarget))
+		if (m_targetRoll == 0.0f || Math::Sign(m_targetRoll) == Math::Sign(actualTarget))
 		{
-			if (m_roll == 0)
+			if (m_targetRoll == 0)
 				m_targetRoll = actualTarget;
-			if (m_roll < 0 && actualTarget < m_roll)
+			if (m_targetRoll < 0 && actualTarget < m_targetRoll)
 				m_targetRoll = actualTarget;
-			else if (actualTarget > m_roll)
+			else if (actualTarget > m_targetRoll)
 				m_targetRoll = actualTarget;
 		}
 		m_targetRollSet = true;
