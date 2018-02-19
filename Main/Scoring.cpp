@@ -105,18 +105,19 @@ void Scoring::Reset()
 	mapTotals = CalculateMapTotals();
 
 	// Recalculate gauge gain
-	// TODO: change variables to depend on the "total" variable in the chart.
+
+	float total = m_playback->GetBeatmap().GetMapSettings().total / 100.0f + 0.001f; //Add a little in case floats go under
 	if (mapTotals.numTicks == 0 && mapTotals.numSingles != 0)
 	{
-		shortGaugeGain = 2.1f / (float)mapTotals.numSingles;
+		shortGaugeGain = total / (float)mapTotals.numSingles;
 	}
 	else if (mapTotals.numSingles == 0 && mapTotals.numTicks != 0)
 	{
-		tickGaugeGain = 2.1f / (float)mapTotals.numTicks;
+		tickGaugeGain = total / (float)mapTotals.numTicks;
 	}
 	else
 	{
-		shortGaugeGain = 42.0f / (5.0f * ((float)mapTotals.numTicks + (4.0f *(float)mapTotals.numSingles)));
+		shortGaugeGain = (total * 20) / (5.0f * ((float)mapTotals.numTicks + (4.0f *(float)mapTotals.numSingles)));
 		tickGaugeGain = shortGaugeGain / 4.0f;
 	}
 	currentGauge = 0.0f;

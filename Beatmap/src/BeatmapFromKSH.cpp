@@ -453,6 +453,10 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		{
 			m_settings.previewDuration = atoi(*s.second);
 		}
+		else if (s.first == "total")
+		{
+			m_settings.total = atoi(*s.second);
+		}
 	}
 
 	// Temporary map for timing points
