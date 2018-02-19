@@ -53,7 +53,7 @@ class TestBackground : public FullscreenBackground
 		{
 			matPath = game->GetBeatmap()->GetMapSettings().foregroundPath;
 			String texPath = "textures/fg_texture.png";
-			if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+			if (matPath.length() > 3 && matPath.substr(matPath.length() - 3, 3) == ".fs")
 			{
 				matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
 				texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "fg_texture.png");
@@ -69,7 +69,7 @@ class TestBackground : public FullscreenBackground
 		{
 			matPath = game->GetBeatmap()->GetMapSettings().backgroundPath;
 			String texPath = "textures/bg_texture.png";
-			if (matPath.substr(matPath.length() - 3, 3) == ".fs")
+			if (matPath.length() > 3 && matPath.substr(matPath.length() - 3, 3) == ".fs")
 			{
 				matPath = Path::Normalize(game->GetMapRootPath() + Path::sep + matPath);
 				texPath = Path::Normalize(game->GetMapRootPath() + Path::sep + "bg_texture.png");
