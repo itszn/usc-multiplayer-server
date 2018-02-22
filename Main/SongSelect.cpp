@@ -865,27 +865,36 @@ public:
 
 	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !IsSuspended())
         {
-            
-			bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
-			MapIndex* map = m_selectionWheel->GetSelection();
-			if(map)
+			// NOTE(local): if filter selection is active, back doesn't work.
+			// For now that sounds right, but maybe it shouldn't matter
+			if (g_input.Are3BTsHeld())
 			{
-				DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
-
-				Game* game = Game::Create(*diff);
-				if(!game)
+				m_suspended = true;
+				g_application->RemoveTickable(this);
+			}
+			else
+			{
+				bool autoplay = (g_gameWindow->GetModifierKeys() & ModifierKeys::Ctrl) == ModifierKeys::Ctrl;
+				MapIndex* map = m_selectionWheel->GetSelection();
+				if (map)
 				{
-					Logf("Failed to start game", Logger::Error);
-					return;
-				}
-				game->GetScoring().autoplay = autoplay;
+					DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
 
-				// Transition to game
-				TransitionScreen* transistion = TransitionScreen::Create(game);
-				g_application->AddTickable(transistion);
-            }
+					Game* game = Game::Create(*diff);
+					if (!game)
+					{
+						Logf("Failed to start game", Logger::Error);
+						return;
+					}
+					game->GetScoring().autoplay = autoplay;
+
+					// Transition to game
+					TransitionScreen* transistion = TransitionScreen::Create(game);
+					g_application->AddTickable(transistion);
+				}
+			}
         }
-		else
+		else    
 		{
 			List<SongFilter*> filters;
 			switch (buttonCode)

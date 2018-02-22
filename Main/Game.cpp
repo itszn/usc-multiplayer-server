@@ -192,7 +192,8 @@ public:
 		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>()); 
 
 		// In case the cursor was still hidden
-		g_gameWindow->SetCursorVisible(true);
+		g_gameWindow->SetCursorVisible(true); 
+		g_input.OnButtonPressed.RemoveAll(this);
 	}
 
 	AsyncAssetLoader loader;
@@ -368,6 +369,8 @@ public:
 		m_scoring.SetPlayback(m_playback);
 		m_scoring.SetInput(&g_input);
 		m_scoring.Reset(); // Initialize
+
+		g_input.OnButtonPressed.Add(this, &Game_Impl::m_OnButtonPressed);
 
 		return true;
 	}
@@ -1310,6 +1313,14 @@ public:
 		{
 			g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
 			m_settingsBar->SetShow(!m_settingsBar->IsShown());
+		}
+	}
+	void m_OnButtonPressed(Input::Button buttonCode)
+	{
+		if (buttonCode == Input::Button::BT_S)
+		{
+			if (g_input.Are3BTsHeld())
+				FinishGame();
 		}
 	}
 
