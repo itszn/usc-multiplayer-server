@@ -8,8 +8,10 @@
 	Linux version
 */
 #include <unistd.h>
+#include <dirent.h>
 #include <linux/limits.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 // Convenience
 #define MAX_PATH PATH_MAX
 
@@ -136,6 +138,30 @@ bool Path::IsAbsolute(const String& path)
 
 Vector<String> Path::GetSubDirs(const String& path)
 {
-    /// TODO: Implement
-    return Vector<String>();
+    Vector<String> ret;
+    DIR* dir = opendir(path.c_str());
+    if(dir == nullptr)
+        return ret;
+
+    // Open first entry
+    dirent* ent = readdir(dir);
+    if(ent)
+    {
+        // Keep scanning files in this folder
+        do
+        {
+            String filename = ent->d_name;
+
+            if(filename == ".")
+                continue;
+            if(filename == "..")
+                continue;
+
+            if(ent->d_type == DT_DIR)
+            {
+                ret.Add(filename);
+            }
+        } while((ent = readdir(dir)));
+    }
+    return ret;
 }
