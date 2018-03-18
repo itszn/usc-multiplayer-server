@@ -1088,6 +1088,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				{
 					state->spinType = tick.add[1];
 					state->spinDuration = std::stoi(tick.add.substr(2));
+					if(state->spinType == '(' || state->spinType == ')')
+						state->spinDuration = (3 * std::stoi(tick.add.substr(2))) / 4;
 				}
 
 			}
