@@ -357,7 +357,20 @@ namespace Graphics
 			}
 			else
 			{
+				if (monitorID == (uint32)-1)
+				{
+					monitorID = SDL_GetWindowDisplayIndex(m_window);
+				}
+
+				SDL_Rect displayRect;
+				SDL_GetDisplayBounds(monitorID, &displayRect);
+				SDL_SetWindowPosition(m_window, displayRect.x, displayRect.y);
+				SDL_SetWindowSize(m_window, displayRect.w, displayRect.h);
+
+				SDL_DisplayMode dm;
+				SDL_GetDesktopDisplayMode(monitorID, &dm);
 				SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+				SDL_SetWindowDisplayMode(m_window, &dm);
 				m_fullscreen = true;
 			}
 		}
