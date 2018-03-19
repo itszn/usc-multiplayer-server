@@ -250,8 +250,7 @@ namespace Graphics
 					uint32 texture = p.second.Get<int32>();
 
 					// Bind the texture
-					glActiveTexture(GL_TEXTURE0 + *textureUnit);
-					glBindTexture(GL_TEXTURE_2D, texture);
+					glBindTextureUnit(*textureUnit, texture);
 
 					// Bind sampler
 					BindAll<int32>(p.first, *textureUnit);
