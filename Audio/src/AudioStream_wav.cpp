@@ -226,7 +226,7 @@ public:
 			{
 				for (uint32 i = 0; i < samplesPerRead; i++)
 				{
-					if ((m_playbackPointer / m_format.nChannels) >= m_samplesTotal)
+					if (m_playbackPointer >= m_samplesTotal)
 					{
 						m_currentBufferSize = samplesPerRead;
 						m_remainingBufferData = samplesPerRead;

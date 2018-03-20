@@ -747,7 +747,7 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 		else
 			currentGauge -= 0.005f;
 		m_ReleaseHoldObject(index);
-		m_autoLaserTime[obj->index] = -1;
+		m_autoLaserTime[obj->index] = -1.f;
 		stat->rating = ScoreHitRating::Miss;
 	}
 
@@ -897,8 +897,6 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			else if (laserDir == 0.0f && fabs(positionDelta) < laserDistanceLeniency)
 			{
 				laserPositions[i] = laserTargetPositions[i];
-				if (m_autoLaserTime[i] < m_assistTime)
-					m_autoLaserTime[i] = m_assistTime;
 			}
 			else if(inputDir != 0.0f)
 			{
