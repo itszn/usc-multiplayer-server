@@ -887,6 +887,7 @@ public:
 						return;
 					}
 					game->GetScoring().autoplay = autoplay;
+					m_suspended = true;
 
 					// Transition to game
 					TransitionScreen* transistion = TransitionScreen::Create(game);
@@ -1035,15 +1036,16 @@ public:
 
         // Tick navigation
 		if (!IsSuspended())
-            TickNavigation(deltaTime);
+		{
+			TickNavigation(deltaTime);
+			m_previewPlayer.Update(deltaTime);
 
-		// Ugly hack to get previews working with the delaty
-		/// TODO: Move the ticking of the fade timer or whatever outside of onsongselected
-		OnMapSelected(m_currentPreviewAudio);
+			// Ugly hack to get previews working with the delaty
+			/// TODO: Move the ticking of the fade timer or whatever outside of onsongselected
+			OnMapSelected(m_currentPreviewAudio);
+		}
 
 
-		// Background
-		m_previewPlayer.Update(deltaTime);
 	}
 
     void TickNavigation(float deltaTime)
