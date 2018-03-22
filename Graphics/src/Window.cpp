@@ -348,11 +348,12 @@ namespace Graphics
 			return !m_closed;
 		}
 
-		void SwitchFullscreen(uint32 monitorID)
+		void SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID)
 		{
 			if(m_fullscreen)
 			{
 				SDL_SetWindowFullscreen(m_window, 0);
+				SDL_SetWindowSize(m_window, w, h);
 				m_fullscreen = false;
 			}
 			else
@@ -362,15 +363,20 @@ namespace Graphics
 					monitorID = SDL_GetWindowDisplayIndex(m_window);
 				}
 
-				SDL_Rect displayRect;
-				SDL_GetDisplayBounds(monitorID, &displayRect);
-				SDL_SetWindowPosition(m_window, displayRect.x, displayRect.y);
-				SDL_SetWindowSize(m_window, displayRect.w, displayRect.h);
-
 				SDL_DisplayMode dm;
 				SDL_GetDesktopDisplayMode(monitorID, &dm);
-				SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+				if (fsw != -1){
+					dm.w = fsw;
+				}
+				if (fsh != -1){
+					dm.h = fsh;
+				}
+
+				// move to correct display
+				SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED_DISPLAY(monitorID), SDL_WINDOWPOS_CENTERED_DISPLAY(monitorID));
+
 				SDL_SetWindowDisplayMode(m_window, &dm);
+				SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
 				m_fullscreen = true;
 			}
 		}
@@ -477,13 +483,18 @@ namespace Graphics
 	{
 		m_impl->SetWindowSize(size);
 	}
-	void Window::SwitchFullscreen(uint32 monitorID)
+	void Window::SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID)
 	{
-		m_impl->SwitchFullscreen(monitorID);
+		m_impl->SwitchFullscreen(w, h, fsw, fsh, monitorID);
 	}
 	bool Window::IsFullscreen() const
 	{
 		return m_impl->IsFullscreen();
+	}
+
+	int Window::GetDisplayIndex() const
+	{
+		return SDL_GetWindowDisplayIndex(m_impl->m_window);
 	}
 
 	bool Window::IsKeyPressed(SDL_Keycode key) const

@@ -6,6 +6,8 @@ DefineEnum(GameConfigKeys,
 	// Screen settings
 	ScreenWidth,
 	ScreenHeight,
+	FullScreenWidth,
+	FullScreenHeight,
 	ScreenX,
 	ScreenY,
 	Fullscreen,
