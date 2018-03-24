@@ -894,9 +894,10 @@ public:
         {
             for (int i = 0; i < 2; i++)
             {
-				m_hispeed += g_input.GetInputLaserDir(i);
+				float change = g_input.GetInputLaserDir(i) / 3.0f;
+				m_hispeed += change;
 				m_hispeed = Math::Clamp(m_hispeed, 0.1f, 16.f);
-				if (m_usecMod || m_usemMod)
+				if ((m_usecMod || m_usemMod) && change != 0.0f)
 				{
 					g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
 				}
