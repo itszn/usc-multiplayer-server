@@ -29,7 +29,10 @@ namespace Graphics
 		}
 		bool Init()
 		{
-			glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
+			if(glCreateTextures)
+				glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
+			else
+				glGenTextures(1, &m_texture);
 			if(m_texture == 0)
 				return false;
 			return true;
@@ -59,7 +62,11 @@ namespace Graphics
 				assert(false);
 			}
 
-			glTextureStorage2D(m_texture, 1, GL_RGBA8, size.x, size.y);
+			if(glTextureStorage2D)
+				glTextureStorage2D(m_texture, 1, GL_RGBA8, size.x, size.y);
+			else
+				glTextureImage2DEXT(m_texture, GL_TEXTURE_2D, 0, ifmt, size.x, size.y, 0, fmt, type, nullptr);
+
 			UpdateFilterState();
 			UpdateWrap();
 		}
@@ -68,8 +75,15 @@ namespace Graphics
 			m_format = TextureFormat::RGBA8;
 			m_size = size;
 			m_data = pData;
-			glTextureStorage2D(m_texture, 1, GL_RGBA8, m_size.x, m_size.y);
-			glTextureSubImage2D(m_texture, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, pData);
+			if (glTextureStorage2D)
+			{
+				glTextureStorage2D(m_texture, 1, GL_RGBA8, m_size.x, m_size.y);
+				glTextureSubImage2D(m_texture, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, pData);
+			}
+			else
+			{
+				glTextureImage2DEXT(m_texture, GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData);
+			}
 			UpdateFilterState();
 			UpdateWrap();
 		}
@@ -142,7 +156,15 @@ namespace Graphics
 		}
 		virtual void Bind(uint32 index)
 		{
-			glBindTextureUnit(index, m_texture);
+			if (glBindTextureUnit)
+			{
+				glBindTextureUnit(index, m_texture);
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE0 + index);
+				glBindTexture(GL_TEXTURE_2D, m_texture);
+			}
 		}
 		virtual uint32 Handle()
 		{
