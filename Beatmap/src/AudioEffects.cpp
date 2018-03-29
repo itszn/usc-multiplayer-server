@@ -44,7 +44,7 @@ static AudioEffect CreateDefault(EffectType type)
 
 	// Default timing is 1/4
 	ret.duration = TimeRange(0.25f);
-
+	ret.mix = FloatRange(1.0);
 	Interpolation::CubicBezier laserEasingCurve = Interpolation::EaseInExpo;
 	Interpolation::CubicBezier lpfEasingCurve = Interpolation::EaseOutCubic;
 
@@ -82,7 +82,7 @@ static AudioEffect CreateDefault(EffectType type)
 		ret.retrigger.reset = TimeRange(0.5f);
 		break;
 	case EffectType::Echo:
-		ret.echo.feedback = FloatRange(0.25f);
+		ret.echo.feedback = FloatRange(0.60f);
 		break;
 	case EffectType::Panning:
 		ret.panning.panning = FloatRange(0.0f);

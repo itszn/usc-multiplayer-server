@@ -122,6 +122,7 @@ public:
 	void SetLength(uint32 length);
 	void SetResetDuration(uint32 resetDuration);
 	void SetGating(float gating);
+	void SetMaxLength(uint32 length);
 
 	virtual void Process(float* out, uint32 numSamples);
 private:
@@ -132,6 +133,7 @@ private:
 	Vector<float> m_sampleBuffer;
 	uint32 m_loops = 0;
 	uint32 m_currentSample = 0;
+	bool m_bufferReserved = false;
 };
 
 class WobbleDSP : public BQFDSP
@@ -206,7 +208,7 @@ class EchoDSP : public DSP
 public:
 	void SetLength(uint32 length);
 
-	float feedback = 0.1f;
+	float feedback = 0.6f;
 
 	virtual void Process(float* out, uint32 numSamples);
 private:

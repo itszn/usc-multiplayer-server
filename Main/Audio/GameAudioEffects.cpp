@@ -13,7 +13,7 @@ DSP* GameAudioEffect::CreateDSP(class AudioBase* audioTrack, AudioPlayback& play
 
 	float filterInput = playback.GetLaserFilterInput();
 	uint32 actualLength = duration.Sample(filterInput).Absolute(noteDuration);
-
+	uint32 maxLength = Math::Max(duration.Sample(0.f).Absolute(noteDuration), duration.Sample(1.f).Absolute(noteDuration));
 	switch(type)
 	{
 	case EffectType::Bitcrush:
@@ -64,6 +64,7 @@ DSP* GameAudioEffect::CreateDSP(class AudioBase* audioTrack, AudioPlayback& play
 	{
 		RetriggerDSP* retriggerDSP = new RetriggerDSP();
 		audioTrack->AddDSP(retriggerDSP);
+		retriggerDSP->SetMaxLength(maxLength);
 		retriggerDSP->SetLength(actualLength);
 		retriggerDSP->SetGating(retrigger.gate.Sample(filterInput));
 		retriggerDSP->SetResetDuration(retrigger.reset.Sample(filterInput).Absolute(noteDuration));

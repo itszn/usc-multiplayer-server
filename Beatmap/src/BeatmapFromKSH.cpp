@@ -273,6 +273,7 @@ AudioEffect ParseCustomEffect(const KShootEffectDefinition& def)
 		AssignSamplesIfSet(effect.bitcrusher.reduction, "amount");
 		break;
 	case EffectType::Echo:
+		AssignDurationIfSet(effect.duration, "waveLength");
 		AssignFloatIfSet(effect.echo.feedback, "feedbackLevel");
 		break;
 	case EffectType::Flanger:

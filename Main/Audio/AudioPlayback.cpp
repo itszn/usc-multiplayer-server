@@ -260,31 +260,34 @@ void AudioPlayback::m_SetLaserEffectParameter(float input)
 		return;
 	assert(input >= 0.0f && input <= 1.0f);
 
-	// Mix for normal effects
-	m_laserDSP->mix = m_laserEffectMix;
-
 	// Mix float biquad filters, these are applied manualy by changing the filter parameters (gain,q,freq,etc.)
 	float mix = m_laserEffectMix;
+	double noteDuration = m_playback->GetCurrentTimingPoint().GetWholeNoteLength();
+	uint32 actualLength = m_laserEffect.duration.Sample(input).Absolute(noteDuration);
+
 	if(input < 0.1f)
 		mix *= input / 0.1f;
 
-	switch(m_laserEffect.type)
+	switch (m_laserEffect.type)
 	{
 	case EffectType::Bitcrush:
 	{
+		m_laserDSP->mix = m_laserEffect.mix.Sample(input);
 		BitCrusherDSP* bcDSP = (BitCrusherDSP*)m_laserDSP;
 		bcDSP->SetPeriod((float)m_laserEffect.bitcrusher.reduction.Sample(input));
 		break;
 	}
 	case EffectType::Echo:
 	{
+		m_laserDSP->mix = m_laserEffect.mix.Sample(input);
 		EchoDSP* echoDSP = (EchoDSP*)m_laserDSP;
 		echoDSP->feedback = m_laserEffect.echo.feedback.Sample(input);
 		break;
 	}
 	case EffectType::PeakingFilter:
 	{
-		if(input > 0.8f)
+		m_laserDSP->mix = m_laserEffectMix;
+		if (input > 0.8f)
 			mix *= 1.0f - (input - 0.8f) / 0.2f;
 
 		BQFDSP* bqfDSP = (BQFDSP*)m_laserDSP;
@@ -293,20 +296,37 @@ void AudioPlayback::m_SetLaserEffectParameter(float input)
 	}
 	case EffectType::LowPassFilter:
 	{
+		m_laserDSP->mix = m_laserEffectMix;
 		BQFDSP* bqfDSP = (BQFDSP*)m_laserDSP;
 		bqfDSP->SetLowPass(m_laserEffect.lpf.q.Sample(input) * mix + 0.1f, m_laserEffect.lpf.freq.Sample(input));
 		break;
 	}
 	case EffectType::HighPassFilter:
 	{
+		m_laserDSP->mix = m_laserEffectMix;
 		BQFDSP* bqfDSP = (BQFDSP*)m_laserDSP;
 		bqfDSP->SetHighPass(m_laserEffect.hpf.q.Sample(input)  * mix + 0.1f, m_laserEffect.hpf.freq.Sample(input));
 		break;
 	}
 	case EffectType::PitchShift:
 	{
+		m_laserDSP->mix = m_laserEffect.mix.Sample(input);
 		PitchShiftDSP* ps = (PitchShiftDSP*)m_laserDSP;
 		ps->amount = m_laserEffect.pitchshift.amount.Sample(input);
+		break;
+	}
+	case EffectType::Gate:
+	{
+		m_laserDSP->mix = m_laserEffect.mix.Sample(input);
+		GateDSP * gd = (GateDSP*)m_laserDSP;
+		gd->SetLength(actualLength);
+		break;
+	}
+	case EffectType::Retrigger:
+	{
+		m_laserDSP->mix = m_laserEffect.mix.Sample(input);
+		RetriggerDSP * rt = (RetriggerDSP*)m_laserDSP;
+		rt->SetLength(actualLength);
 		break;
 	}
 	}

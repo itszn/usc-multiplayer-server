@@ -889,11 +889,11 @@ public:
 		m_psi->SetBPM((float)m_currentTiming->GetBPM());
 
 
-        // Update hispeed
-        if (g_input.GetButton(Input::Button::BT_S))
-        {
-            for (int i = 0; i < 2; i++)
-            {
+		// Update hispeed
+		if (g_input.GetButton(Input::Button::BT_S))
+		{
+			for (int i = 0; i < 2; i++)
+			{
 				float change = g_input.GetInputLaserDir(i) / 3.0f;
 				m_hispeed += change;
 				m_hispeed = Math::Clamp(m_hispeed, 0.1f, 16.f);
@@ -901,8 +901,8 @@ public:
 				{
 					g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
 				}
-            }
-        }
+			}
+		}
 
 
 

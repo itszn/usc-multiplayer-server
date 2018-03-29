@@ -255,7 +255,11 @@ void RetriggerDSP::SetLength(uint32 length)
 	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
 	m_length = (uint32)flength;
 	SetGating(m_gating);
-	m_sampleBuffer.reserve(m_length + 100);
+	if (!m_bufferReserved)
+	{
+		m_sampleBuffer.reserve(m_length + 100);
+		m_bufferReserved = true;
+	}
 }
 void RetriggerDSP::SetResetDuration(uint32 resetDuration)
 {
@@ -266,6 +270,15 @@ void RetriggerDSP::SetGating(float gating)
 {
 	m_gating = gating;
 	m_gateLength = (uint32)((float)m_length * gating);
+}
+void RetriggerDSP::SetMaxLength(uint32 length)
+{
+	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	if (!m_bufferReserved)
+	{
+		m_sampleBuffer.reserve((uint32_t)flength + 100);
+		m_bufferReserved = true;
+	}
 }
 void RetriggerDSP::Process(float* out, uint32 numSamples)
 {
@@ -296,13 +309,14 @@ void RetriggerDSP::Process(float* out, uint32 numSamples)
 		{
 			m_currentSample -= m_length;
 			m_loops++;
-			if((m_loops * m_length) > m_resetDuration)
+			if((m_loops * m_length) > m_resetDuration && m_resetDuration != 0)
 			{
 				m_loops = 0;
 				m_currentSample = 0;
 				m_sampleBuffer.resize(0);
 			}
 		}
+		m_currentSample = Math::Clamp(m_currentSample, (uint32_t)0, (uint32_t)m_sampleBuffer.size());
 	}
 }
 
