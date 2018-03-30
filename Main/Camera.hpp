@@ -5,11 +5,10 @@
 */
 struct CameraShake
 {
+	CameraShake() = default;
 	CameraShake(float duration);
-	CameraShake(float duration, float amplitude, float freq);;
-	Vector3 amplitude;
-	Vector3 frequency;
-	Vector3 offsets;
+	CameraShake(float duration, float amplitude);
+	float amplitude;
 	float duration;
 	float time = 0.0f;
 };
@@ -36,6 +35,7 @@ public:
 	void SetSpin(float direction, uint32 duration, uint8 type, class BeatmapPlayback& playback);
 	float GetRoll() const;
 	float GetHorizonHeight();
+	Vector2i GetScreenCenter();
 	Vector3 GetShakeOffset();
 
 	Vector2 Project(const Vector3& pos);
@@ -57,6 +57,9 @@ public:
 	float cameraHeightMult = 1.0f;
 	float cameraNearBase = 0.53f;
 	float cameraNearMult = 1.0f;
+	float cameraShakeX = 0.0f;
+	float cameraShakeY = 0.66f;
+	float cameraShakeZ = 1.0f;
 
 	// Camera variables Landscape, Portrait
 	float basePitch[2] = { -35.f, -47.f };
@@ -98,7 +101,7 @@ private:
 
 	RenderState m_rsLast;
 
-	Vector<CameraShake> m_shakeEffects;
+	CameraShake m_shakeEffect;
 	// Base position with shake effects applied after a frame
 	Vector3 m_shakeOffset;
 };

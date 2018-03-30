@@ -147,6 +147,10 @@ private:
 	Ref<ParticleEmitter> m_laserFollowEmitters[2];
 	Ref<ParticleEmitter> m_holdEmitters[6];
 
+
+	float m_shakeAmount = 3;
+	float m_shakeDuration = 0.083;
+
 public:
 	Game_Impl(const String& mapPath)
 	{
@@ -691,7 +695,12 @@ public:
 			sb->AddSetting(m_camera.basePitch + portrait, 0.0f, -180.0f, "Base pitch");
 			sb->AddSetting(&(m_track->trackLength), 4.0f, 20.0f, "Track Length");
 			sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
-			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f/32.0f, 1.0f, "Laser Distance Leniency");
+			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f / 32.0f, 1.0f, "Laser Distance Leniency");
+			sb->AddSetting(&m_shakeAmount, 0.3, 10.0f, "Screen Shake Amount");
+			sb->AddSetting(&m_shakeDuration, 0.0, 1.0f, "Screen Shake Duration");
+			sb->AddSetting(&m_camera.cameraShakeX, -3.0f, 3.0f, "Screen Shake X");
+			sb->AddSetting(&m_camera.cameraShakeY, -3.0f, 3.0f, "Screen Shake Y");
+			sb->AddSetting(&m_camera.cameraShakeZ, -3.0f, 3.0f, "Screen Shake Z");
 			m_settingsBar->SetShow(false);
 
 			Canvas::Slot* settingsSlot = m_canvas->Add(sb->MakeShared());
@@ -1116,9 +1125,10 @@ public:
 
 	void OnLaserSlamHit(LaserObjectState* object)
 	{
-		float slamSize = fabs(object->points[1] - object->points[0]);
-		CameraShake shake(0.2f, 0.5f, 170.0f);
-		shake.amplitude = Vector3(0.04f * slamSize, 0.01f, 0.0f); // Mainly x-axis
+		float slamSize = (object->points[1] - object->points[0]);
+		float direction = Math::Sign(slamSize);
+		slamSize = fabsf(slamSize);
+		CameraShake shake(m_shakeDuration, powf(slamSize, 0.5f) * m_shakeAmount * -direction);
 		m_camera.AddCameraShake(shake);
 		m_slamSample->Play();
 

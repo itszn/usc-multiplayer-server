@@ -58,32 +58,21 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	// Update camera shake effects
 	m_shakeOffset = Vector3(0.0f);
-	for(auto it = m_shakeEffects.begin(); it != m_shakeEffects.end();)
-	{
-		if(it->time <= 0.0f)
-		{
-			it = m_shakeEffects.erase(it);
-			continue;
-		}
 
-		it->time -= deltaTime;
-		it->offsets += Vector3(deltaTime);
-		float shakeIntensity = it->time / it->duration;
-		Vector3 shakeVec = it->amplitude;
-		Vector3 shakeInput = it->frequency * it->offsets;
-		shakeVec = Vector3(cos(shakeInput.x), cos(shakeInput.y), cos(shakeInput.z)) * shakeVec;
-		m_shakeOffset += shakeVec * shakeIntensity;
-		it++;
+	m_shakeEffect.time -= deltaTime;
+	if (m_shakeEffect.time >= 0.f)
+	{
+		float shakeProgress = m_shakeEffect.time / m_shakeEffect.duration;
+		float shakeIntensity = sinf(powf(shakeProgress, 1.6) * Math::pi);
+
+		Vector3 shakeVec = Vector3(m_shakeEffect.amplitude * shakeIntensity) * Vector3(cameraShakeX, cameraShakeY, cameraShakeZ);
+
+		m_shakeOffset += shakeVec;
 	}
 }
 void Camera::AddCameraShake(CameraShake cameraShake)
 {
-	// Randomize offsets
-	cameraShake.offsets = Vector3(
-		Random::FloatRange(0.0f, 1.0f / cameraShake.frequency.x),
-		Random::FloatRange(0.0f, 1.0f / cameraShake.frequency.y),
-		Random::FloatRange(0.0f, 1.0f / cameraShake.frequency.z));
-	m_shakeEffects.Add(cameraShake);
+	m_shakeEffect = cameraShake;
 }
 void Camera::AddRollImpulse(float dir, float strength)
 {
@@ -154,12 +143,11 @@ RenderState Camera::CreateRenderState(bool clipped)
 	float distToTrackEnd = sqrtf(toTrackEnd.x * toTrackEnd.x + toTrackEnd.y * toTrackEnd.y + toTrackEnd.z * toTrackEnd.z);
 	float angleToTrackEnd = atan2f(toTrackEnd.y, toTrackEnd.z);
 
-	cameraTransform *= Transform::Rotation({base_pitch - pitchOffset,
+	cameraTransform *= Transform::Rotation(Vector3(base_pitch - pitchOffset,
 											0.0f,
-											0.0f });
-	cameraTransform *= Transform::Translation(m_shakeOffset);
+											0.0f ) + m_shakeOffset);
 
-	m_pitch = base_pitch - pitchOffset;
+	m_pitch = base_pitch - pitchOffset + m_shakeOffset.x;
 
 	float d0 = VectorMath::Dot(Vector3(0.0f, 0.0f, 0.0f), cameraDir) + offset;
 	float d1 = fabsf(cosf(angleToTrackEnd - (Math::degToRad * m_pitch)) * distToTrackEnd);
@@ -220,6 +208,19 @@ float Camera::GetHorizonHeight()
 	return (0.5 + ((-90.f - m_pitch) / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
+Vector2i Camera::GetScreenCenter()
+{
+	Vector2i ret = Vector2i(0, GetHorizonHeight());
+
+	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
+	float fov = fovs[portrait];
+
+	ret.x = m_rsLast.viewportSize.x / 2;
+	ret.x -= (m_shakeOffset.y / (fov * g_aspectRatio)) * m_rsLast.viewportSize.x;
+
+	return ret;
+}
+
 Vector3 Camera::GetShakeOffset()
 {
 	return m_shakeOffset;
@@ -248,7 +249,7 @@ CameraShake::CameraShake(float duration) : duration(duration)
 {
 	time = duration;
 }
-CameraShake::CameraShake(float duration, float amplitude, float freq) : duration(duration), amplitude(amplitude), frequency(freq)
+CameraShake::CameraShake(float duration, float amplitude) : duration(duration), amplitude(amplitude)
 {
 	time = duration;
 }

@@ -114,9 +114,9 @@ class TestBackground : public FullscreenBackground
 
 
 		Vector3 trackEndWorld = Vector3(0.0f, 25.0f, 0.0f);
-		Vector2i screenCenter = Vector2i(g_resolution.x / 2, game->GetCamera().GetHorizonHeight());
-		Vector2i shakeOffset = game->GetCamera().GetShakeOffset().xy() * g_resolution * 0.15f;
-		screenCenter += shakeOffset;
+		Vector2i screenCenter = game->GetCamera().GetScreenCenter();
+		
+
 
 		float tilt = game->GetCamera().GetRoll();
 		fullscreenMaterialParams.SetParameter("clearTransition", clearTransition);
