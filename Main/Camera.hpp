@@ -58,8 +58,8 @@ public:
 	float cameraNearBase = 0.53f;
 	float cameraNearMult = 1.0f;
 	float cameraShakeX = 0.0f;
-	float cameraShakeY = 0.66f;
-	float cameraShakeZ = 1.0f;
+	float cameraShakeY = 0.4f;
+	float cameraShakeZ = 0.0f;
 
 	// Camera variables Landscape, Portrait
 	float basePitch[2] = { -35.f, -47.f };
