@@ -625,6 +625,85 @@ private:
 	MapDatabase* m_mapDB;
 };
 
+class GameSettingsWheel : public Canvas {
+public:
+	GameSettingsWheel()
+	{
+		m_gameFlags = GameFlags::None;
+
+		AddSetting(L"Mirror", GameFlags::Mirror);
+		AddSetting(L"Random", GameFlags::Random);
+		AddSetting(L"Auto BT", GameFlags::AutoBT);
+		AddSetting(L"Auto FX", GameFlags::AutoFX);
+		AddSetting(L"Auto Lasers", GameFlags::AutoLaser);
+	}
+
+	bool Active = false;
+
+	void AddSetting(WString name, GameFlags flag)
+	{
+		Label* label = new Label();
+		label->SetFontSize(30);
+		label->SetText(Utility::WSprintf(L"%ls: Off", name));
+		m_guiElements[flag] = label;
+
+		Canvas::Slot* labelSlot = Add(label->MakeShared());
+		labelSlot->allowOverflow = true;
+		labelSlot->autoSizeX = true;
+		labelSlot->autoSizeY = true;
+		labelSlot->anchor = Anchors::Middle;
+		labelSlot->alignment = Vector2(0.5f, 0.5f);
+
+		m_flagNames[flag] = name;
+		SelectSetting((GameFlags)1);
+	}
+	void SelectSetting(GameFlags setting)
+	{
+		m_currentSelection = setting;
+		for (size_t i = 0; i < m_guiElements.size(); i++)
+		{
+			Vector2 coordinate = Vector2(50, 0);
+			GameFlags flag = (GameFlags)(1 << i);
+			coordinate.y = ((int)i - log2((int)m_currentSelection)) * 40.f;
+			Canvas::Slot* labelSlot = Add(m_guiElements[flag]->MakeShared());
+			AddAnimation(Ref<IGUIAnimation>(
+				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+			labelSlot->offset = Rect(coordinate, Vector2(0));
+		}
+	}
+	void ChangeSetting()
+	{
+		Label* label = m_guiElements[m_currentSelection];
+		if ((m_gameFlags & m_currentSelection) == GameFlags::None)
+		{
+			m_gameFlags = m_gameFlags | m_currentSelection;
+			label->SetText(Utility::WSprintf(L"%ls: On", m_flagNames[m_currentSelection]));
+		}
+		else
+		{
+			m_gameFlags = m_gameFlags & (~m_currentSelection);
+			label->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[m_currentSelection]));
+		}
+	}
+
+	void AdvanceSelection(int32 offset)
+	{
+		int flag = 1 << ((int)log2((int)m_currentSelection) + offset);
+		flag = Math::Clamp(flag, 1, (int)GameFlags::End - 1);
+		SelectSetting((GameFlags)flag);
+	}
+	GameFlags GetGameFlags()
+	{
+		return m_gameFlags;
+	}
+
+private:
+	GameFlags m_gameFlags;
+	Map<GameFlags, Label*> m_guiElements;
+	Map<GameFlags, WString> m_flagNames;
+	GameFlags m_currentSelection;
+};
+
 /*
 	Song select window/screen
 */
@@ -644,6 +723,8 @@ private:
 	Ref<SelectionWheel> m_selectionWheel;
 	// Filter selection
 	Ref<FilterSelection> m_filterSelection;
+	// Game settings wheel
+	Ref<GameSettingsWheel> m_settingsWheel;
 	// Search field
 	Ref<TextInputField> m_searchField;
 	// Panel to fade out selection wheel
@@ -672,6 +753,8 @@ private:
 	bool m_previewLoaded = true;
 	bool m_showScores = false;
 	uint64_t m_previewDelayTicks = 0;
+	Map<Input::Button, float> m_timeSinceButtonPressed;
+	Map<Input::Button, float> m_timeSinceButtonReleased;
 
 public:
 	bool Init() override
@@ -691,8 +774,16 @@ public:
 		statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
 		statisticsSlot->SetZOrder(2);
 
+		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
+		{
+			m_timeSinceButtonPressed[(Input::Button)i] = 0;
+			m_timeSinceButtonReleased[(Input::Button)i] = 0;
+		}
+
+
         // Set up input
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
+		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);
         
 		Panel* background = new Panel();
 		background->imageFillMode = FillMode::Fill;
@@ -749,6 +840,12 @@ public:
 			m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
 			slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
 			slot->anchor = Anchors::Full;
+		}
+
+		{
+			m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
+			Canvas::Slot* slot = m_canvas->Add(m_settingsWheel->MakeShared());
+			slot->anchor = Anchor(0.0, -1.0, 1.0, 0.0);
 		}
 
 		{
@@ -863,6 +960,8 @@ public:
 		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
 			return;
 
+		m_timeSinceButtonPressed[buttonCode] = 0;
+
 	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !IsSuspended())
         {
 			// NOTE(local): if filter selection is active, back doesn't work.
@@ -900,7 +999,112 @@ public:
 			List<SongFilter*> filters;
 			switch (buttonCode)
 			{
+			case Input::Button::BT_0:
+			case Input::Button::BT_1:
+			case Input::Button::BT_2:
+			case Input::Button::BT_3:
+				if (m_settingsWheel->Active)
+					m_settingsWheel->ChangeSetting();
+				break;
+
 			case Input::Button::FX_1:
+				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0) && !m_filterSelection->Active)
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+
+					m_settingsWheel->Active = true;
+				}
+				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0))
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+
+					m_settingsWheel->Active = false;
+				}
+				break;
+			case Input::Button::FX_0:
+				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1) && !m_filterSelection->Active)
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+
+					m_settingsWheel->Active = true;
+				}
+				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1))
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+
+					m_settingsWheel->Active = false;
+				}
+				break;
+			case Input::Button::BT_S:
+				if (m_filterSelection->Active)
+					m_filterSelection->ToggleSelectionMode();
+			default:
+				break;
+			}
+
+		}
+    }
+	void m_OnButtonReleased(Input::Button buttonCode)
+	{
+		if (m_suspended)
+			return;
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
+			return;
+
+		m_timeSinceButtonReleased[buttonCode] = 0;
+
+		switch (buttonCode)
+		{
+		case Input::Button::FX_0:
+			if (m_timeSinceButtonPressed[Input::Button::FX_0] < m_timeSinceButtonPressed[Input::Button::FX_1] && !g_input.GetButton(Input::Button::FX_1) && !m_settingsWheel->Active)
+			{
+				if (!m_filterSelection->Active)
+				{
+					g_guiRenderer->SetInputFocus(nullptr);
+
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+					m_filterSelection->Active = !m_filterSelection->Active;
+				}
+				else
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+					m_filterSelection->Active = !m_filterSelection->Active;
+				}
+			}
+			break;
+		case Input::Button::FX_1:
+			if (m_timeSinceButtonPressed[Input::Button::FX_1] < m_timeSinceButtonPressed[Input::Button::FX_0] && !g_input.GetButton(Input::Button::FX_0) && !m_settingsWheel->Active)
+			{
 				if (!m_showScores)
 				{
 					m_canvas->AddAnimation(Ref<IGUIAnimation>(
@@ -913,41 +1117,11 @@ public:
 						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, 0.0f, 0.2f)), true);
 					m_showScores = !m_showScores;
 				}
-				break;
-			case Input::Button::FX_0:
-				if (!m_filterSelection->Active)
-				{
-					g_guiRenderer->SetInputFocus(nullptr);
-
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)),true);
-					m_filterSelection->Active = !m_filterSelection->Active;
-				}
-				else
-				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)),true);
-					m_filterSelection->Active = !m_filterSelection->Active;
-				}
-				break;
-			case Input::Button::BT_S:
-				if (m_filterSelection->Active)
-					m_filterSelection->ToggleSelectionMode();
-			default:
-				break;
 			}
-
+			break;
 		}
-    }
 
+	}
 	virtual void OnKeyPressed(int32 key)
 	{
 		if (m_filterSelection->Active)
@@ -1064,6 +1238,12 @@ public:
 			g_gameWindow->SetCursorVisible(true);
 		}
 		
+		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
+		{
+			m_timeSinceButtonPressed[(Input::Button)i] += deltaTime;
+			m_timeSinceButtonReleased[(Input::Button)i] += deltaTime;
+		}
+
         // Song navigation using laser inputs
 		/// TODO: Investigate strange behaviour further and clean up.
 
@@ -1075,20 +1255,27 @@ public:
 
 		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff)) * Math::Sign(m_advanceDiff);;
 		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong)) * Math::Sign(m_advanceSong);;
-
-		if (!m_filterSelection->Active)
+		
+		if (m_settingsWheel->Active)
 		{
 			if (advanceDiffActual != 0)
-				m_selectionWheel->AdvanceDifficultySelection(advanceDiffActual);
+				m_settingsWheel->ChangeSetting();
 			if (advanceSongActual != 0)
-				m_selectionWheel->AdvanceSelection(advanceSongActual);
+				m_settingsWheel->AdvanceSelection(advanceSongActual);
 		}
-		else
+		else if (m_filterSelection->Active)
 		{
 			if (advanceDiffActual != 0)
 				m_filterSelection->AdvanceSelection(advanceDiffActual);
 			if (advanceSongActual != 0)
 				m_filterSelection->AdvanceSelection(advanceSongActual);
+		}
+		else
+		{
+			if (advanceDiffActual != 0)
+				m_selectionWheel->AdvanceDifficultySelection(advanceDiffActual);
+			if (advanceSongActual != 0)
+				m_selectionWheel->AdvanceSelection(advanceSongActual);
 		}
         
 		m_advanceDiff -= advanceDiffActual;

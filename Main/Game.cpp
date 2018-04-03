@@ -1440,3 +1440,19 @@ Game* Game::Create(const String& difficulty)
 	Game_Impl* impl = new Game_Impl(difficulty);
 	return impl;
 }
+
+GameFlags operator|(const GameFlags & a, const GameFlags & b)
+{
+	return (GameFlags)((uint8)a | (uint8)b);
+
+}
+
+GameFlags operator&(const GameFlags & a, const GameFlags & b)
+{
+	return (GameFlags)((uint8)a & (uint8)b);
+}
+
+GameFlags operator~(const GameFlags & a)
+{
+	return (GameFlags)(~(uint8)a);
+}
