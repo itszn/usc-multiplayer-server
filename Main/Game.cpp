@@ -427,6 +427,30 @@ public:
 
 		}
 
+		if ((m_flags & GameFlags::Mirror) != GameFlags::None)
+		{
+			int buttonSwaps[] = { 3,2,1,0,5,4 };
+
+			const Vector<ObjectState*> chartObjects = m_playback.GetBeatmap().GetLinearObjects();
+			for (ObjectState* currentobj : chartObjects)
+			{
+				if (currentobj->type == ObjectType::Single || currentobj->type == ObjectType::Hold)
+				{
+					ButtonObjectState* bos = (ButtonObjectState*)currentobj;
+					bos->index = buttonSwaps[bos->index];
+				}
+				else if (currentobj->type == ObjectType::Laser)
+				{
+					LaserObjectState* los = (LaserObjectState*)currentobj;
+					los->index = (los->index + 1) % 2;
+					for (size_t i = 0; i < 2; i++)
+					{
+						los->points[i] = fabsf(los->points[i] - 1.0f);
+					}
+				}
+			}
+		}
+
 
 		return true;
 	}
