@@ -974,7 +974,7 @@ public:
 
 		m_timeSinceButtonPressed[buttonCode] = 0;
 
-	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !IsSuspended())
+	    if(buttonCode == Input::Button::BT_S && !m_filterSelection->Active && !m_settingsWheel->Active && !IsSuspended())
         {
 			// NOTE(local): if filter selection is active, back doesn't work.
 			// For now that sounds right, but maybe it shouldn't matter
@@ -1069,7 +1069,21 @@ public:
 				break;
 			case Input::Button::BT_S:
 				if (m_filterSelection->Active)
+				{
 					m_filterSelection->ToggleSelectionMode();
+				}
+				if (m_settingsWheel->Active)
+				{
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					m_canvas->AddAnimation(Ref<IGUIAnimation>(
+						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+
+					m_settingsWheel->Active = false;
+				}
+				break;
 			default:
 				break;
 			}
@@ -1136,7 +1150,33 @@ public:
 	}
 	virtual void OnKeyPressed(int32 key)
 	{
-		if (m_filterSelection->Active)
+		if (m_settingsWheel->Active)
+		{
+			if (key == SDLK_DOWN)
+			{
+				m_settingsWheel->AdvanceSelection(1);
+			}
+			else if (key == SDLK_UP)
+			{
+				m_settingsWheel->AdvanceSelection(-1);
+			}
+			else if (key == SDLK_LEFT || key == SDLK_RIGHT)
+			{
+				m_settingsWheel->ChangeSetting();
+			}
+			else if (key == SDLK_ESCAPE)
+			{
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+				m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+
+				m_settingsWheel->Active = false;
+			}
+		}
+		else if (m_filterSelection->Active)
 		{
 			if (key == SDLK_DOWN)
 			{
