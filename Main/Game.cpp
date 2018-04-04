@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Game.hpp"
 #include "Application.hpp"
+#include <array>
+#include <random>
 #include <Beatmap/BeatmapPlayback.hpp>
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
@@ -146,19 +148,19 @@ private:
 	ParticleSystem m_particleSystem;
 	Ref<ParticleEmitter> m_laserFollowEmitters[2];
 	Ref<ParticleEmitter> m_holdEmitters[6];
-
+	GameFlags m_flags;
 
 	float m_shakeAmount = 3;
 	float m_shakeDuration = 0.083;
 
 public:
-	Game_Impl(const String& mapPath)
+	Game_Impl(const String& mapPath, GameFlags flags)
 	{
 		// Store path to map
 		m_mapPath = Path::Normalize(mapPath);
 		// Get Parent path
 		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
-
+		m_flags = flags;
 		m_diffIndex.id = -1;
 		m_diffIndex.mapId = -1;
 
@@ -168,11 +170,12 @@ public:
 		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 	}
 
-	Game_Impl(const DifficultyIndex& difficulty)
+	Game_Impl(const DifficultyIndex& difficulty, GameFlags flags)
 	{
 		// Store path to map
 		m_mapPath = Path::Normalize(difficulty.path);
 		m_diffIndex = difficulty;
+		m_flags = flags;
 		// Get Parent path
 		m_mapRootPath = Path::RemoveLast(m_mapPath, nullptr);
 
@@ -375,6 +378,55 @@ public:
 		m_scoring.Reset(); // Initialize
 
 		g_input.OnButtonPressed.Add(this, &Game_Impl::m_OnButtonPressed);
+
+		if ((m_flags & GameFlags::Random) != GameFlags::None)
+		{
+			//Randomize
+			std::array<int,4> swaps = { 0,1,2,3 };
+			
+			std::shuffle(swaps.begin(), swaps.end(), std::default_random_engine((int)(1000 * g_application->GetAppTime())));
+
+			bool unchanged = true;
+			for (size_t i = 0; i < 4; i++)
+			{
+				if (swaps[i] != i)
+				{
+					unchanged = false;
+					break;
+				}
+			}
+			bool flipFx = false;
+
+			if (unchanged)
+			{
+				flipFx = true;
+			}
+			else
+			{
+				std::srand((int)(1000 * g_application->GetAppTime()));
+				flipFx = (std::rand() % 2) == 1;
+			}
+
+			const Vector<ObjectState*> chartObjects = m_playback.GetBeatmap().GetLinearObjects();
+			for (ObjectState* currentobj : chartObjects)
+			{
+				if (currentobj->type == ObjectType::Single || currentobj->type == ObjectType::Hold)
+				{
+					ButtonObjectState* bos = (ButtonObjectState*)currentobj;
+					if (bos->index < 4)
+					{
+						bos->index = swaps[bos->index];
+					}
+					else if (flipFx)
+					{
+						bos->index = (bos->index - 3) % 2;
+						bos->index += 4;
+					}
+				}
+			}
+
+		}
+
 
 		return true;
 	}
@@ -1429,15 +1481,15 @@ public:
 
 };
 
-Game* Game::Create(const DifficultyIndex& difficulty)
+Game* Game::Create(const DifficultyIndex& difficulty, GameFlags flags)
 {
-	Game_Impl* impl = new Game_Impl(difficulty);
+	Game_Impl* impl = new Game_Impl(difficulty, flags);
 	return impl;
 }
 
-Game* Game::Create(const String& difficulty)
+Game* Game::Create(const String& difficulty, GameFlags flags)
 {
-	Game_Impl* impl = new Game_Impl(difficulty);
+	Game_Impl* impl = new Game_Impl(difficulty, flags);
 	return impl;
 }
 

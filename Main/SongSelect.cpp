@@ -636,6 +636,18 @@ public:
 		AddSetting(L"Auto BT", GameFlags::AutoBT);
 		AddSetting(L"Auto FX", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers", GameFlags::AutoLaser);
+
+		Label* label = new Label();
+		label->SetFontSize(30);
+		label->SetText(L">>");
+
+		Canvas::Slot* labelSlot = Add(label->MakeShared());
+		labelSlot->allowOverflow = true;
+		labelSlot->autoSizeX = true;
+		labelSlot->autoSizeY = true;
+		labelSlot->anchor = Anchors::Middle;
+		labelSlot->alignment = Vector2(0.5f, 0.5f);
+		labelSlot->offset.pos.x = -100;
 	}
 
 	bool Active = false;
@@ -979,7 +991,7 @@ public:
 				{
 					DifficultyIndex* diff = m_selectionWheel->GetSelectedDifficulty();
 
-					Game* game = Game::Create(*diff);
+					Game* game = Game::Create(*diff, m_settingsWheel->GetGameFlags());
 					if (!game)
 					{
 						Logf("Failed to start game", Logger::Error);

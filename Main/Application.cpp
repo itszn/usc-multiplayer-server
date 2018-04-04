@@ -492,7 +492,7 @@ void Application::m_Cleanup()
 
 class Game* Application::LaunchMap(const String& mapPath)
 {
-	Game* game = Game::Create(mapPath);
+	Game* game = Game::Create(mapPath, GameFlags::None);
 	TransitionScreen* screen = TransitionScreen::Create(game);
 	AddTickable(screen);
 	return game;

@@ -30,8 +30,8 @@ protected:
 	Game() = default;
 public:
 	virtual ~Game() = default;
-	static Game* Create(const DifficultyIndex& mapPath);
-	static Game* Create(const String& mapPath);
+	static Game* Create(const DifficultyIndex& mapPath, GameFlags flags);
+	static Game* Create(const String& mapPath, GameFlags flags);
 
 public:
 	// When the game is still going, false when the map is done, all ending sequences have played, etc.
