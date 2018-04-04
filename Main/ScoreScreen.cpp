@@ -51,7 +51,7 @@ private:
 	BeatmapSettings m_beatmapSettings;
 	Texture m_jacketImage;
 	Texture m_graphTex;
-
+	GameFlags m_flags;
 
 public:
 	ScoreScreen_Impl(class Game* game)
@@ -65,6 +65,7 @@ public:
 		m_gaugeSamples = game->GetGaugeSamples();
 		m_timedHits[0] = scoring.timedHits[0];
 		m_timedHits[1] = scoring.timedHits[1];
+		m_flags = game->GetFlags();
 
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 		m_meanHitDelta = scoring.GetMeanHitDelta();
@@ -77,7 +78,7 @@ public:
 		m_songSelectStyle = SongSelectStyle::Get(g_application);
 
 		m_startPressed = false;
-
+		
 		m_beatmapSettings = game->GetBeatmap()->GetMapSettings();
 		m_jacketPath = Path::Normalize(game->GetMapRootPath() + Path::sep + m_beatmapSettings.jacketPath);
 		m_jacketImage = game->GetJacketImage();
@@ -255,6 +256,12 @@ public:
 			}
 
 			PerformanceGraph* graphPanel = new PerformanceGraph();
+			if ((m_flags & GameFlags::Hard) != GameFlags::None)
+			{
+				graphPanel->colorBorder = 0.3f;
+				graphPanel->upperColor = Colori(255, 100, 0);
+				graphPanel->lowerColor = Colori(200, 50, 0);
+			}
 			loader.AddTexture(graphPanel->borderTexture, "ui/button.png");
 
 			graphPanel->graphTex = m_graphTex;
@@ -299,12 +306,20 @@ public:
 				slot->padding = Margin(0, 20);
 			}
 
-
+			String gaugePath = "gauges/normal/";
 			m_gauge = Ref<HealthGauge>(new HealthGauge());
-			loader.AddTexture(m_gauge->fillTexture, "gauge_fill.png");
-			loader.AddTexture(m_gauge->frontTexture, "gauge_front.png");
-			loader.AddTexture(m_gauge->backTexture, "gauge_back.png");
-			loader.AddTexture(m_gauge->maskTexture, "gauge_mask.png");
+			if ((m_flags & GameFlags::Hard) != GameFlags::None)
+			{
+				gaugePath = "gauges/hard/";
+				m_gauge->colorBorder = 0.3f;
+				m_gauge->lowerColor = Colori(200, 50, 0);
+				m_gauge->upperColor = Colori(255, 100, 0);
+			}
+
+			loader.AddTexture(m_gauge->fillTexture, gaugePath + "gauge_fill.png");
+			loader.AddTexture(m_gauge->frontTexture, gaugePath + "gauge_front.png");
+			loader.AddTexture(m_gauge->backTexture, gaugePath + "gauge_back.png");
+			loader.AddTexture(m_gauge->maskTexture, gaugePath + "gauge_mask.png");
 			loader.AddMaterial(m_gauge->fillMaterial, "gauge");
 			m_gauge->rate = m_finalGaugeValue;
 			{

@@ -373,6 +373,7 @@ public:
 		CheckedLoad(m_foreground = CreateBackground(this, true));
 
 		// Do this here so we don't get input events while still loading
+		m_scoring.SetFlags(m_flags);
 		m_scoring.SetPlayback(m_playback);
 		m_scoring.SetInput(&g_input);
 		m_scoring.Reset(); // Initialize
@@ -741,12 +742,21 @@ public:
 		}
 
 		{
-			// Gauge
 			m_scoringGauge = Utility::MakeRef(new HealthGauge());
-			loader.AddTexture(m_scoringGauge->fillTexture, "gauge_fill.png");
-			loader.AddTexture(m_scoringGauge->frontTexture, "gauge_front.png");
-			loader.AddTexture(m_scoringGauge->backTexture, "gauge_back.png");
-			loader.AddTexture(m_scoringGauge->maskTexture, "gauge_mask.png");
+			String gaugePath = "gauges/normal/";
+			if ((m_flags & GameFlags::Hard) != GameFlags::None)
+			{
+				gaugePath = "gauges/hard/";
+				m_scoringGauge->colorBorder = 0.3f;
+				m_scoringGauge->lowerColor = Colori(200,50,0);
+				m_scoringGauge->upperColor = Colori(255,100,0);
+			}
+
+			// Gauge
+			loader.AddTexture(m_scoringGauge->fillTexture, gaugePath + "gauge_fill.png");
+			loader.AddTexture(m_scoringGauge->frontTexture, gaugePath + "gauge_front.png");
+			loader.AddTexture(m_scoringGauge->backTexture, gaugePath + "gauge_back.png");
+			loader.AddTexture(m_scoringGauge->maskTexture, gaugePath + "gauge_mask.png");
 			loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
 
 			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
@@ -951,8 +961,18 @@ public:
 		// Link FX track to combo counter for now
 		m_audioPlayback.SetFXTrackEnabled(m_scoring.currentComboCounter > 0);
 
+		// Stop playing if gauge is on hard and at 0%
+		if ((m_flags & GameFlags::Hard) != GameFlags::None && m_scoring.currentGauge == 0.f)
+		{
+			FinishGame();
+		}
+
+
 		// Update scoring
-		m_scoring.Tick(deltaTime);
+		if (!m_ended)
+		{
+			m_scoring.Tick(deltaTime);
+		}
 
 		// Update scoring gauge
 		m_scoringGauge->rate = m_scoring.currentGauge;
@@ -1488,6 +1508,10 @@ public:
 	virtual float* GetGaugeSamples() override
 	{
 		return m_gaugeSamples;
+	}
+	virtual GameFlags GetFlags() override
+	{
+		return m_flags;
 	}
 
 	virtual const String& GetMapRootPath() const

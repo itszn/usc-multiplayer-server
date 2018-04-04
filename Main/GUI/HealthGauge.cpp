@@ -29,19 +29,13 @@ void HealthGauge::Render(GUIRenderData rd)
 
 
 	Color color;
-	if(rate > 0.70f)
+	if(rate >= colorBorder)
 	{
-		// Fade to max
-		//float f2 = (rate - 0.70f) / 0.25f;
-		//f2 = powf(f2, 1.2f);
-		color = Colori(255, 102, 255);
-		//color *= (0.70f + f2 * 0.25f);
+		color = upperColor;
 	}
 	else
 	{
-		//float f1 = (rate / 0.70f);
-		color = Colori(0, 204, 255);
-		//color *= (0.70f + f1 * 0.25f);
+		color = lowerColor;
 	}
 	params.SetParameter("barColor", color);
 	rd.rq->Draw(transform, rd.guiRenderer->guiQuad, fillMaterial, params);

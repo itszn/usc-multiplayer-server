@@ -103,7 +103,13 @@ class TestBackground : public FullscreenBackground
 		//if(tickTime > 0.7f)
 		//	timing.y += ((tickTime - 0.7f) / 0.3f) * 0.8f; // Gradual build up again
 
-		bool cleared = game->GetScoring().currentGauge >= 0.70f;
+		float clearBorder = 0.70f;
+		if ((game->GetFlags() & GameFlags::Hard) != GameFlags::None)
+		{
+			clearBorder = 0.30f;
+		}
+
+		bool cleared = game->GetScoring().currentGauge >= clearBorder;
 		
 			if (cleared)
 			clearTransition += deltaTime / tp.beatDuration * 1000;

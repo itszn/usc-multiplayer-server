@@ -7,15 +7,17 @@ enum class GameFlags : uint8
 {
 	None = 0,
 
-	Mirror = 0b1,
+	Hard = 0b1,
 
-	Random = 0b10,
+	Mirror = 0b10,
 
-	AutoBT = 0b100,
+	Random = 0b100,
 
-	AutoFX = 0b1000,
+	AutoBT = 0b1000,
 
-	AutoLaser = 0b10000,
+	AutoFX = 0b10000,
+
+	AutoLaser = 0b100000,
 End};
 GameFlags operator|(const GameFlags& a, const GameFlags& b);
 GameFlags operator&(const GameFlags& a, const GameFlags& b);
@@ -44,7 +46,7 @@ public:
 	virtual class Scoring& GetScoring() = 0;
 	// Samples of the gauge for the performance graph
 	virtual float* GetGaugeSamples() = 0;
-
+	virtual GameFlags GetFlags() = 0;
 	// Map jacket image
 	virtual Texture GetJacketImage() = 0;
 	// Difficulty data

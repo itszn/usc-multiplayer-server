@@ -7,6 +7,10 @@ layout(location=0) out vec4 target;
 uniform sampler2D graphTex;
 uniform ivec2 viewport;
 uniform vec4 color;
+uniform vec4 upperColor;
+uniform vec4 lowerColor;
+uniform float colorBorder;
+
 
 void main()
 {
@@ -19,10 +23,10 @@ void main()
     vec2 avg = (current + next) / 2.0;
     float dist = abs(distance(vec2(fsTex.x,fsTex.y * -1 + 1.),avg));
     
-    if (avg.y >= 0.70f)
-        col = vec3(0.0f, 1.0f, 0.0f);
+    if (avg.y >= colorBorder)
+        col = upperColor.xyz;
     else
-        col = vec3(1.0f, 0.0f, 0.0f);
+        col = lowerColor.xyz;
     
 
     target.xyz = vec3(col);

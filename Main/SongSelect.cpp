@@ -534,10 +534,9 @@ public:
 
 				coordinate.y = ((int)i - (int)m_currentFolderSelection) * 40.f;
 				coordinate.x -= ((int)m_currentFolderSelection - i) * ((int)m_currentFolderSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
+				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
 				AddAnimation(Ref<IGUIAnimation>(
 					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-				labelSlot->offset = Rect(coordinate, Vector2(0));
 			}
 		}
 		else
@@ -549,10 +548,9 @@ public:
 
 				coordinate.y = ((int)i - (int)m_currentLevelSelection) * 40.f;
 				coordinate.x -= ((int)m_currentLevelSelection - i) * ((int)m_currentLevelSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = Add(m_guiElements[songFilter]->MakeShared());
+				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
 				AddAnimation(Ref<IGUIAnimation>(
 					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-				labelSlot->offset = Rect(coordinate, Vector2(0));
 			}
 		}
 
@@ -631,6 +629,7 @@ public:
 	{
 		m_gameFlags = GameFlags::None;
 
+		AddSetting(L"Hard Guage", GameFlags::Hard);
 		AddSetting(L"Mirror", GameFlags::Mirror);
 		AddSetting(L"Random", GameFlags::Random);
 		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);
@@ -677,10 +676,9 @@ public:
 			Vector2 coordinate = Vector2(50, 0);
 			GameFlags flag = (GameFlags)(1 << i);
 			coordinate.y = ((int)i - log2((int)m_currentSelection)) * 40.f;
-			Canvas::Slot* labelSlot = Add(m_guiElements[flag]->MakeShared());
+			Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[flag]->slot;
 			AddAnimation(Ref<IGUIAnimation>(
 				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-			labelSlot->offset = Rect(coordinate, Vector2(0));
 		}
 	}
 	void ChangeSetting()
@@ -891,6 +889,7 @@ public:
 		// Clear callbacks
 		m_mapDatabase.OnMapsCleared.Clear();
 		g_input.OnButtonPressed.RemoveAll(this);
+		g_input.OnButtonReleased.RemoveAll(this);
 	}
 
 	// When a map is selected in the song wheel

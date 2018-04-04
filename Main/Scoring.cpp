@@ -64,6 +64,10 @@ void Scoring::SetInput(Input* input)
 		m_input->OnButtonReleased.Add(this, &Scoring::m_OnButtonReleased);
 	}
 }
+void Scoring::SetFlags(GameFlags flags)
+{
+	m_flags = flags;
+}
 void Scoring::m_CleanupInput()
 {
 	if(m_input)
@@ -106,7 +110,14 @@ void Scoring::Reset()
 
 	// Recalculate gauge gain
 
+	currentGauge = 0.0f;
 	float total = m_playback->GetBeatmap().GetMapSettings().total / 100.0f + 0.001f; //Add a little in case floats go under
+	if ((m_flags & GameFlags::Hard) != GameFlags::None)
+	{
+		total *= 12.f / 21.f;
+		currentGauge = 1.0f;
+	}
+
 	if (mapTotals.numTicks == 0 && mapTotals.numSingles != 0)
 	{
 		shortGaugeGain = total / (float)mapTotals.numSingles;
@@ -120,7 +131,6 @@ void Scoring::Reset()
 		shortGaugeGain = (total * 20) / (5.0f * ((float)mapTotals.numTicks + (4.0f *(float)mapTotals.numSingles)));
 		tickGaugeGain = shortGaugeGain / 4.0f;
 	}
-	currentGauge = 0.0f;
 
 	m_heldObjects.clear();
 	memset(m_holdObjects, 0, sizeof(m_holdObjects));
@@ -725,17 +735,26 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 {
 	HitStat* stat = m_AddOrUpdateHitStat(tick->object);
 	stat->hasMissed = true;
+	float shortMissDrain = 0.02f;
+	if ((m_flags & GameFlags::Hard) != GameFlags::None)
+	{
+		shortMissDrain = 0.09f;
+		if (currentGauge <= 0.1f)
+			shortMissDrain *= 0.5f;
+		else if (currentGauge <= 0.2f)
+			shortMissDrain *= 0.75f;
+	}
 	if(tick->HasFlag(TickFlags::Button))
 	{
 		OnButtonMiss.Call((Input::Button)index, delta < 0 && abs(delta) > goodHitTime); 
 		stat->rating = ScoreHitRating::Miss;
 		stat->delta = delta;
-		currentGauge -= 0.02f;
+		currentGauge -= shortMissDrain;
 	}
 	else if(tick->HasFlag(TickFlags::Hold))
 	{
 		m_ReleaseHoldObject(index);
-		currentGauge -= 0.005f;
+		currentGauge -= shortMissDrain / 4.f;
 		stat->rating = ScoreHitRating::Miss;
 	}
 	else if(tick->HasFlag(TickFlags::Laser))
@@ -743,9 +762,9 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 		LaserObjectState* obj = (LaserObjectState*)tick->object;
 		
 		if(tick->HasFlag(TickFlags::Slam))
-			currentGauge -= 0.02f;
+			currentGauge -= shortMissDrain;
 		else
-			currentGauge -= 0.005f;
+			currentGauge -= shortMissDrain / 4.f;
 		m_ReleaseHoldObject(index);
 		m_autoLaserTime[obj->index] = -1.f;
 		stat->rating = ScoreHitRating::Miss;

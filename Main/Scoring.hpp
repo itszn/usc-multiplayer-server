@@ -2,6 +2,7 @@
 #include <Beatmap/BeatmapPlayback.hpp>
 #include "HitStat.hpp"
 #include "Input.hpp"
+#include "Game.hpp"
 
 enum class TickFlags : uint8
 {
@@ -73,6 +74,8 @@ public:
 
 	// Needs to be set to handle input
 	void SetInput(Input* input);
+
+	void SetFlags(GameFlags flags);
 
 	// Resets/Initializes the scoring system
 	// Called after SetPlayback
@@ -282,5 +285,7 @@ private:
 	// Hold objects
 	ObjectState* m_holdObjects[8];
 	Set<ObjectState*> m_heldObjects;
+
+	GameFlags m_flags;
 };
 

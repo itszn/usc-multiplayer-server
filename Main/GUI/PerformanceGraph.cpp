@@ -13,7 +13,7 @@ void PerformanceGraph::Render(GUIRenderData rd)
 {
 	rd.guiRenderer->RenderButton(rd.area, borderTexture, border);
 	Rect inner = border.Apply(rd.area);
-	rd.guiRenderer->RenderGraph(inner, graphTex);
+	rd.guiRenderer->RenderGraph(inner, graphTex, upperColor, lowerColor, colorBorder);
 }
 
 Vector2 PerformanceGraph::GetDesiredSize(GUIRenderData rd)
