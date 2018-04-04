@@ -633,9 +633,9 @@ public:
 
 		AddSetting(L"Mirror", GameFlags::Mirror);
 		AddSetting(L"Random", GameFlags::Random);
-		AddSetting(L"Auto BT", GameFlags::AutoBT);
-		AddSetting(L"Auto FX", GameFlags::AutoFX);
-		AddSetting(L"Auto Lasers", GameFlags::AutoLaser);
+		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);
+		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
+		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
 
 		Label* label = new Label();
 		label->SetFontSize(30);
@@ -647,7 +647,7 @@ public:
 		labelSlot->autoSizeY = true;
 		labelSlot->anchor = Anchors::Middle;
 		labelSlot->alignment = Vector2(0.5f, 0.5f);
-		labelSlot->offset.pos.x = -100;
+		labelSlot->offset.pos.x = -135;
 	}
 
 	bool Active = false;
