@@ -4,8 +4,12 @@
 #include "Buffer.hpp"
 
 /*
-	Linux implementation
+	Unix implementation
 */
+#ifdef __APPLE__
+#include <errno.h>
+#endif
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,7 +121,12 @@ uint64 File::GetLastWriteTime() const
 	assert(m_impl);
 	struct stat sb;
 	fstat(m_impl->handle, &sb);
-	return sb.st_mtim.tv_sec * (uint64)1000000000L + sb.st_mtim.tv_nsec;
+
+	#ifdef __APPLE__
+		return sb.st_mtimespec.tv_sec * (uint64)1000000000L + sb.st_mtimespec.tv_nsec;
+	#else
+		return sb.st_mtim.tv_sec * (uint64)1000000000L + sb.st_mtim.tv_nsec;
+	#endif
 }
 
 uint64 File::GetLastWriteTime(const String& path)
@@ -125,7 +134,12 @@ uint64 File::GetLastWriteTime(const String& path)
 	struct stat sb;
 	if(stat(*path, &sb) != 0)
 		return 0;
-	return sb.st_mtim.tv_sec * (uint64)1000000000L + sb.st_mtim.tv_nsec;
+
+	#ifdef __APPLE__
+		return sb.st_mtimespec.tv_sec * (uint64)1000000000L + sb.st_mtimespec.tv_nsec;
+	#else
+		return sb.st_mtim.tv_sec * (uint64)1000000000L + sb.st_mtim.tv_nsec;
+	#endif
 }
 
 bool LoadResourceInternal(const char* name, const char* type, Buffer& out)

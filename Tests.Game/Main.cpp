@@ -6,7 +6,7 @@ void ListTests()
 	TestManager& testManager = TestManager::Get();
 	Vector<String> testNames = testManager.GetAvailableTests();
 	size_t numTests = testNames.size();
-	Logf("Available Tests:", Logger::Info, testManager);
+	Logf("Available Tests:", Logger::Info, typeid(testManager).name());
 	for(size_t i = 0; i < numTests; i++)
 	{
 		Logf(" %s", Logger::Info, testNames[i]);

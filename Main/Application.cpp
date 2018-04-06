@@ -219,10 +219,11 @@ bool Application::m_Init()
 	g_aspectRatio = (float)g_resolution.x / (float)g_resolution.y;
 	g_gameWindow = new Graphics::Window(g_resolution);
 	g_gameWindow->Show();
-	m_OnWindowResized(g_resolution);
+
 	g_gameWindow->OnKeyPressed.Add(this, &Application::m_OnKeyPressed);
 	g_gameWindow->OnKeyReleased.Add(this, &Application::m_OnKeyReleased);
 	g_gameWindow->OnResized.Add(this, &Application::m_OnWindowResized);
+
 	// Initialize Input
 	g_input.Init(*g_gameWindow);
 
@@ -276,6 +277,9 @@ bool Application::m_Init()
 			return false;
 		}
 	}
+
+	// call the initial OnWindowResized now that we have intialized OpenGL
+	m_OnWindowResized(g_resolution);
 
 	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
 
