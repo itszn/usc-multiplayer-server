@@ -317,10 +317,10 @@ void Track::DrawBase(class RenderQueue& rq)
 	// Base
 	MaterialParameterSet params;
 	Transform transform = trackOrigin;
-	transform *= Transform::Translation({ 0.0f, -m_trackHide * trackLength * 1.1f, 0.0f });
 	params.SetParameter("mainTex", trackTexture);
 	params.SetParameter("lCol", laserColors[0]);
 	params.SetParameter("rCol", laserColors[1]);
+	params.SetParameter("hidden", m_trackHide);
 	rq.Draw(transform, trackMesh, trackMaterial, params);
 
 	// Draw the main beat ticks on the track
