@@ -100,6 +100,9 @@ public:
 				//Logf("Channels: %d", Logger::Info, m_format.nChannels);
 				//Logf("Sample rate: %d", Logger::Info, m_format.nSampleRate);
 				//Logf("Bps: %d", Logger::Info, m_format.nBitsPerSample);
+
+				// In case there's some extra data at the end that we dont use.
+				stream.Skip(chunkHdr.nLength - sizeof(WavFormat));
 			}
 			else if(chunkHdr == "data") // data Chunk
 			{
