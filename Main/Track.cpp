@@ -116,6 +116,7 @@ bool Track::AsyncLoad()
 	loader->AddMaterial(buttonMaterial, "button");
 	loader->AddMaterial(holdButtonMaterial, "holdbutton");
 	loader->AddMaterial(laserMaterial, "laser");
+	loader->AddMaterial(blackLaserMaterial, "blackLaser");
 	loader->AddMaterial(trackOverlay, "overlay");
 
 	return loader->Load();
@@ -172,6 +173,7 @@ bool Track::AsyncFinalize()
 	// Laser object material, allows coloring and sampling laser edge texture
 	laserMaterial->blendMode = MaterialBlendMode::Additive;
 	laserMaterial->opaque = false;
+	blackLaserMaterial->opaque = false;
 
 	// Overlay shader
 	trackOverlay->opaque = false;
@@ -310,6 +312,39 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	}
 
 
+}
+
+void Track::DrawLaserBase(RenderQueue& rq, class BeatmapPlayback& playback, const Vector<ObjectState*>& objects)
+{
+	for (auto obj : objects)
+	{
+		if (obj->type != ObjectType::Laser)
+			continue;
+
+		LaserObjectState* laser = (LaserObjectState*)obj;
+		if ((laser->flags & LaserObjectState::flag_Extended) != 0 || m_trackHide > 0.f)
+		{
+			// Calculate height based on time on current track
+			float viewRange = trackViewRange.y - trackViewRange.x;
+			float position = playback.TimeToViewDistance(obj->time);
+			float posmult = trackLength / (m_viewRange * laserSpeedOffset);
+
+			Mesh laserMesh = m_laserTrackBuilder[laser->index]->GenerateTrackMesh(playback, laser);
+
+			MaterialParameterSet laserParams;
+			laserParams.SetParameter("mainTex", laserTexture);
+
+			// Get the length of this laser segment
+			Transform laserTransform = trackOrigin;
+			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position,
+				0.007f + 0.003f * laser->index }); // Small amount of elevation
+
+			if (laserMesh)
+			{
+				rq.Draw(laserTransform, laserMesh, blackLaserMaterial, laserParams);
+			}
+		}
+	}
 }
 
 void Track::DrawBase(class RenderQueue& rq)

@@ -39,6 +39,8 @@ public:
 	virtual bool AsyncFinalize() override;
 	void Tick(class BeatmapPlayback& playback, float deltaTime);
 
+	// Draw black laser underlays for wide lasers or all lasers if lane is hidden
+	void DrawLaserBase(RenderQueue& rq, class BeatmapPlayback& playback, const Vector<ObjectState*>& objects);
 	// Just the board with tick lines
 	void DrawBase(RenderQueue& rq);
 	// Draws an object
@@ -106,6 +108,7 @@ public:
 	Texture laserTexture;
 	Texture laserTailTextures[2]; // Entry and exit textures
 	Material laserMaterial;
+	Material blackLaserMaterial;
 	Texture laserAlertTextures[2];
 
 	/* Overlay graphics */

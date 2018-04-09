@@ -569,16 +569,12 @@ public:
 		// Get objects in range
 		MapTime msViewRange = m_playback.ViewDistanceToDuration(m_track->GetViewRange());
 		m_currentObjectSet = m_playback.GetObjectsInRange(msViewRange);
-
-		// Draw the base track + time division ticks
-		m_track->DrawBase(renderQueue);
-
 		// Sort objects to draw
 		m_currentObjectSet.Sort([](const TObjectState<void>* a, const TObjectState<void>* b)
 		{
 			auto ObjectRenderPriorty = [](const TObjectState<void>* a)
 			{
-				if(a->type == ObjectType::Single || a->type == ObjectType::Hold)
+				if (a->type == ObjectType::Single || a->type == ObjectType::Hold)
 					return (((ButtonObjectState*)a)->index < 4) ? 1 : 0;
 				else
 					return 2;
@@ -587,6 +583,12 @@ public:
 			uint32 renderPriorityB = ObjectRenderPriorty(b);
 			return renderPriorityA < renderPriorityB;
 		});
+
+		/// TODO: Performance impact analysis.
+		m_track->DrawLaserBase(renderQueue, m_playback, m_currentObjectSet);
+
+		// Draw the base track + time division ticks
+		m_track->DrawBase(renderQueue);
 
 		for(auto& object : m_currentObjectSet)
 		{
