@@ -641,6 +641,10 @@ public:
 
 			g_application->RemoveTickable(this);
 		}
+		else if (m_completed)
+		{
+			g_application->RemoveTickable(this);
+		}
 	}
 
 	void OnButtonPressed(uint8 key)
@@ -657,7 +661,7 @@ public:
 		if (!m_isGamepad && !m_knobs)
 		{
 			g_gameConfig.Set(m_key, key);
-			g_application->RemoveTickable(this);
+			m_completed = true; // Needs to be set because pressing right alt triggers two keypresses on the same frame.
 		}
 		else if (!m_isGamepad && m_knobs)
 		{
