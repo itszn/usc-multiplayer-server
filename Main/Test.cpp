@@ -37,6 +37,7 @@ private:
 	float c = 1.0f; // 0 - 5
 	float d = 0.0f; // -2 - 2
 	int e = 0;
+	int f = 0;
 	Ref<Gamepad> m_gamepad;
 	Vector<String> m_textSettings;
 
@@ -156,6 +157,7 @@ public:
 			m_textSettings.Add("Set 2");
 			m_textSettings.Add("3");
 			sb->AddSetting(&e, m_textSettings, m_textSettings.size(), "E");
+			sb->AddSetting(&f, 5, 10, "Step");
 
 			Canvas::Slot* slot = g_rootCanvas->Add(sb->MakeShared());
 			slot->anchor = Anchor(0.75f, 0.0f, 1.0f, 1.0f);

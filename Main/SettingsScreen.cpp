@@ -84,6 +84,8 @@ private:
 	int m_buttonMode = 0;
 	int m_selectedGamepad = 0;
 	int m_selectedSkin = 0;
+	int m_globalOffset = 0;
+	int m_inputOffset = 0;
 	float m_modSpeed = 400.f;
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
@@ -179,6 +181,8 @@ private:
 		g_gameConfig.Set(GameConfigKeys::Laser0Color, m_laserColors[0]);
 		g_gameConfig.Set(GameConfigKeys::Laser1Color, m_laserColors[1]);
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
+		g_gameConfig.Set(GameConfigKeys::GlobalOffset, m_globalOffset);
+		g_gameConfig.Set(GameConfigKeys::InputOffset, m_inputOffset);
 		if(m_skins.size() > 0)
 			g_gameConfig.Set(GameConfigKeys::Skin, m_skins[m_selectedSkin]);
 
@@ -265,6 +269,10 @@ public:
 		m_masterVolume = g_gameConfig.GetFloat(GameConfigKeys::MasterVolume);
 		m_laserColors[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
 		m_laserColors[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
+
+		m_globalOffset = g_gameConfig.GetInt(GameConfigKeys::GlobalOffset);
+		m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
+
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 		auto skinSearch = std::find(m_skins.begin(), m_skins.end(), g_gameConfig.GetString(GameConfigKeys::Skin));
 		if (skinSearch == m_skins.end())
@@ -426,8 +434,10 @@ public:
 			sb->AddSetting(&m_masterVolume, 0.f, 1.0f, "Master Volume");
 			sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
 			sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
-			sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");
 			m_sensSetting = sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
+			sb->AddSetting(&m_globalOffset, 1, 5, "Global offset", "ms");
+			sb->AddSetting(&m_inputOffset, 1, 5, "Input offset", "ms");
+			sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");
 			sb->AddSetting(&m_hispeed, 0.25f, 10.0f, "HiSpeed");
 			sb->AddSetting(&m_modSpeed, 50.0f, 1500.0f, "ModSpeed");
 			if (m_gamePads.size() > 0)

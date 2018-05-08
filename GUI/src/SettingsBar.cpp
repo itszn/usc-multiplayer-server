@@ -55,6 +55,7 @@ SettingBarSetting* SettingsBar::AddSetting(float* target, float min, float max, 
 	setting->floatSetting.min = min;
 	setting->floatSetting.max = max;
 	float v = (target[0] - min) / (max - min);
+	setting->type = SettingBarSetting::Type::Float;
 
 	LayoutBox* box = new LayoutBox();
 	box->layoutDirection = LayoutBox::Vertical;
@@ -88,6 +89,7 @@ SettingBarSetting* SettingsBar::AddSetting(int* target, Vector<String> options, 
 	setting->textSetting.target = target;
 	setting->textSetting.options = new Vector<String>(options);
 	setting->textSetting.optionsCount = optionsCount;
+	setting->type = SettingBarSetting::Type::Text;
 
 	LayoutBox* box = new LayoutBox();
 	box->layoutDirection = LayoutBox::Vertical;
@@ -130,6 +132,108 @@ SettingBarSetting* SettingsBar::AddSetting(int* target, Vector<String> options, 
 	m_settings.Add(setting, box->MakeShared());
 
 	setting->m_UpdateTextSetting(0);
+	return setting;
+}
+
+SettingBarSetting * SettingsBar::AddSetting(int * target, int smallStep, int bigStep, const String & name, const String & suffix /* = "" */)
+{
+	SettingBarSetting* setting = new SettingBarSetting();
+	setting->name = Utility::ConvertToWString(name);
+	setting->suffix = Utility::ConvertToWString(suffix);
+	const wchar_t* nw = *setting->name;
+	const char* na = *name;
+	setting->intSetting.target = target;
+	setting->intSetting.bigStep = bigStep;
+	setting->intSetting.smallStep = smallStep;
+	setting->type = SettingBarSetting::Type::Int;
+
+	LayoutBox* box = new LayoutBox();
+	box->layoutDirection = LayoutBox::Vertical;
+	LayoutBox::Slot* slot = m_container->Add(box->MakeShared());
+	slot->fillX = true;
+	LayoutBox* buttonBox = new LayoutBox();
+
+	buttonBox->layoutDirection = LayoutBox::Horizontal;
+
+	// Create Visuals
+	{
+		// Name Label
+		Label* nameLabel = new Label();
+		nameLabel->SetFontSize(25);
+		nameLabel->SetText(Utility::WSprintf(L"%ls: ", setting->name));
+		box->Add(nameLabel->MakeShared());
+
+		// Big minus Button
+		{
+			Button* prevButton = new Button(m_style);
+			prevButton->SetText(L"<<");
+
+			prevButton->OnPressed.AddLambda([setting]()
+			{
+				setting->intSetting.target[0] -= setting->intSetting.bigStep;
+				setting->label->SetText(Utility::WSprintf(L"%d%ls", setting->intSetting.target[0], setting->suffix));
+			});
+
+			LayoutBox::Slot* prevButtonSlot = buttonBox->Add(prevButton->MakeShared());
+			prevButtonSlot->fillX = true;
+		}
+
+		{
+			// Small minus Button
+			Button* prevButton = new Button(m_style);
+			prevButton->SetText(L"<");
+
+			prevButton->OnPressed.AddLambda([setting]()
+			{
+				setting->intSetting.target[0] -= setting->intSetting.smallStep;
+				setting->label->SetText(Utility::WSprintf(L"%d%ls", setting->intSetting.target[0], setting->suffix));
+			});
+
+			LayoutBox::Slot* prevButtonSlot = buttonBox->Add(prevButton->MakeShared());
+			prevButtonSlot->fillX = true;
+		}
+
+		// Value label
+		Label* label = setting->label = new Label();
+		label->SetFontSize(40);
+		LayoutBox::Slot* valueLabelSlot = buttonBox->Add(label->MakeShared());
+		setting->label->SetText(Utility::WSprintf(L"%d%ls", setting->intSetting.target[0], setting->suffix));
+		valueLabelSlot->fillX = false;
+
+		// Small plus Button
+		{
+			Button* nextButton = new Button(m_style);
+			nextButton->SetText(L">");
+
+			nextButton->OnPressed.AddLambda([setting]()
+			{
+				setting->intSetting.target[0] += setting->intSetting.smallStep;
+				setting->label->SetText(Utility::WSprintf(L"%d%ls", setting->intSetting.target[0], setting->suffix));
+			});
+
+			LayoutBox::Slot* nextButtonSlot = buttonBox->Add(nextButton->MakeShared());
+			nextButtonSlot->fillX = true;
+		}
+
+		// Big plus Button
+		{		
+			Button* nextButton = new Button(m_style);
+			nextButton->SetText(L">>");
+
+			nextButton->OnPressed.AddLambda([setting]()
+			{
+				setting->intSetting.target[0] += setting->intSetting.bigStep;
+				setting->label->SetText(Utility::WSprintf(L"%d%ls", setting->intSetting.target[0], setting->suffix));
+			});
+
+			LayoutBox::Slot* nextButtonSlot = buttonBox->Add(nextButton->MakeShared());
+			nextButtonSlot->fillX = true;
+		}
+	}
+	LayoutBox::Slot* buttonBoxSlot = box->Add(buttonBox->MakeShared());
+	buttonBoxSlot->fillX = true;
+	m_settings.Add(setting, box->MakeShared());
+
 	return setting;
 }
 
@@ -179,6 +283,7 @@ void SettingBarSetting::m_PrevTextSetting()
 {
 	m_UpdateTextSetting(-1);
 }
+
 void SettingBarSetting::m_NextTextSetting()
 {
 	m_UpdateTextSetting(1);

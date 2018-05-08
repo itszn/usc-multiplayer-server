@@ -3,12 +3,14 @@
 #include "LayoutBox.hpp"
 #include "ScrollBox.hpp"
 #include "CommonGUIStyle.hpp"
+#include <functional>
 
 struct SettingBarSetting
 {
 	enum class Type
 	{
 		Float,
+		Int,
 		Text,
 		Button
 	};
@@ -27,7 +29,14 @@ struct SettingBarSetting
 			Vector<String>* options;
 			int optionsCount;
 		} textSetting;
+		struct
+		{
+			int* target;
+			int smallStep;
+			int bigStep;
+		} intSetting;
 	};
+	WString suffix;
 	WString name;
 	class Label* label;
 
@@ -38,6 +47,7 @@ protected:
 	void m_NextTextSetting();
 	void m_PrevTextSetting();
 };
+
 
 class SettingsBar : public ScrollBox
 {
@@ -50,6 +60,7 @@ public:
 
 	SettingBarSetting* AddSetting(float* target, float min, float max, const String& name);
 	SettingBarSetting* AddSetting(int* target, Vector<String> options, int optionsCount, const String& name);
+	SettingBarSetting* AddSetting(int* target, int smallStep, int bigStep, const String& name, const String& suffix = "");
 	void SetValue(SettingBarSetting* setting, float value);
 	void SetValue(SettingBarSetting* setting, int value);
 	void ClearSettings();
