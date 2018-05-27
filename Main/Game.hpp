@@ -3,7 +3,7 @@
 #include "AsyncLoadable.hpp"
 #include <Beatmap/MapDatabase.hpp>
 
-enum class GameFlags : uint8
+enum class GameFlags : uint32
 {
 	None = 0,
 
@@ -53,6 +53,9 @@ public:
 	virtual const DifficultyIndex& GetDifficultyIndex() const = 0;
 	// The beatmap
 	virtual Ref<class Beatmap> GetBeatmap() = 0;
+	// Song was manually ended
+	virtual bool GetManualExit() = 0;
+
 	// The folder that contians the map
 	virtual const String& GetMapRootPath() const = 0;
 	// Full path to map

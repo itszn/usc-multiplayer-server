@@ -42,6 +42,20 @@ String Scoring::CalculateGrade(uint32 score)
 	return "D"; // D
 }
 
+uint8 Scoring::CalculateBadge(const ScoreIndex& score)
+{
+	if (score.score == 10000000) //Perfect
+		return 0;
+	if (score.miss == 0) //Full Combo
+		return 1;
+	if (((GameFlags)score.gameflags & GameFlags::Hard) != GameFlags::None && score.gauge > 0) //Hard Clear
+		return 2;
+	if (((GameFlags)score.gameflags & GameFlags::Hard) == GameFlags::None && score.gauge >= 0.70) //Normal Clear
+		return 3;
+
+	return 4; //Failed
+}
+
 void Scoring::SetPlayback(BeatmapPlayback& playback)
 {
 	if(m_playback)

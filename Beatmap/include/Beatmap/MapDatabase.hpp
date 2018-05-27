@@ -2,7 +2,6 @@
 #include "Beatmap.hpp"
 
 
-
 struct ScoreIndex
 {
 	int32 id;
@@ -12,6 +11,7 @@ struct ScoreIndex
 	int32 almost;
 	int32 miss;
 	float gauge;
+	uint32 gameflags;
 };
 
 
@@ -69,7 +69,7 @@ public:
 	MapIndex* GetMap(int32 idx);
 
 	void AddSearchPath(const String& path);
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge);
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags);
 	void RemoveSearchPath(const String& path);
 
 	// (mapId, mapIndex)

@@ -71,8 +71,9 @@ public:
 		m_meanHitDelta = scoring.GetMeanHitDelta();
 		m_medianHitDelta = scoring.GetMedianHitDelta();
 		// Don't save the score if autoplay was on or if the song was launched using command line
-		if(!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1)
-			m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue);
+		// also don't save the score if the song was manually exited
+		if(!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1 && !game->GetManualExit())
+			m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue, (uint32)m_flags);
 
 		// Used for jacket images
 		m_songSelectStyle = SongSelectStyle::Get(g_application);

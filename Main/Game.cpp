@@ -149,6 +149,7 @@ private:
 	Ref<ParticleEmitter> m_laserFollowEmitters[2];
 	Ref<ParticleEmitter> m_holdEmitters[6];
 	GameFlags m_flags;
+	bool m_manualExit = false;
 
 	float m_shakeAmount = 3;
 	float m_shakeDuration = 0.083;
@@ -1406,6 +1407,7 @@ public:
 		}
 		else if(key == SDLK_ESCAPE)
 		{
+			m_manualExit = true;
 			FinishGame();
 		}
 		else if(key == SDLK_F5) // Restart map
@@ -1429,7 +1431,10 @@ public:
 		if (buttonCode == Input::Button::BT_S)
 		{
 			if (g_input.Are3BTsHeld())
+			{
+				m_manualExit = true;
 				FinishGame();
+			}
 		}
 	}
 
@@ -1515,6 +1520,11 @@ public:
 	{
 		return m_flags;
 	}
+	virtual bool GetManualExit() override
+	{
+		return m_manualExit;
+	}
+
 
 	virtual const String& GetMapRootPath() const
 	{
@@ -1545,16 +1555,16 @@ Game* Game::Create(const String& difficulty, GameFlags flags)
 
 GameFlags operator|(const GameFlags & a, const GameFlags & b)
 {
-	return (GameFlags)((uint8)a | (uint8)b);
+	return (GameFlags)((uint32)a | (uint32)b);
 
 }
 
 GameFlags operator&(const GameFlags & a, const GameFlags & b)
 {
-	return (GameFlags)((uint8)a & (uint8)b);
+	return (GameFlags)((uint32)a & (uint32)b);
 }
 
 GameFlags operator~(const GameFlags & a)
 {
-	return (GameFlags)(~(uint8)a);
+	return (GameFlags)(~(uint32)a);
 }

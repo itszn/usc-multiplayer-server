@@ -935,9 +935,12 @@ public:
 			ScoreIndex s = **it;
 
 			WString grade = Utility::ConvertToWString(Scoring::CalculateGrade(s.score));
+			int badge = Scoring::CalculateBadge(s);
+
+			WString badges[] = { L"P", L"U", L"HC", L"C", L"c" };
 
 			Label* text = new Label();
-			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%%\n%ls",place, s.score, (int)(s.gauge * 100), grade));
+			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%% %ls\n%ls",place, s.score, (int)(s.gauge * 100), badges[badge], grade));
 			text->SetFontSize(32);
 			LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
 			slot->fillX = true;

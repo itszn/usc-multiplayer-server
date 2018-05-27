@@ -435,9 +435,9 @@ public:
 		}
 	}
 
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge)
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags)
 	{
-		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,diffid) VALUES(?,?,?,?,?,?)");
+		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,gameflags,diffid) VALUES(?,?,?,?,?,?,?)");
 
 		m_database.Exec("BEGIN");
 
@@ -446,7 +446,8 @@ public:
 		addScore.BindInt(3, almost);
 		addScore.BindInt(4, miss);
 		addScore.BindDouble(5, gauge);
-		addScore.BindInt(6, diff.id);
+		addScore.BindInt(6, gameflags);
+		addScore.BindInt(7, diff.id);
 
 		addScore.Step();
 		addScore.Rewind();
@@ -483,7 +484,7 @@ private:
 			"FOREIGN KEY(mapid) REFERENCES Maps(rowid))");
 
 		m_database.Exec("CREATE TABLE Scores"
-			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, diffid INTEGER,"
+			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, gameflags INTEGER, diffid INTEGER,"
 			"FOREIGN KEY(diffid) REFERENCES Difficulties(rowid))");
 	}
 	void m_LoadInitialData()
@@ -543,7 +544,8 @@ private:
 		}
 
 		// Select Scores
-		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,diffid FROM Scores");
+		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,gameflags,diffid FROM Scores");
+		
 		while (scoreScan.StepRow())
 		{
 			ScoreIndex* score = new ScoreIndex();
@@ -553,7 +555,8 @@ private:
 			score->almost = scoreScan.IntColumn(3);
 			score->miss = scoreScan.IntColumn(4);
 			score->gauge = scoreScan.DoubleColumn(5);
-			score->diffid = scoreScan.IntColumn(6);
+			score->gameflags = scoreScan.IntColumn(6);
+			score->diffid = scoreScan.IntColumn(7);
 
 			// Add difficulty to map and resort difficulties
 			auto diffIt = m_difficulties.find(score->diffid);
@@ -739,7 +742,7 @@ void MapDatabase::RemoveSearchPath(const String& path)
 {
 	m_impl->RemoveSearchPath(path);
 }
-void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge)
+void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags)
 {
-	m_impl->AddScore(diff, score, crit, almost, miss, gauge);
+	m_impl->AddScore(diff, score, crit, almost, miss, gauge, gameflags);
 }

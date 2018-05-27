@@ -111,6 +111,13 @@ public:
 		return m_diff->scores.size() > 0;
 	}
 
+	uint32 CalculateBadge()
+	{
+		ScoreIndex* topScore = m_diff->scores.back();
+		return Scoring::CalculateBadge(*topScore);
+	}
+
+
 	uint32 CalculateGrade()
 	{
 		uint32 value = (uint32)(m_diff->scores.back()->score * 0.9 + m_diff->scores.back()->gauge * 1000000.0);
@@ -276,11 +283,15 @@ void SongSelectItem::SetSelectedDifficulty(int32 selectedIndex)
 		if (m_diffSelectors[selectedIndex]->HasScores())
 		{
 			int score = m_diffSelectors[selectedIndex]->GetScore();
+			int badge = m_diffSelectors[selectedIndex]->CalculateBadge();
 			double gauge = m_diffSelectors[selectedIndex]->GetGauge();
 			WString grade = Utility::ConvertToWString(Scoring::CalculateGrade(score));
 			int gaugeDisplay = gauge * 100;
+			
+			WString badges[] = {L"P", L"U", L"HC", L"C", L"c"};
 
-			m_score->SetText(Utility::WSprintf(L"%08d\n%d%%\n%ls", score, gaugeDisplay, grade));
+
+			m_score->SetText(Utility::WSprintf(L"%08d\n%d%% %ls\n%ls", score, gaugeDisplay, badges[badge], grade));
 		}
 		else
 		{
