@@ -27,9 +27,11 @@ namespace Graphics
 		virtual ~TextureRes() = default;
 		static Ref<TextureRes> Create(class OpenGL* gl);
 		static Ref<TextureRes> Create(class OpenGL* gl, Ref<class ImageRes> image);
+		static Ref<TextureRes> CreateFromFrameBuffer(class OpenGL* gl, const Vector2i& resolution);
 	public:
 		virtual void Init(Vector2i size, TextureFormat format = TextureFormat::RGBA8) = 0;
 		virtual void SetData(Vector2i size, void* pData) = 0;
+		virtual void SetFromFrameBuffer() = 0;
 		virtual void SetMipmaps(bool enabled) = 0;
 		virtual void SetFilter(bool enabled, bool mipFiltering = true, float anisotropic = 1.0f) = 0;
 		virtual const Vector2i& GetSize() const = 0;

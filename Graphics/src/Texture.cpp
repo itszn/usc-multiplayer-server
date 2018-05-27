@@ -80,6 +80,15 @@ namespace Graphics
 			UpdateFilterState();
 			UpdateWrap();
 		}
+		virtual void SetFromFrameBuffer()
+		{
+			glReadBuffer(GL_BACK);
+			glBindTexture(GL_TEXTURE_2D, m_texture);
+			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_size.x, m_size.y);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+
+
 		virtual void SetData(Vector2i size, void* pData)
 		{
 			m_format = TextureFormat::RGBA8;
@@ -288,6 +297,23 @@ namespace Graphics
 		}
 	}
 
+	Texture TextureRes::CreateFromFrameBuffer(class OpenGL* gl, const Vector2i& resolution)
+	{
+		Texture_Impl* pImpl = new Texture_Impl();
+		if (pImpl->Init())
+		{
+			pImpl->Init(resolution, TextureFormat::RGBA8);
+			pImpl->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
+			pImpl->SetFromFrameBuffer();
+			return GetResourceManager<ResourceType::Texture>().Register(pImpl);
+		}
+		else
+		{
+			delete pImpl; pImpl = nullptr;
+		}
+		return Texture();
+	}
+
 	float TextureRes::CalculateHeight(float width)
 	{
 		Vector2 size = GetSize();
@@ -301,4 +327,7 @@ namespace Graphics
 		float aspect = size.x / size.y;
 		return aspect * height;
 	}
+
+
+
 }

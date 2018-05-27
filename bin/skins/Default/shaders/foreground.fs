@@ -11,8 +11,10 @@ uniform ivec2 screenCenter;
 uniform vec3 timing;
 uniform ivec2 viewport;
 uniform float objectGlow;
-// bg_texture.png
+// fg_texture.png
 uniform sampler2D mainTex;
+// current FrameBuffer
+uniform sampler2D fb_tex;
 uniform float tilt;
 uniform float clearTransition;
 

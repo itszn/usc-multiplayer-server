@@ -14,6 +14,7 @@ public:
 	virtual bool Init(bool foreground) override
 	{
 		fullscreenMesh = MeshGenerators::Quad(g_gl, Vector2(-1.0f), Vector2(2.0f));
+		this->foreground = foreground;
 		return true;
 	}
 	void UpdateRenderState(float deltaTime)
@@ -34,8 +35,10 @@ public:
 	Mesh fullscreenMesh;
 	Material fullscreenMaterial;
 	Texture backgroundTexture;
+	Texture frameBufferTexture;
 	MaterialParameterSet fullscreenMaterialParams;
 	float clearTransition = 0.0f;
+	bool foreground;
 };
 
 class TestBackground : public FullscreenBackground
@@ -51,6 +54,7 @@ class TestBackground : public FullscreenBackground
 		String matPath = "";
 		if (foreground)
 		{
+			frameBufferTexture = TextureRes::CreateFromFrameBuffer(g_gl, g_resolution);
 			matPath = game->GetBeatmap()->GetMapSettings().foregroundPath;
 			String texPath = "textures/fg_texture.png";
 			if (matPath.length() > 3 && matPath.substr(matPath.length() - 3, 3) == ".fs")
@@ -130,6 +134,11 @@ class TestBackground : public FullscreenBackground
 		fullscreenMaterialParams.SetParameter("mainTex", backgroundTexture);
 		fullscreenMaterialParams.SetParameter("screenCenter", screenCenter);
 		fullscreenMaterialParams.SetParameter("timing", timing);
+		if (foreground)
+		{
+			frameBufferTexture->SetFromFrameBuffer();
+			fullscreenMaterialParams.SetParameter("fb_tex", frameBufferTexture);
+		}
 
 		FullscreenBackground::Render(deltaTime);
 	}
