@@ -418,7 +418,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			mat = holdButtonMaterial;
 		}
 
-		Vector3 buttonPos = Vector3(xposition, trackLength * position, 0.02f);
+		Vector3 buttonPos = Vector3(xposition, trackLength * position, 0.0f);
 
 		Transform buttonTransform = trackOrigin;
 		buttonTransform *= Transform::Translation(buttonPos);
@@ -458,7 +458,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			// Get the length of this laser segment
 			Transform laserTransform = trackOrigin;
 			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position,
-				0.007f + 0.003f * laser->index }); // Small amount of elevation
+				0.0f });
 
 			// Set laser color
 			laserParams.SetParameter("color", laserColors[laser->index]);
