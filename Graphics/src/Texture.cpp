@@ -17,10 +17,12 @@ namespace Graphics
 		bool m_mipmaps = false;
 		float m_anisotropic = 1.0f;
 		void* m_data = nullptr;
+		OpenGL* m_gl = nullptr;
 
 	public:
-		Texture_Impl()
+		Texture_Impl(OpenGL* gl)
 		{
+			m_gl = gl;
 		}
 		~Texture_Impl()
 		{
@@ -82,9 +84,19 @@ namespace Graphics
 		}
 		virtual void SetFromFrameBuffer()
 		{
+			m_gl->BlitFramebuffer();
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glReadBuffer(GL_BACK);
 			glBindTexture(GL_TEXTURE_2D, m_texture);
 			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_size.x, m_size.y);
+			GLenum err;
+			bool errored = false;
+			while ((err = glGetError()) != GL_NO_ERROR)
+			{			
+				Logf("OpenGL Error: 0x%p", Logger::Severity::Error, err);
+				errored = true;
+			}
+			//assert(!errored);
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
@@ -269,7 +281,7 @@ namespace Graphics
 
 	Texture TextureRes::Create(OpenGL* gl)
 	{
-		Texture_Impl* pImpl = new Texture_Impl();
+		Texture_Impl* pImpl = new Texture_Impl(gl);
 		if(pImpl->Init())
 		{
 			return GetResourceManager<ResourceType::Texture>().Register(pImpl);
@@ -284,7 +296,7 @@ namespace Graphics
 	{
 		if(!image)
 			return Texture();
-		Texture_Impl* pImpl = new Texture_Impl();
+		Texture_Impl* pImpl = new Texture_Impl(gl);
 		if(pImpl->Init())
 		{
 			pImpl->SetData(image->GetSize(), image->GetBits());
@@ -299,7 +311,7 @@ namespace Graphics
 
 	Texture TextureRes::CreateFromFrameBuffer(class OpenGL* gl, const Vector2i& resolution)
 	{
-		Texture_Impl* pImpl = new Texture_Impl();
+		Texture_Impl* pImpl = new Texture_Impl(gl);
 		if (pImpl->Init())
 		{
 			pImpl->Init(resolution, TextureFormat::RGBA8);

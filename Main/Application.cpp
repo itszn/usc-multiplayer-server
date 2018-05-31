@@ -271,7 +271,7 @@ bool Application::m_Init()
 
 		// Create graphics context
 		g_gl = new OpenGL();
-		if(!g_gl->Init(*g_gameWindow))
+		if(!g_gl->Init(*g_gameWindow, g_gameConfig.GetInt(GameConfigKeys::AntiAliasing)))
 		{
 			Log("Failed to create OpenGL context", Logger::Error);
 			return false;
@@ -639,6 +639,7 @@ void Application::m_OnWindowResized(const Vector2i& newSize)
 
 	m_renderStateBase.aspectRatio = g_aspectRatio;
 	m_renderStateBase.viewportSize = g_resolution;
+	g_gl->SetViewport(newSize);
 	glViewport(0, 0, newSize.x, newSize.y);
 	glScissor(0, 0, newSize.x, newSize.y);
 

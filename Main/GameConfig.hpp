@@ -12,6 +12,7 @@ DefineEnum(GameConfigKeys,
 	ScreenY,
 	Fullscreen,
 	FullscreenMonitorIndex,
+	AntiAliasing,
 	MasterVolume,
 	VSync,
 

@@ -678,6 +678,7 @@ public:
 		// Render particle effects last
 		RenderParticles(rs, deltaTime);
 
+		glFlush();
 		// Render foreground
 		m_foreground->Render(deltaTime);
 

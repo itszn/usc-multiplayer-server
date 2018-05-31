@@ -37,6 +37,7 @@ private:
 	Vector<String> m_speedMods = { "XMod", "MMod", "CMod" };
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
 	Vector<String> m_buttonModes = { "Keyboard", "Controller" };
+	Vector<String> m_aaModes = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA" };
 	Vector<String> m_gamePads;
 	Vector<String> m_skins;
 
@@ -86,6 +87,7 @@ private:
 	int m_selectedSkin = 0;
 	int m_globalOffset = 0;
 	int m_inputOffset = 0;
+	int m_antialiasing = 0;
 	float m_modSpeed = 400.f;
 	float m_hispeed = 1.f;
 	float m_laserSens = 1.0f;
@@ -176,6 +178,7 @@ private:
 		g_gameConfig.SetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice, inputModeMap[m_laserModes[m_laserMode]]);
 
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
+		g_gameConfig.Set(GameConfigKeys::AntiAliasing, m_antialiasing);
 		g_gameConfig.Set(GameConfigKeys::ModSpeed, m_modSpeed);
 		g_gameConfig.Set(GameConfigKeys::MasterVolume, m_masterVolume);
 		g_gameConfig.Set(GameConfigKeys::Laser0Color, m_laserColors[0]);
@@ -263,6 +266,8 @@ public:
 			m_laserSens = g_gameConfig.GetFloat(GameConfigKeys::Key_Sensitivity);
 			break;
 		}
+
+		m_antialiasing = g_gameConfig.GetInt(GameConfigKeys::AntiAliasing);
 
 		m_modSpeed = g_gameConfig.GetFloat(GameConfigKeys::ModSpeed);
 		m_hispeed = g_gameConfig.GetFloat(GameConfigKeys::HiSpeed);
@@ -432,6 +437,7 @@ public:
 			m_settings = Ref<SettingsBar>(sb);
 
 			sb->AddSetting(&m_masterVolume, 0.f, 1.0f, "Master Volume");
+			sb->AddSetting(&m_antialiasing, m_aaModes, m_aaModes.size(), "Anti Aliasing");
 			sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
 			sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
 			m_sensSetting = sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");

@@ -61,7 +61,7 @@ namespace Graphics
 		ResourceManagers::CreateResourceManager<ResourceType::Framebuffer>();
 		ResourceManagers::CreateResourceManager<ResourceType::ParticleSystem>();
 	}
-	bool OpenGL::Init(Window& window)
+	bool OpenGL::Init(Window& window, uint32 antialiasing)
 	{
 		if(m_impl->context)
 			return true; // Already initialized
@@ -73,8 +73,8 @@ namespace Graphics
 		SDL_Window* sdlWnd = (SDL_Window*)m_window->Handle();
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 		// Create a context
 		m_impl->context = SDL_GL_CreateContext(sdlWnd);
@@ -124,11 +124,18 @@ namespace Graphics
 		// Create pipeline for the program
 		glGenProgramPipelines(1, &m_mainProgramPipeline);
 		glBindProgramPipeline(m_mainProgramPipeline);
-
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
-		glDisable(GL_BLEND);
+		glEnable(GL_MULTISAMPLE);
+		glEnable(GL_BLEND);
+		int samples = 0;
+		glGetIntegerv(GL_MAX_SAMPLES, &samples);
+		samples -= 1;
+		if (antialiasing > 0)
+		{
+			m_boundFramebuffer = FramebufferRes::CreateMultisample(this, 1 << antialiasing);
+		}
 
 		return true;
 	}
@@ -147,12 +154,33 @@ namespace Graphics
 		glGetIntegerv(GL_VIEWPORT, &vp.pos.x);
 		return vp;
 	}
+	uint32 OpenGL::GetFramebufferHandle()
+	{
+		if (m_boundFramebuffer)
+			return m_boundFramebuffer->Handle();
+		else
+			return GL_BACK;
+	}
+	uint32 OpenGL::GetFramebufferTextureHandle()
+	{
+		if (m_boundFramebuffer)
+			return m_boundFramebuffer->TextureHandle();
+		else
+			return 0;
+	}
+	void OpenGL::BlitFramebuffer()
+	{
+		if (m_boundFramebuffer)
+			m_boundFramebuffer->Display();
+	}
 	void OpenGL::SetViewport(Recti vp)
 	{
 		glViewport(vp.pos.x, vp.pos.y, vp.size.x, vp.size.y);
 	}
 	void OpenGL::SetViewport(Vector2i size)
 	{
+		if(m_boundFramebuffer)
+			m_boundFramebuffer->Resize(size);
 		glViewport(0, 0, size.x, size.y);
 	}
 
@@ -163,6 +191,8 @@ namespace Graphics
 
 	void OpenGL::SwapBuffers()
 	{
+		if(m_boundFramebuffer)
+			m_boundFramebuffer->Display();
 		glFlush();
 		SDL_Window* sdlWnd = (SDL_Window*)m_window->Handle();
 		SDL_GL_SwapWindow(sdlWnd);
