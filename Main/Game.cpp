@@ -1408,7 +1408,10 @@ public:
 		}
 		else if(key == SDLK_ESCAPE)
 		{
-			m_manualExit = true;
+			ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+			MapTime timePastEnd = m_lastMapTime - (*lastObj)->time;
+			if (timePastEnd < 0)
+				m_manualExit = true;
 			FinishGame();
 		}
 		else if(key == SDLK_F5) // Restart map
@@ -1433,7 +1436,11 @@ public:
 		{
 			if (g_input.Are3BTsHeld())
 			{
-				m_manualExit = true;
+				ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+				MapTime timePastEnd = m_lastMapTime - (*lastObj)->time;
+				if (timePastEnd < 0)
+					m_manualExit = true;
+
 				FinishGame();
 			}
 		}
