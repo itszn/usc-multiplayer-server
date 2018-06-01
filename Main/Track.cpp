@@ -336,8 +336,7 @@ void Track::DrawLaserBase(RenderQueue& rq, class BeatmapPlayback& playback, cons
 
 			// Get the length of this laser segment
 			Transform laserTransform = trackOrigin;
-			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position,
-				0.007f + 0.003f * laser->index }); // Small amount of elevation
+			laserTransform *= Transform::Translation(Vector3{ 0.0f, posmult * position, 0.0f });
 
 			if (laserMesh)
 			{
@@ -443,9 +442,9 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			MaterialParameterSet laserParams;
 
 			// Make not yet hittable lasers slightly glowing
-			if ((laser->GetRoot()->time + Scoring::goodHitTime) > playback.GetLastTime())
+			if (laser->GetRoot()->time > playback.GetLastTime())
 			{
-				laserParams.SetParameter("objectGlow", 0.2f);
+				laserParams.SetParameter("objectGlow", 0.4f);
 				laserParams.SetParameter("hitState", 1);
 			}
 			else

@@ -565,13 +565,7 @@ void Scoring::m_UpdateTicks()
 					if(!tick->HasFlag(TickFlags::Start) || (autoplay || autoplayButtons))
 					{
 						HoldObjectState* hos = (HoldObjectState*)tick->object;
-
-						MapTime holdStart = 0;
-						while (hos)
-						{
-							holdStart = hos->time;
-							hos = hos->prev;
-						}
+						MapTime holdStart = hos->GetRoot()->time;
 
 						// Check buttons here for holds
 						if((m_input && m_input->GetButton(button) && holdStart - goodHitTime < m_buttonHitTime[(uint8)button]) || autoplay || autoplayButtons)
@@ -707,7 +701,7 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 	{
 		HoldObjectState* hold = (HoldObjectState*)tick->object;
 		if(hold->time + hold->duration > m_playback->GetLastTime()) // Only set active hold object if object hasn't passed yet
-		m_SetHoldObject(tick->object, index);
+			m_SetHoldObject(tick->object, index);
 
 		stat->rating = ScoreHitRating::Perfect;
 		stat->hold++;
@@ -726,14 +720,7 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 			laserPositions[object->index] = object->points[1];
 			m_autoLaserTime[object->index] = m_assistTime;
 		}
-		if(m_holdObjects[object->index + 6] != *rootObject)
-		{
-			// Only set active hold object if object hasn't passed yet
-			LaserObjectState* endObject = ((LaserObjectState*)tick->object)->GetTail();
-			if(endObject->time + endObject->duration > m_playback->GetLastTime())
-				m_SetHoldObject(*rootObject, index);
-		}
-		m_SetHoldObject(*rootObject, index);
+
 		currentGauge += tickGaugeGain;
 		m_AddScore(2);
 
@@ -777,7 +764,6 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 			currentGauge -= shortMissDrain;
 		else
 			currentGauge -= shortMissDrain / 4.f;
-		m_ReleaseHoldObject(index);
 		m_autoLaserTime[obj->index] = -1.f;
 		stat->rating = ScoreHitRating::Miss;
 	}
@@ -974,6 +960,14 @@ void Scoring::m_UpdateLasers(float deltaTime)
 		// Clamp cursor between 0 and 1
 		laserPositions[i] = Math::Clamp(laserPositions[i], 0.0f, 1.0f);
 		m_autoLaserTime[i] -= deltaTime;
+		if (fabsf(laserPositions[i] - laserTargetPositions[i]) < laserDistanceLeniency && currentSegment)
+		{
+			m_SetHoldObject(*currentSegment->GetRoot(), 6 + i);
+		}
+		else
+		{
+			m_ReleaseHoldObject(6 + i);
+		}
 	}
 
 	// Interpolate laser output
@@ -1007,6 +1001,7 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 }
 void Scoring::m_OnButtonReleased(Input::Button buttonCode)
 {
+	m_ReleaseHoldObject((uint32)buttonCode);
 }
 
 MapTotals Scoring::CalculateMapTotals() const
