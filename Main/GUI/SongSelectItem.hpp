@@ -15,13 +15,13 @@ public:
 	SongSelectIndex() = default;
 	SongSelectIndex(MapIndex* map)
 		: m_map(map), m_diffs(map->difficulties),
-		id(map->id * 10)
+		id(map->selectId * 10)
 	{
 	}
 
 	SongSelectIndex(MapIndex* map, Vector<DifficultyIndex*> diffs)
 		: m_map(map), m_diffs(diffs),
-		id(map->id * 10)
+		id(map->selectId * 10)
 	{
 	}
 
@@ -38,7 +38,7 @@ public:
 			i++;
 		}
 
-		id = map->id * 10 + i + 1;
+		id = map->selectId * 10 + i + 1;
 	}
 
 	// TODO(local): likely make this a function as well

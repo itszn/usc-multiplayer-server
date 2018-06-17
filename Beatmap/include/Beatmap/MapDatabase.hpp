@@ -41,6 +41,8 @@ struct MapIndex
 {
 	// Id of this map
 	int32 id;
+	// Id of this map
+	int32 selectId;
 	// Full path to the map root folder
 	String path;
 	// List of difficulties contained within the map

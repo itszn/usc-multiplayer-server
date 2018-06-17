@@ -106,8 +106,10 @@ class SelectionWheel : public Canvas
 	Map<int32, SongSelectIndex> m_mapFilter;
 	bool m_filterSet = false;
 
-	// Currently selected map ID
+	// Currently selected selection ID
 	int32 m_currentlySelectedId = 0;
+	// Currently selected map ID
+	int32 m_currentlySelectedMapId = 0;
 	// Currently selected sub-widget
 	Ref<SongSelectItem> m_currentSelection;
 
@@ -120,6 +122,10 @@ class SelectionWheel : public Canvas
 public:
 	SelectionWheel(Ref<SongSelectStyle> style) : m_style(style)
 	{
+	}
+	~SelectionWheel()
+	{
+		g_gameConfig.Set(GameConfigKeys::LastSelected, m_currentlySelectedMapId);
 	}
 	void OnMapsAdded(Vector<MapIndex*> maps)
 	{
@@ -136,7 +142,7 @@ public:
 		for(auto m : maps)
 		{
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
-			SongSelectIndex index = m_maps.at(m->id * 10);
+			SongSelectIndex index = m_maps.at(m->selectId * 10);
 			m_maps.erase(index.id);
 
 			auto it = m_guiElements.find(index.id);
@@ -161,7 +167,7 @@ public:
 		for(auto m : maps)
 		{
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
-			SongSelectIndex index = m_maps.at(m->id * 10);
+			SongSelectIndex index = m_maps.at(m->selectId * 10);
 
 			auto it = m_guiElements.find(index.id);
 			if(it != m_guiElements.end())
@@ -204,6 +210,18 @@ public:
 		std::advance(it, selection);
 		SelectMap(it->first);
 	}
+	void SelectByMapId(uint32 id)
+	{
+		for (const auto& it : m_SourceCollection())
+		{
+			if (it.second.GetMap()->id == id)
+			{
+				SelectMap(it.first);
+				break;
+			}
+		}
+	}
+
 	void SelectMap(int32 newIndex)
 	{
 		Set<int32> visibleIndices;
@@ -214,9 +232,8 @@ public:
 			const float initialSpacing = 0.65f * m_style->frameMain->GetSize().y;
 			const float spacing = 0.8f * m_style->frameSub->GetSize().y;
 			const Anchor anchor = Anchor(0.0f, 0.5f, 1.0f, 0.5f);
-
 			static const int32 numItems = 10;
-
+			m_currentlySelectedMapId = it->second.GetMap()->id;
 			int32 istart;
 			for(istart = 0; istart > -numItems;)
 			{
@@ -282,7 +299,7 @@ public:
 			}
 		}
 		m_currentlySelectedId = newIndex;
-
+		
 		// Cleanup invisible elements
 		for(auto it = m_guiElements.begin(); it != m_guiElements.end();)
 		{
@@ -471,6 +488,14 @@ public:
 			AddFilter(new LevelFilter(i), FilterType::Level);
 		}
 	}
+	~FilterSelection()
+	{
+		g_gameConfig.Set(GameConfigKeys::FolderFilter, m_currentFolderSelection);
+		g_gameConfig.Set(GameConfigKeys::LevelFilter, m_currentLevelSelection);
+		m_levelFilters.clear();
+		m_folderFilters.clear();
+		m_guiElements.clear();
+	}
 
 	bool Active = false;
 
@@ -505,16 +530,6 @@ public:
 		labelSlot->autoSizeY = true;
 		labelSlot->anchor = Anchors::MiddleLeft;
 		labelSlot->alignment = Vector2(0.f, 0.5f);
-		if (type == FilterType::Level)
-		{
-			m_currentLevelSelection = 0;
-			SelectFilter(m_levelFilters[0], FilterType::Level);
-		}
-		else
-		{
-			m_currentFolderSelection = 0;
-			SelectFilter(m_folderFilters[0], FilterType::Folder);
-		}
 	}
 
 	void SelectFilter(SongFilter* filter, FilterType type)
@@ -541,6 +556,7 @@ public:
 		}
 		else
 		{
+			g_gameConfig.Set(GameConfigKeys::LevelFilter, int32(std::find(m_levelFilters.begin(), m_levelFilters.end(), filter) - m_levelFilters.begin()));
 			for (size_t i = 0; i < m_levelFilters.size(); i++)
 			{
 				Vector2 coordinate = Vector2(50, 0);
@@ -556,6 +572,29 @@ public:
 
 		m_currentFilters[t] = filter;
 		m_selectionWheel->SetFilter(m_currentFilters);
+	}
+
+	void SetFiltersByIndex(uint32 level, uint32 folder)
+	{
+		if (level >= m_levelFilters.size())
+		{
+			Log("LevelFilter out of range.", Logger::Severity::Error);
+		}
+		else
+		{
+			m_currentLevelSelection = level;
+			SelectFilter(m_levelFilters[level], FilterType::Level);
+		}
+
+		if (folder >= m_folderFilters.size())
+		{
+			Log("FolderFilter out of range.", Logger::Severity::Error);
+		}
+		else
+		{
+			m_currentFolderSelection = folder;
+			SelectFilter(m_folderFilters[folder], FilterType::Folder);
+		}
 	}
 
 	void AdvanceSelection(int32 offset)
@@ -864,7 +903,6 @@ public:
 			slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
 		}
 		m_filterSelection->SetMapDB(&m_mapDatabase);
-
 		// Select interface sound
 		m_selectSound = g_audio->CreateSample("audio/menu_click.wav");
 
@@ -877,7 +915,8 @@ public:
 		m_mapDatabase.OnMapsCleared.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsCleared);
 		m_mapDatabase.StartSearching();
 
-		m_selectionWheel->SelectRandom();
+		m_filterSelection->SetFiltersByIndex(g_gameConfig.GetInt(GameConfigKeys::LevelFilter), g_gameConfig.GetInt(GameConfigKeys::FolderFilter));
+		m_selectionWheel->SelectByMapId(g_gameConfig.GetInt(GameConfigKeys::LastSelected));
 
 		/// TODO: Check if debugmute is enabled
 		g_audio->SetGlobalVolume(g_gameConfig.GetFloat(GameConfigKeys::MasterVolume));
@@ -890,6 +929,8 @@ public:
 		m_mapDatabase.OnMapsCleared.Clear();
 		g_input.OnButtonPressed.RemoveAll(this);
 		g_input.OnButtonReleased.RemoveAll(this);
+		m_selectionWheel.Destroy();
+		m_filterSelection.Destroy();
 	}
 
 	// When a map is selected in the song wheel
@@ -1010,7 +1051,6 @@ public:
         }
 		else    
 		{
-			List<SongFilter*> filters;
 			switch (buttonCode)
 			{
 			case Input::Button::BT_0:

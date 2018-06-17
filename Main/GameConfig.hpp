@@ -72,7 +72,11 @@ DefineEnum(GameConfigKeys,
 	Controller_Laser0Axis,
 	Controller_Laser1Axis,
 	Controller_Deadzone,
-	Controller_Sensitivity
+	Controller_Sensitivity,
+
+	LastSelected,
+	LevelFilter,
+	FolderFilter
 	);
 
 // Config for game settings

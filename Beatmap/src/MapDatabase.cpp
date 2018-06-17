@@ -28,6 +28,7 @@ public:
 	Map<String, MapIndex*> m_mapsByPath;
 	int32 m_nextMapId = 1;
 	int32 m_nextDiffId = 1;
+	String m_sortField = "title";
 
 	struct SearchState
 	{
@@ -279,6 +280,7 @@ public:
 					map = new MapIndex();
 					map->id = m_nextMapId++;
 					map->path = mapPath;
+					map->selectId = m_maps.size();
 
 					m_maps.Add(map->id, map);
 					m_mapsByPath.Add(map->path, map);
@@ -498,12 +500,13 @@ private:
 		m_CleanupMapIndex();
 
 		// Select Maps
-		DBStatement mapScan = m_database.Query("SELECT rowid,path FROM Maps");
+		DBStatement mapScan = m_database.Query("SELECT rowid,path FROM Maps ORDER BY " + m_sortField);
 		while(mapScan.StepRow())
 		{
 			MapIndex* map = new MapIndex();
 			map->id = mapScan.IntColumn(0);
 			map->path = mapScan.StringColumn(1);
+			map->selectId = m_maps.size();
 			m_maps.Add(map->id, map);
 			m_mapsByPath.Add(map->path, map);
 		}
