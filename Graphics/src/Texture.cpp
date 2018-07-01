@@ -31,15 +31,7 @@ namespace Graphics
 		}
 		bool Init()
 		{
-			#ifdef __APPLE__
 			glGenTextures(1, &m_texture);
-			#else
-			if(glCreateTextures)
-				glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
-			else
-				glGenTextures(1, &m_texture);
-			#endif
-
 			if(m_texture == 0)
 				return false;
 			return true;
@@ -69,15 +61,9 @@ namespace Graphics
 				assert(false);
 			}
 
-			#ifdef __APPLE__
-			Bind(m_texture);
-			glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, size.x, size.y);
-			#else
-			if(glTextureStorage2D)
-				glTextureStorage2D(m_texture, 1, GL_RGBA8, size.x, size.y);
-			else
-				glTextureImage2DEXT(m_texture, GL_TEXTURE_2D, 0, ifmt, size.x, size.y, 0, fmt, type, nullptr);
-			#endif
+			glBindTexture(GL_TEXTURE_2D, m_texture);
+			glTexImage2D(GL_TEXTURE_2D, 0, ifmt, size.x, size.y, 0, fmt, type, nullptr);
+			glBindTexture(GL_TEXTURE_2D, 0);
 
 			UpdateFilterState();
 			UpdateWrap();
@@ -106,30 +92,16 @@ namespace Graphics
 			m_format = TextureFormat::RGBA8;
 			m_size = size;
 			m_data = pData;
-
-			#ifdef __APPLE__
-			Bind(m_texture);
-			glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_size.x, m_size.y);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, pData);
-			#else
-			if (glTextureStorage2D)
-			{
-				glTextureStorage2D(m_texture, 1, GL_RGBA8, m_size.x, m_size.y);
-				glTextureSubImage2D(m_texture, 0, 0, 0, m_size.x, m_size.y, GL_RGBA, GL_UNSIGNED_BYTE, pData);
-			}
-			else
-			{
-				glTextureImage2DEXT(m_texture, GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pData);
-			}
-			#endif
+			glBindTexture(GL_TEXTURE_2D, m_texture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+			glBindTexture(GL_TEXTURE_2D, 0);
 
 			UpdateFilterState();
 			UpdateWrap();
 		}
 		void UpdateFilterState()
 		{
-			#ifdef __APPLE__
-			Bind(m_texture);
+			glBindTexture(GL_TEXTURE_2D, m_texture);
 			if(!m_mipmaps)
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
@@ -147,48 +119,7 @@ namespace Graphics
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_anisotropic);
 			}
-			#else
-			if(glTextureParameteri)
-			{
-				if(!m_mipmaps)
-				{
-					glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-					glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-				}
-				else
-				{
-					if(m_mipFilter)
-						glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR);
-					else
-						glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-					glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-				}
-				if(GL_TEXTURE_MAX_ANISOTROPY_EXT)
-				{
-					glTextureParameteri(m_texture, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_anisotropic);
-				}
-			}
-			else /* Sigh */
-			{
-				if (!m_mipmaps)
-				{
-					glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-					glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-				}
-				else
-				{
-					if (m_mipFilter)
-						glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR);
-					else
-						glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_filter ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST);
-					glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_filter ? GL_LINEAR : GL_NEAREST);
-				}
-				if (GL_TEXTURE_MAX_ANISOTROPY_EXT)
-				{
-					glTextureParameterfEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, m_anisotropic);
-				}
-			}
-			#endif
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 		virtual void SetFilter(bool enabled, bool mipFiltering, float anisotropic)
 		{
@@ -202,15 +133,9 @@ namespace Graphics
 		{
 			if(enabled)
 			{
-				#ifdef __APPLE__
-				Bind(m_texture);
+				glBindTexture(GL_TEXTURE_2D, m_texture);
 				glGenerateMipmap(GL_TEXTURE_2D);
-				#else
-				if(glGenerateTextureMipmap)
-					glGenerateTextureMipmap(m_texture);
-				else
-					glGenerateTextureMipmapEXT(m_texture, GL_TEXTURE_2D);
-				#endif
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 			m_mipmaps = enabled;
 			UpdateFilterState();
@@ -221,19 +146,9 @@ namespace Graphics
 		}
 		virtual void Bind(uint32 index)
 		{
-			#ifdef __APPLE__
+			glActiveTexture(GL_TEXTURE0 + index);
 			glBindTexture(GL_TEXTURE_2D, m_texture);
-			#else
-			if (glBindTextureUnit)
-			{
-				glBindTextureUnit(index, m_texture);
-			}
-			else
-			{
-				glActiveTexture(GL_TEXTURE0 + index);
-				glBindTexture(GL_TEXTURE_2D, m_texture);
-			}
-			#endif
+
 		}
 		virtual uint32 Handle()
 		{
@@ -255,22 +170,10 @@ namespace Graphics
 				GL_CLAMP_TO_EDGE,
 			};
 
-			#ifdef __APPLE__
-			Bind(m_texture);
+			glBindTexture(GL_TEXTURE_2D, m_texture);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wmode[(size_t)m_wmode[0]]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wmode[(size_t)m_wmode[1]]);
-			#else
-			if (glTextureParameteri)
-			{
-				glTextureParameteri(m_texture, GL_TEXTURE_WRAP_S, wmode[(size_t)m_wmode[0]]);
-				glTextureParameteri(m_texture, GL_TEXTURE_WRAP_T, wmode[(size_t)m_wmode[1]]);
-			}
-			else
-			{
-				glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wmode[(size_t)m_wmode[0]]);
-				glTextureParameteriEXT(m_texture, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wmode[(size_t)m_wmode[1]]);
-			}
-			#endif
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		TextureFormat GetFormat() const

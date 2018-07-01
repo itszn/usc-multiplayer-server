@@ -247,23 +247,11 @@ namespace Graphics
 						//Logf("Texture not found \"%s\"", Logger::Warning, p.first);
 						break;
 					}
-					uint32 texture = p.second.Get<int32>();
+					Ref<TextureRes> texture = p.second.Get<Ref<TextureRes>>();
 
 					// Bind the texture
-					#ifdef __APPLE__
-					glActiveTexture(GL_TEXTURE0 + *textureUnit);
-					glBindTexture(GL_TEXTURE_2D, texture);
-					#else
-					if (glBindTextureUnit)
-					{
-						glBindTextureUnit(*textureUnit, texture);
-					}
-					else
-					{
-						glActiveTexture(GL_TEXTURE0 + *textureUnit);
-						glBindTexture(GL_TEXTURE_2D, texture);
-					}
-					#endif
+					texture->Bind(*textureUnit);
+
 
 					// Bind sampler
 					BindAll<int32>(p.first, *textureUnit);
@@ -428,7 +416,7 @@ namespace Graphics
 	}
 	void MaterialParameterSet::SetParameter(const String& name, Ref<class TextureRes> tex)
 	{
-		Add(name, MaterialParameter::Create(tex->Handle(), GL_SAMPLER_2D));
+		Add(name, MaterialParameter::Create(tex, GL_SAMPLER_2D));
 	}
 	void MaterialParameterSet::SetParameter(const String& name, const Vector2i& vec2)
 	{
