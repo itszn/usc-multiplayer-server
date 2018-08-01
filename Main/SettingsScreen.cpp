@@ -657,7 +657,7 @@ public:
 
 			g_application->RemoveTickable(this);
 		}
-		else if (m_completed)
+		else if (m_completed && !m_knobs)
 		{
 			g_application->RemoveTickable(this);
 		}
