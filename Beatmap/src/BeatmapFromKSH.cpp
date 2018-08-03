@@ -542,7 +542,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			&tick == &block.ticks.back();
 
 		// flag set when a new effect parameter is set and a new hold notes should be created
-		bool splitupHoldNotes = false;
+		bool splitupHoldNotes[2] = { false, false };
 
 		// Process settings
 		for (auto& p : tick.settings)
@@ -637,22 +637,22 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			else if (p.first == "fx-l") // KSH 1.6
 			{
 				currentButtonEffectTypes[0] = ParseFXAndParameters(p.second, currentButtonEffectParams);
-				splitupHoldNotes = true;
+				splitupHoldNotes[0] = true;
 			}
 			else if (p.first == "fx-r") // KSH 1.6
 			{
 				currentButtonEffectTypes[1] = ParseFXAndParameters(p.second, currentButtonEffectParams + maxEffectParamsPerButtons);
-				splitupHoldNotes = true;
+				splitupHoldNotes[1] = true;
 			}
 			else if (p.first == "fx-l_param1")
 			{
 				currentButtonEffectParams[0] = atoi(*p.second);
-				splitupHoldNotes = true;
+				splitupHoldNotes[0] = true;
 			}
 			else if (p.first == "fx-r_param1")
 			{
 				currentButtonEffectParams[maxEffectParamsPerButtons] = atoi(*p.second);
-				splitupHoldNotes = true;
+				splitupHoldNotes[1] = true;
 			}
 			else if (p.first == "filtertype")
 			{
@@ -803,7 +803,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			};
 
 			// Split up multiple hold notes
-			if (IsHoldState() && splitupHoldNotes)
+			if (i > 3 && IsHoldState() && splitupHoldNotes[i-4])
 			{
 				CreateButton();
 			}

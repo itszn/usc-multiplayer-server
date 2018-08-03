@@ -371,16 +371,24 @@ void Scoring::m_CalculateHoldTicks(HoldObjectState* hold, Vector<MapTime>& ticks
 	const TimingPoint* tp = m_playback->GetTimingPointAt(hold->time);
 
 	// Tick rate based on BPM
-	const double tickNoteValue = 16 / (pow(2, Math::Max((int)(log2(tp->GetBPM())) - 7, 0)));
-	const double tickInterval = tp->GetWholeNoteLength() / tickNoteValue;
+	double tickNoteValue = 16 / (pow(2, Math::Max((int)(log2(tp->GetBPM())) - 7, 0)));
+	double tickInterval = tp->GetWholeNoteLength() / tickNoteValue;
 
-	uint32 numTicks = (uint32)Math::Floor((double)hold->duration / tickInterval);
-	if(numTicks < 1)
-		numTicks = 1; // At least 1 tick at the start
-
-	for(uint32 i = 0; i < numTicks; i++)
+	double tickpos = hold->time;
+	if (!hold->prev) // no tick at the very start of a hold
 	{
-		ticks.Add((MapTime)((double)hold->time + tickInterval * (double)i));
+		tickpos += tickInterval;
+	}	
+	while (tickpos < hold->time + hold->duration - tickInterval)
+	{
+		ticks.Add((MapTime)tickpos);
+		tickNoteValue = 16 / (pow(2, Math::Max((int)(log2(tp->GetBPM())) - 7, 0)));
+		tickInterval = tp->GetWholeNoteLength() / tickNoteValue;
+		tickpos += tickInterval;
+	}
+	if (ticks.size() == 0)
+	{
+		ticks.Add(hold->time + (hold->duration / 2));
 	}
 }
 void Scoring::m_CalculateLaserTicks(LaserObjectState* laserRoot, Vector<ScoreTick>& ticks) const
@@ -560,19 +568,14 @@ void Scoring::m_UpdateTicks()
 
 				if(tick->HasFlag(TickFlags::Hold))
 				{
-					// Ignore the first hold note ticks
-					//	except for autoplay, which just hits it.
-					if(!tick->HasFlag(TickFlags::Start) || (autoplay || autoplayButtons))
-					{
-						HoldObjectState* hos = (HoldObjectState*)tick->object;
-						MapTime holdStart = hos->GetRoot()->time;
+					HoldObjectState* hos = (HoldObjectState*)tick->object;
+					MapTime holdStart = hos->GetRoot()->time;
 
-						// Check buttons here for holds
-						if((m_input && m_input->GetButton(button) && holdStart - goodHitTime < m_buttonHitTime[(uint8)button]) || autoplay || autoplayButtons)
-						{							
-							m_TickHit(tick, buttonCode);
-							processed = true;
-						}
+					// Check buttons here for holds
+					if((m_input && m_input->GetButton(button) && holdStart - goodHitTime < m_buttonHitTime[(uint8)button]) || autoplay || autoplayButtons)
+					{							
+						m_TickHit(tick, buttonCode);
+						processed = true;
 					}
 				}
 				else if(tick->HasFlag(TickFlags::Laser))
@@ -651,7 +654,15 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 
 		if(tick->HasFlag(TickFlags::Laser))
 		{
-			// Ignore laser ticks
+			// Ignore laser and hold ticks
+			continue;
+		}
+		else if (tick->HasFlag(TickFlags::Hold))
+		{
+			HoldObjectState* hos = (HoldObjectState*)hitObject;
+			hos = hos->GetRoot();
+			if(hos->time - Scoring::goodHitTime <= currentTime + m_inputOffset)
+				m_SetHoldObject(hitObject, buttonCode);
 			continue;
 		}
 		if(abs(delta) <= Scoring::goodHitTime)
