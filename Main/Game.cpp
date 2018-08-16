@@ -791,6 +791,7 @@ public:
 			sb->AddSetting(&m_camera.cameraShakeX, -3.0f, 3.0f, "Screen Shake X");
 			sb->AddSetting(&m_camera.cameraShakeY, -3.0f, 3.0f, "Screen Shake Y");
 			sb->AddSetting(&m_camera.cameraShakeZ, -3.0f, 3.0f, "Screen Shake Z");
+			sb->AddSetting(m_audioPlayback.GetPlaybackSpeedPtr(), 0.01f, 2.0f, "Playback Speed");
 			m_settingsBar->SetShow(false);
 
 			Canvas::Slot* settingsSlot = m_canvas->Add(sb->MakeShared());

@@ -117,6 +117,8 @@ void Scoring::Reset()
 
 	// Get input offset
 	m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
+	// Get bounce guard duration
+	m_bounceGuard = g_gameConfig.GetInt(GameConfigKeys::InputBounceGuard);
 	// Get laser assist level
 	m_assistLevel = g_gameConfig.GetFloat(GameConfigKeys::LaserAssistLevel);
 	// Recalculate maximum score
@@ -993,6 +995,10 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 
 	if(buttonCode < Input::Button::BT_S)
 	{
+		int32 guardDelta = m_playback->GetLastTime() - m_buttonHitTime[(uint32)buttonCode];
+		if (guardDelta < m_bounceGuard && guardDelta > 0)
+			return;
+
 		m_buttonHitTime[(uint32)buttonCode] = m_playback->GetLastTime();
 		ObjectState* obj = m_ConsumeTick((uint32)buttonCode);
 		if(!obj)

@@ -88,6 +88,9 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::Mouse_Laser1Axis, 1);
 	Set(GameConfigKeys::Mouse_Sensitivity, 1.0f);
 
+	// Default to 0ms input bounce guard
+	Set(GameConfigKeys::InputBounceGuard, 0);
+
 	Set(GameConfigKeys::LastSelected, 0);
 	Set(GameConfigKeys::LevelFilter, 0);
 	Set(GameConfigKeys::FolderFilter, 0);

@@ -264,12 +264,13 @@ private:
 	// Decides if the coming tick should be auto completed
 	float m_autoLaserTime[2] = { 0,0 };
 	// Saves the time when a button was hit, used to decide if a button was held before a hold object was active
-	MapTime m_buttonHitTime[6] = { -1,-1,-1,-1,-1,-1 };
+	MapTime m_buttonHitTime[6] = { 0, 0, 0, 0, 0, 0 };
 	// Max number of ticks to assist
 	float m_assistLevel = 1.5f;
 	float m_assistTime = 0.0f;
 	// Offet to use for calculating judge (ms)
 	uint32 m_inputOffset = 0;
+	int32 m_bounceGuard = 0;
 
 	// used the update the amount of hit ticks for hold/laser notes
 	Map<ObjectState*, HitStat*> m_holdHitStats;

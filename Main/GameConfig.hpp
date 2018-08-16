@@ -73,6 +73,7 @@ DefineEnum(GameConfigKeys,
 	Controller_Laser1Axis,
 	Controller_Deadzone,
 	Controller_Sensitivity,
+	InputBounceGuard,
 
 	LastSelected,
 	LevelFilter,
