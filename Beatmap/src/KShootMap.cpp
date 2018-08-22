@@ -96,7 +96,9 @@ bool KShootMap::Init(BinaryStream& input, bool metadataOnly)
 			break;
 		}
 		String k, v;
-		if(line.empty())
+		if (line.empty())
+			continue;
+		if (line.substr(0, 2).compare("//") == 0)
 			continue;
 		if(!line.Split("=", &k, &v))
 			return false;
@@ -130,6 +132,8 @@ bool KShootMap::Init(BinaryStream& input, bool metadataOnly)
 		else
 		{
 			if(line.empty())
+				continue;
+			if (line.substr(0, 2).compare("//") == 0)
 				continue;
 
 			String k, v;

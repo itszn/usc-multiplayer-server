@@ -265,6 +265,8 @@ private:
 	float m_autoLaserTime[2] = { 0,0 };
 	// Saves the time when a button was hit, used to decide if a button was held before a hold object was active
 	MapTime m_buttonHitTime[6] = { 0, 0, 0, 0, 0, 0 };
+	// Saves the time when a button was hit or released for bounce guarding
+	MapTime m_buttonGuardTime[6] = { 0, 0, 0, 0, 0, 0 };
 	// Max number of ticks to assist
 	float m_assistLevel = 1.5f;
 	float m_assistTime = 0.0f;

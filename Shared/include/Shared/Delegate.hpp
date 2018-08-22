@@ -84,8 +84,8 @@ public:
 			{
 				delete f.second;
 			}
+			objectMap.erase(it);
 		}
-		objectMap.erase(it);
 	}
 
 	// Removes all handlers

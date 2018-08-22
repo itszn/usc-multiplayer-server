@@ -995,11 +995,12 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 
 	if(buttonCode < Input::Button::BT_S)
 	{
-		int32 guardDelta = m_playback->GetLastTime() - m_buttonHitTime[(uint32)buttonCode];
+		int32 guardDelta = m_playback->GetLastTime() - m_buttonGuardTime[(uint32)buttonCode];
 		if (guardDelta < m_bounceGuard && guardDelta > 0)
 			return;
 
 		m_buttonHitTime[(uint32)buttonCode] = m_playback->GetLastTime();
+		m_buttonGuardTime[(uint32)buttonCode] = m_playback->GetLastTime();
 		ObjectState* obj = m_ConsumeTick((uint32)buttonCode);
 		if(!obj)
 		{
@@ -1018,6 +1019,14 @@ void Scoring::m_OnButtonPressed(Input::Button buttonCode)
 }
 void Scoring::m_OnButtonReleased(Input::Button buttonCode)
 {
+	if (buttonCode < Input::Button::BT_S)
+	{
+		int32 guardDelta = m_playback->GetLastTime() - m_buttonGuardTime[(uint32)buttonCode];
+		if (guardDelta < m_bounceGuard && guardDelta > 0)
+			return;
+		m_buttonGuardTime[(uint32)buttonCode] = m_playback->GetLastTime();
+	}
+
 	m_ReleaseHoldObject((uint32)buttonCode);
 }
 
