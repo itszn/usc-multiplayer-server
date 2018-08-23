@@ -17,6 +17,9 @@
 #include <GUI/Canvas.hpp>
 #include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
+#include "nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg_gl.h"
 #ifdef _WIN32
 #include "SDL_keycode.h"
 #else
@@ -25,6 +28,7 @@
 
 GameConfig g_gameConfig;
 OpenGL* g_gl = nullptr;
+NVGcontext* g_vg = nullptr;
 Graphics::Window* g_gameWindow = nullptr;
 Application* g_application = nullptr;
 JobSheduler* g_jobSheduler = nullptr;
@@ -276,6 +280,9 @@ bool Application::m_Init()
 			Log("Failed to create OpenGL context", Logger::Error);
 			return false;
 		}
+		g_vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.ttf");
+
 	}
 
 	// call the initial OnWindowResized now that we have intialized OpenGL
@@ -437,7 +444,7 @@ void Application::m_Tick()
 	{
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
-
+		nvgBeginFrame(g_vg, g_resolution.x, g_resolution.y, 1.0);
 		// Render all items
 		for(auto& tickable : g_tickables)
 		{
@@ -446,7 +453,13 @@ void Application::m_Tick()
 
 		// Time to render GUI
 		g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
-
+		nvgBeginPath(g_vg);
+		nvgFontFace(g_vg, "fallback");
+		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
+		nvgFontSize(g_vg, 20);
+		nvgFillColor(g_vg, nvgRGB(0, 200, 255));
+		nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 5, "nanovg branch", 0);
+		nvgEndFrame(g_vg);
 		// Swap buffers
 		g_gl->SwapBuffers();
 	}

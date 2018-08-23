@@ -2,6 +2,7 @@
 #include <Audio/Sample.hpp>
 
 extern class OpenGL* g_gl;
+extern class NVGcontext* g_vg;
 extern class Graphics::Window* g_gameWindow;
 extern float g_aspectRatio;
 extern Vector2i g_resolution;

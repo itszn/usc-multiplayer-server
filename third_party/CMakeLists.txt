@@ -1,6 +1,11 @@
 # All third party libraries
 cmake_minimum_required(VERSION 3.4)
 
+#nanovg
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src)
+add_library(nanovg nanovg/src/nanovg.c)
+target_include_directories(nanovg PUBLIC nanovg/src)
+
 if(WIN32)
 	# Use bundled third party libraries on windows
 	add_subdirectory(freetype)
