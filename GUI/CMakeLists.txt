@@ -15,4 +15,5 @@ target_include_directories(GUI PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Dependencies
 target_link_libraries(GUI Shared)
+target_link_libraries(GUI nanovg)
 target_link_libraries(GUI Graphics)

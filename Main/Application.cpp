@@ -12,10 +12,7 @@
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
 #include "GameConfig.hpp"
-#include <GUI/GUIRenderer.hpp>
 #include "Input.hpp"
-#include <GUI/Canvas.hpp>
-#include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
 #include "nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
@@ -294,22 +291,22 @@ bool Application::m_Init()
 		ProfilerScope $1("GUI Init");
 
 		// GUI Rendering
-		g_guiRenderer = new GUIRenderer();
-		if (!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
-		{
-			Logf("Failed to initialize GUI renderer", Logger::Error);
-			return false;
-		}
+		//g_guiRenderer = new GUIRenderer();
+		//if (!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
+		//{
+		//	Logf("Failed to initialize GUI renderer", Logger::Error);
+		//	return false;
+		//}
 	}
 
 	{
 		ProfilerScope $1("Loading common GUI elements");
 		// Load GUI style for common elements
-		g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
+		//g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
 	}
 
 	// Create root canvas
-	g_rootCanvas = Ref<Canvas>(new Canvas());
+	//g_rootCanvas = Ref<Canvas>(new Canvas());
 
 	return true;
 }
@@ -452,7 +449,7 @@ void Application::m_Tick()
 		}
 
 		// Time to render GUI
-		g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
+		//g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
 		nvgBeginPath(g_vg);
 		nvgFontFace(g_vg, "fallback");
 		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);

@@ -10,13 +10,6 @@
 #include "Track.hpp"
 #include "Camera.hpp"
 #include "Background.hpp"
-#include <GUI/GUI.hpp>
-#include <GUI/CommonGUIStyle.hpp>
-#include <GUI/Button.hpp>
-#include <GUI/Slider.hpp>
-#include <GUI/ScrollBox.hpp>
-#include <GUI/SettingsBar.hpp>
-#include <GUI/Spinner.hpp>
 #include "HealthGauge.hpp"
 #include "Shared/Jobs.hpp"
 #include "ScoreScreen.hpp"
@@ -48,51 +41,51 @@ public:
 	bool Init()
 	{
 		m_guiStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
-		
-		//GUI Buttons
-		{
-			LayoutBox* box = new LayoutBox();
-			Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
-			slot->anchor = Anchor(0.5f, 0.5f);
-			slot->autoSizeX = true;
-			slot->autoSizeY = true;
-			slot->alignment = Vector2(0.5, 0.5);
+		//m_canvas = Utility::MakeRef(new Canvas());
+		//
+		////GUI Buttons
+		//{
+		//	LayoutBox* box = new LayoutBox();
+		//	Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
+		//	slot->anchor = Anchor(0.5f, 0.5f);
+		//	slot->autoSizeX = true;
+		//	slot->autoSizeY = true;
+		//	slot->alignment = Vector2(0.5, 0.5);
 
-			
-			box->layoutDirection = LayoutBox::Vertical;
+		//	
+		//	box->layoutDirection = LayoutBox::Vertical;
 
-			Label* titleLabel = new Label();
-			titleLabel->SetText(L"unnamed_sdvx_clone");
-			titleLabel->SetFontSize(100);
-			box->Add(titleLabel->MakeShared());
+		//	Label* titleLabel = new Label();
+		//	titleLabel->SetText(L"unnamed_sdvx_clone");
+		//	titleLabel->SetFontSize(100);
+		//	box->Add(titleLabel->MakeShared());
 
-			LayoutBox::Slot* btnSlot;
-			Button* startBtn = new Button(m_guiStyle);
-			startBtn->OnPressed.Add(this, &TitleScreen_Impl::Start);
-			startBtn->SetText(L"Start");
-			startBtn->SetFontSize(32);
-			btnSlot = box->Add(startBtn->MakeShared());
-			btnSlot->padding = Margin(2);
-			btnSlot->fillX = true;
-			
-			Button* settingsBtn = new Button(m_guiStyle);
-			settingsBtn->OnPressed.Add(this, &TitleScreen_Impl::Settings);
-			settingsBtn->SetText(L"Settings");
-			settingsBtn->SetFontSize(32);
-			btnSlot = box->Add(settingsBtn->MakeShared());
-			btnSlot->padding = Margin(2);
-			btnSlot->fillX = true;
+		//	LayoutBox::Slot* btnSlot;
+		//	Button* startBtn = new Button(m_guiStyle);
+		//	startBtn->OnPressed.Add(this, &TitleScreen_Impl::Start);
+		//	startBtn->SetText(L"Start");
+		//	startBtn->SetFontSize(32);
+		//	btnSlot = box->Add(startBtn->MakeShared());
+		//	btnSlot->padding = Margin(2);
+		//	btnSlot->fillX = true;
+		//	
+		//	Button* settingsBtn = new Button(m_guiStyle);
+		//	settingsBtn->OnPressed.Add(this, &TitleScreen_Impl::Settings);
+		//	settingsBtn->SetText(L"Settings");
+		//	settingsBtn->SetFontSize(32);
+		//	btnSlot = box->Add(settingsBtn->MakeShared());
+		//	btnSlot->padding = Margin(2);
+		//	btnSlot->fillX = true;
 
-			Button* exitBtn = new Button(m_guiStyle);
-			exitBtn->OnPressed.Add(this, &TitleScreen_Impl::Exit);
-			exitBtn->SetText(L"Exit");
-			exitBtn->SetFontSize(32);
-			btnSlot = box->Add(exitBtn->MakeShared());
-			btnSlot->padding = Margin(2);
-			btnSlot->fillX = true;
+		//	Button* exitBtn = new Button(m_guiStyle);
+		//	exitBtn->OnPressed.Add(this, &TitleScreen_Impl::Exit);
+		//	exitBtn->SetText(L"Exit");
+		//	exitBtn->SetFontSize(32);
+		//	btnSlot = box->Add(exitBtn->MakeShared());
+		//	btnSlot->padding = Margin(2);
+		//	btnSlot->fillX = true;
 
-		}
+		//}
 
 		return true;
 	}
@@ -103,12 +96,12 @@ public:
 
 	virtual void OnSuspend()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 		g_gameWindow->SetCursorVisible(true);
 	}
 

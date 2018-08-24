@@ -5,7 +5,6 @@
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
 #include "Input.hpp"
-#include <GUI/GUI.hpp>
 #include "Game.hpp"
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
@@ -98,7 +97,7 @@ const float PreviewPlayer::m_fadeDuration = 0.5f;
 /*
 	Song selection wheel
 */
-class SelectionWheel : public Canvas
+class SelectionWheel
 {
 	// keyed on SongSelectIndex::id
 	Map<int32, Ref<SongSelectItem>> m_guiElements;
@@ -153,7 +152,6 @@ public:
 					m_currentSelection.Release();
 
 				// Remove this item from the canvas that displays the items
-				Remove(it->second.As<GUIElementBase>());
 				m_guiElements.erase(it);
 			}
 		}
@@ -181,7 +179,7 @@ public:
 		m_currentSelection.Release();
 		for(auto g : m_guiElements)
 		{
-			Remove(g.second.As<GUIElementBase>());
+			//Remove(g.second.As<GUIElementBase>());
 		}
 		m_guiElements.clear();
 		m_filterSet = false;
@@ -231,7 +229,6 @@ public:
 		{
 			const float initialSpacing = 0.65f * m_style->frameMain->GetSize().y;
 			const float spacing = 0.8f * m_style->frameSub->GetSize().y;
-			const Anchor anchor = Anchor(0.0f, 0.5f, 1.0f, 0.5f);
 			static const int32 numItems = 10;
 			m_currentlySelectedMapId = it->second.GetMap()->id;
 			int32 istart;
@@ -261,28 +258,27 @@ public:
 						offset = initialSpacing * Math::Sign(i) +
 							spacing * (i - Math::Sign(i));
 					}
-					Canvas::Slot* slot = Add(item.As<GUIElementBase>());
 
 					int32 z = -abs(i);
-					slot->SetZOrder(z);
+					//slot->SetZOrder(z);
 
-					slot->anchor = anchor;
-					slot->autoSizeX = true;
-					slot->autoSizeY = true;
-					slot->alignment = Vector2(0, 0.5f);
+					//slot->anchor = anchor;
+					//slot->autoSizeX = true;
+					//slot->autoSizeY = true;
+					//slot->alignment = Vector2(0, 0.5f);
 					if(newItem)
 					{
 						// Hard set target position
-						slot->offset.pos = Vector2(0, offset);
-						slot->offset.size.x = z * 50.0f;
+						//slot->offset.pos = Vector2(0, offset);
+						//slot->offset.size.x = z * 50.0f;
 					}
 					else
 					{
 						// Animate towards target position
-						item->AddAnimation(Ref<IGUIAnimation>(
-							new GUIAnimation<Vector2>(&slot->offset.pos, Vector2(0, offset), 0.1f)), true);
-						item->AddAnimation(Ref<IGUIAnimation>(
-							new GUIAnimation<float>(&slot->offset.size.x, z * 50.0f, 0.1f)), true);
+						//item->AddAnimation(Ref<IGUIAnimation>(
+						//	new GUIAnimation<Vector2>(&slot->offset.pos, Vector2(0, offset), 0.1f)), true);
+						//item->AddAnimation(Ref<IGUIAnimation>(
+						//	new GUIAnimation<float>(&slot->offset.size.x, z * 50.0f, 0.1f)), true);
 					}
 
 					item->fade = 1.0f - ((float)abs(i) / (float)numItems);
@@ -305,7 +301,7 @@ public:
 		{
 			if(!visibleIndices.Contains(it->first))
 			{
-				Remove(it->second.As<GUIElementBase>());
+				//Remove(it->second.As<GUIElementBase>());
 				it = m_guiElements.erase(it);
 				continue;
 			}
@@ -322,7 +318,7 @@ public:
 			{
 				// Remove all elements, empty
 				m_currentSelection.Release();
-				Clear();
+				//Clear();
 				m_guiElements.clear();
 				return;
 			}
@@ -473,7 +469,7 @@ private:
 /*
 	Filter selection element
 */
-class FilterSelection : public Canvas
+class FilterSelection
 {
 public:
 	FilterSelection(Ref<SelectionWheel> selectionWheel) : m_selectionWheel(selectionWheel)
@@ -516,29 +512,29 @@ public:
 			m_levelFilters.Add(filter);
 		else
 			m_folderFilters.Add(filter);
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(Utility::ConvertToWString(filter->GetName()));
-		if (!m_selectingFolders && type == FilterType::Folder)
-			label->color.w = 0.0f;
-		else if (m_selectingFolders && type == FilterType::Level)
-			label->color.w = 0.0f;
-		m_guiElements[filter] = label;
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::MiddleLeft;
-		labelSlot->alignment = Vector2(0.f, 0.5f);
+		//Label* label = new Label();
+		//label->SetFontSize(30);
+		//label->SetText(Utility::ConvertToWString(filter->GetName()));
+		//if (!m_selectingFolders && type == FilterType::Folder)
+		//	label->color.w = 0.0f;
+		//else if (m_selectingFolders && type == FilterType::Level)
+		//	label->color.w = 0.0f;
+		//m_guiElements[filter] = label;
+		//Canvas::Slot* labelSlot = Add(label->MakeShared());
+		//labelSlot->allowOverflow = true;
+		//labelSlot->autoSizeX = true;
+		//labelSlot->autoSizeY = true;
+		//labelSlot->anchor = Anchors::MiddleLeft;
+		//labelSlot->alignment = Vector2(0.f, 0.5f);
 	}
 
 	void SelectFilter(SongFilter* filter, FilterType type)
 	{
 		uint8 t = type == FilterType::Folder ? 0 : 1;
 
-		if (m_currentFilters[t])
-			m_guiElements[m_currentFilters[t]]->SetText(Utility::ConvertToWString(m_currentFilters[t]->GetName()));
-		m_guiElements[filter]->SetText(Utility::ConvertToWString(Utility::Sprintf("->%s", filter->GetName())));
+		//if (m_currentFilters[t])
+		//	m_guiElements[m_currentFilters[t]]->SetText(Utility::ConvertToWString(m_currentFilters[t]->GetName()));
+		//m_guiElements[filter]->SetText(Utility::ConvertToWString(Utility::Sprintf("->%s", filter->GetName())));
 
 		if (type == FilterType::Folder)
 		{
@@ -549,9 +545,9 @@ public:
 
 				coordinate.y = ((int)i - (int)m_currentFolderSelection) * 40.f;
 				coordinate.x -= ((int)m_currentFolderSelection - i) * ((int)m_currentFolderSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
-				AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+				//Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
+				//AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
 			}
 		}
 		else
@@ -564,9 +560,9 @@ public:
 
 				coordinate.y = ((int)i - (int)m_currentLevelSelection) * 40.f;
 				coordinate.x -= ((int)m_currentLevelSelection - i) * ((int)m_currentLevelSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
-				AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+				//Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
+				//AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
 			}
 		}
 
@@ -631,17 +627,17 @@ public:
 		m_selectingFolders = !m_selectingFolders;
 		for (auto flFilter : m_folderFilters)
 		{
-			if (m_selectingFolders)
-				m_guiElements[flFilter]->color.w = 1.0f;
-			else
-				m_guiElements[flFilter]->color.w = 0.0f;
+			//if (m_selectingFolders)
+			//	m_guiElements[flFilter]->color.w = 1.0f;
+			//else
+			//	m_guiElements[flFilter]->color.w = 0.0f;
 		}
 		for (auto lvFilter : m_levelFilters)
 		{
-			if (!m_selectingFolders)
-				m_guiElements[lvFilter]->color.w = 1.0f;
-			else
-				m_guiElements[lvFilter]->color.w = 0.0f;
+			//if (!m_selectingFolders)
+			//	m_guiElements[lvFilter]->color.w = 1.0f;
+			//else
+			//	m_guiElements[lvFilter]->color.w = 0.0f;
 		}
 	}
 
@@ -657,12 +653,12 @@ private:
 	int32 m_currentFolderSelection = 0;
 	int32 m_currentLevelSelection = 0;
 	bool m_selectingFolders = true;
-	Map<SongFilter*, Label*> m_guiElements;
+	Map<SongFilter*, void*> m_guiElements;
 	SongFilter* m_currentFilters[2] = { nullptr };
 	MapDatabase* m_mapDB;
 };
 
-class GameSettingsWheel : public Canvas {
+class GameSettingsWheel{
 public:
 	GameSettingsWheel()
 	{
@@ -675,34 +671,34 @@ public:
 		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
 
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(L">>");
+		//Label* label = new Label();
+		//label->SetFontSize(30);
+		//label->SetText(L">>");
 
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::Middle;
-		labelSlot->alignment = Vector2(0.5f, 0.5f);
-		labelSlot->offset.pos.x = -135;
+		//Canvas::Slot* labelSlot = Add(label->MakeShared());
+		//labelSlot->allowOverflow = true;
+		//labelSlot->autoSizeX = true;
+		//labelSlot->autoSizeY = true;
+		//labelSlot->anchor = Anchors::Middle;
+		//labelSlot->alignment = Vector2(0.5f, 0.5f);
+		//labelSlot->offset.pos.x = -135;
 	}
 
 	bool Active = false;
 
 	void AddSetting(WString name, GameFlags flag)
 	{
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(Utility::WSprintf(L"%ls: Off", name));
-		m_guiElements[flag] = label;
+		//Label* label = new Label();
+		//label->SetFontSize(30);
+		//label->SetText(Utility::WSprintf(L"%ls: Off", name));
+		//m_guiElements[flag] = label;
 
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::Middle;
-		labelSlot->alignment = Vector2(0.5f, 0.5f);
+		//Canvas::Slot* labelSlot = Add(label->MakeShared());
+		//labelSlot->allowOverflow = true;
+		//labelSlot->autoSizeX = true;
+		//labelSlot->autoSizeY = true;
+		//labelSlot->anchor = Anchors::Middle;
+		//labelSlot->alignment = Vector2(0.5f, 0.5f);
 
 		m_flagNames[flag] = name;
 		SelectSetting((GameFlags)1);
@@ -715,23 +711,23 @@ public:
 			Vector2 coordinate = Vector2(50, 0);
 			GameFlags flag = (GameFlags)(1 << i);
 			coordinate.y = ((int)i - log2((int)m_currentSelection)) * 40.f;
-			Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[flag]->slot;
-			AddAnimation(Ref<IGUIAnimation>(
-				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
+			//Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[flag]->slot;
+			//AddAnimation(Ref<IGUIAnimation>(
+			//	new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
 		}
 	}
 	void ChangeSetting()
 	{
-		Label* label = m_guiElements[m_currentSelection];
+		//Label* label = m_guiElements[m_currentSelection];
 		if ((m_gameFlags & m_currentSelection) == GameFlags::None)
 		{
 			m_gameFlags = m_gameFlags | m_currentSelection;
-			label->SetText(Utility::WSprintf(L"%ls: On", m_flagNames[m_currentSelection]));
+			//label->SetText(Utility::WSprintf(L"%ls: On", m_flagNames[m_currentSelection]));
 		}
 		else
 		{
 			m_gameFlags = m_gameFlags & (~m_currentSelection);
-			label->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[m_currentSelection]));
+			//label->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[m_currentSelection]));
 		}
 	}
 
@@ -748,7 +744,7 @@ public:
 
 private:
 	GameFlags m_gameFlags;
-	Map<GameFlags, Label*> m_guiElements;
+	Map<GameFlags, void*> m_guiElements;
 	Map<GameFlags, WString> m_flagNames;
 	GameFlags m_currentSelection;
 };
@@ -775,15 +771,15 @@ private:
 	// Game settings wheel
 	Ref<GameSettingsWheel> m_settingsWheel;
 	// Search field
-	Ref<TextInputField> m_searchField;
+	//Ref<TextInputField> m_searchField;
 	// Panel to fade out selection wheel
-	Ref<Panel> m_fadePanel;
+	//Ref<Panel> m_fadePanel;
 	
-	Ref<Label> m_filterStatus;
+	//Ref<Label> m_filterStatus;
 
 	// Score list canvas
 	Ref<Canvas> m_scoreCanvas;
-	Ref<LayoutBox> m_scoreList;
+	//Ref<LayoutBox> m_scoreList;
 
 	// Player of preview music
 	PreviewPlayer m_previewPlayer;
@@ -809,103 +805,103 @@ public:
 	bool Init() override
 	{
 		m_commonGUIStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
+		m_style = SongSelectStyle::Get(g_application);
+		//m_canvas = Utility::MakeRef(new Canvas());
 
 		// Load textures for song select
-		m_style = SongSelectStyle::Get(g_application);
 
-		// Split between statistics and selection wheel (in percentage)
-		const float screenSplit = 0.0f;
+		//// Split between statistics and selection wheel (in percentage)
+		//const float screenSplit = 0.0f;
 
-		// Statistics window
-		m_statisticsWindow = Ref<SongStatistics>(new SongStatistics(m_style));
-		Canvas::Slot* statisticsSlot = m_canvas->Add(m_statisticsWindow.As<GUIElementBase>());
-		statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
-		statisticsSlot->SetZOrder(2);
+		//// Statistics window
+		//m_statisticsWindow = Ref<SongStatistics>(new SongStatistics(m_style));
+		//Canvas::Slot* statisticsSlot = m_canvas->Add(m_statisticsWindow.As<GUIElementBase>());
+		//statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
+		//statisticsSlot->SetZOrder(2);
 
-		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
-		{
-			m_timeSinceButtonPressed[(Input::Button)i] = 0;
-			m_timeSinceButtonReleased[(Input::Button)i] = 0;
-		}
+		//for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
+		//{
+		//	m_timeSinceButtonPressed[(Input::Button)i] = 0;
+		//	m_timeSinceButtonReleased[(Input::Button)i] = 0;
+		//}
 
 
-        // Set up input
+
+		//Panel* background = new Panel();
+		//background->imageFillMode = FillMode::Fill;
+		//background->texture = g_application->LoadTexture("bg.png");
+		//background->color = Color(0.5f);
+		//Canvas::Slot* bgSlot = m_canvas->Add(background->MakeShared());
+		//bgSlot->anchor = Anchors::Full;
+		//bgSlot->SetZOrder(-2);
+
+		//LayoutBox* box = new LayoutBox();
+		//Canvas::Slot* boxSlot = m_canvas->Add(box->MakeShared());
+		//boxSlot->anchor = Anchor(screenSplit, 0, 1.0f, 1.0f);
+		//box->layoutDirection = LayoutBox::Vertical;
+		//{
+		//	m_searchField = Ref<TextInputField>(new TextInputField(m_commonGUIStyle));
+		//	LayoutBox::Slot* searchFieldSlot = box->Add(m_searchField.As<GUIElementBase>());
+		//	searchFieldSlot->fillX = true;
+		//	m_searchField->OnTextUpdated.Add(this, &SongSelect_Impl::OnSearchTermChanged);
+
+		//	m_filterStatus = Ref<Label>(new Label());
+		//	m_filterStatus->SetFontSize(40);
+		//	m_filterStatus->SetText(L"All / All");
+		//	LayoutBox::Slot* filterLabelSlot = box->Add(m_filterStatus->MakeShared());
+
+		//	LayoutBox::Slot* selectionSlot = box->Add(m_selectionWheel.As<GUIElementBase>());
+		//	selectionSlot->fillY = true;
+			
+
+
+		//	
+		//}
+
+		//{
+		//	m_fadePanel = Ref<Panel>(new Panel());
+		//	m_fadePanel->color = Color(0.f);
+		//	m_fadePanel->color.w = 0.0f;
+		//	Canvas::Slot* panelSlot = m_canvas->Add(m_fadePanel->MakeShared());
+		//	panelSlot->anchor = Anchors::Full;
+		//}
+
+		//{
+		//	m_scoreCanvas = Ref<Canvas>(new Canvas());
+		//	Canvas::Slot* slot = m_canvas->Add(m_scoreCanvas->MakeShared());
+		//	slot->anchor = Anchor(1.0,0.0,2.0,10.0);
+
+		//	Panel* scoreBg = new Panel();
+		//	scoreBg->color = Color(Vector3(0.5), 1.0);
+		//	slot = m_scoreCanvas->Add(scoreBg->MakeShared());
+		//	slot->anchor = Anchors::Full;
+
+		//	m_scoreList = Ref<LayoutBox>(new LayoutBox());
+		//	m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
+		//	slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
+		//	slot->anchor = Anchors::Full;
+		//}
+
+		//{
+		//	Canvas::Slot* slot = m_canvas->Add(m_settingsWheel->MakeShared());
+		//	slot->anchor = Anchor(0.0, -1.0, 1.0, 0.0);
+		//}
+
+		//{
+		//	Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
+		//	slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
+		//}
+		// Select interface sound
+		// Set up input
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
 		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);
-        
-		Panel* background = new Panel();
-		background->imageFillMode = FillMode::Fill;
-		background->texture = g_application->LoadTexture("bg.png");
-		background->color = Color(0.5f);
-		Canvas::Slot* bgSlot = m_canvas->Add(background->MakeShared());
-		bgSlot->anchor = Anchors::Full;
-		bgSlot->SetZOrder(-2);
-
-		LayoutBox* box = new LayoutBox();
-		Canvas::Slot* boxSlot = m_canvas->Add(box->MakeShared());
-		boxSlot->anchor = Anchor(screenSplit, 0, 1.0f, 1.0f);
-		box->layoutDirection = LayoutBox::Vertical;
-		{
-			m_searchField = Ref<TextInputField>(new TextInputField(m_commonGUIStyle));
-			LayoutBox::Slot* searchFieldSlot = box->Add(m_searchField.As<GUIElementBase>());
-			searchFieldSlot->fillX = true;
-			m_searchField->OnTextUpdated.Add(this, &SongSelect_Impl::OnSearchTermChanged);
-
-			m_filterStatus = Ref<Label>(new Label());
-			m_filterStatus->SetFontSize(40);
-			m_filterStatus->SetText(L"All / All");
-			LayoutBox::Slot* filterLabelSlot = box->Add(m_filterStatus->MakeShared());
-
-			m_selectionWheel = Ref<SelectionWheel>(new SelectionWheel(m_style));
-			LayoutBox::Slot* selectionSlot = box->Add(m_selectionWheel.As<GUIElementBase>());
-			selectionSlot->fillY = true;
-			m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
-			m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
-
-
-			
-		}
-
-		{
-			m_fadePanel = Ref<Panel>(new Panel());
-			m_fadePanel->color = Color(0.f);
-			m_fadePanel->color.w = 0.0f;
-			Canvas::Slot* panelSlot = m_canvas->Add(m_fadePanel->MakeShared());
-			panelSlot->anchor = Anchors::Full;
-		}
-
-		{
-			m_scoreCanvas = Ref<Canvas>(new Canvas());
-			Canvas::Slot* slot = m_canvas->Add(m_scoreCanvas->MakeShared());
-			slot->anchor = Anchor(1.0,0.0,2.0,10.0);
-
-			Panel* scoreBg = new Panel();
-			scoreBg->color = Color(Vector3(0.5), 1.0);
-			slot = m_scoreCanvas->Add(scoreBg->MakeShared());
-			slot->anchor = Anchors::Full;
-
-			m_scoreList = Ref<LayoutBox>(new LayoutBox());
-			m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
-			slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
-			slot->anchor = Anchors::Full;
-		}
-
-		{
-			m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
-			Canvas::Slot* slot = m_canvas->Add(m_settingsWheel->MakeShared());
-			slot->anchor = Anchor(0.0, -1.0, 1.0, 0.0);
-		}
-
-		{
-			m_filterSelection = Ref<FilterSelection>(new FilterSelection(m_selectionWheel));
-			Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
-			slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
-		}
-		m_filterSelection->SetMapDB(&m_mapDatabase);
-		// Select interface sound
+		m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
 		m_selectSound = g_audio->CreateSample("audio/menu_click.wav");
-
+		m_selectionWheel = Ref<SelectionWheel>(new SelectionWheel(m_style));
+		m_filterSelection = Ref<FilterSelection>(new FilterSelection(m_selectionWheel));
+		m_filterSelection->SetMapDB(&m_mapDatabase);
+		m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
+		m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
 		// Setup the map database
 		m_mapDatabase.AddSearchPath(g_gameConfig.GetString(GameConfigKeys::SongFolder));
 
@@ -968,7 +964,7 @@ public:
 	// When a difficulty is selected in the song wheel
 	void OnDifficultySelected(DifficultyIndex* diff)
 	{
-		m_scoreList->Clear();
+		//m_scoreList->Clear();
 		uint32 place = 1;
 
 		for (auto it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
@@ -980,12 +976,12 @@ public:
 
 			WString badges[] = { L"P", L"U", L"HC", L"C", L"c" };
 
-			Label* text = new Label();
-			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%% %ls\n%ls",place, s.score, (int)(s.gauge * 100), badges[badge], grade));
-			text->SetFontSize(32);
-			LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
-			slot->fillX = true;
-			slot->padding = Margin(10, 5, 0, 0);
+			//Label* text = new Label();
+			//text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%% %ls\n%ls",place, s.score, (int)(s.gauge * 100), badges[badge], grade));
+			//text->SetFontSize(32);
+			//LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
+			//slot->fillX = true;
+			//slot->padding = Margin(10, 5, 0, 0);
 			
 			if (place++ > 9)
 				break;
@@ -1012,8 +1008,8 @@ public:
     {
 		if (m_suspended)
 			return;
-		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
-			return;
+		//if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard /*&& m_searchField->HasInputFocus()*/)
+		//	return;
 
 		m_timeSinceButtonPressed[buttonCode] = 0;
 
@@ -1064,23 +1060,23 @@ public:
 			case Input::Button::FX_1:
 				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0) && !m_filterSelection->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
 
 					m_settingsWheel->Active = true;
 				}
 				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0))
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 
 					m_settingsWheel->Active = false;
 				}
@@ -1088,23 +1084,23 @@ public:
 			case Input::Button::FX_0:
 				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1) && !m_filterSelection->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
 
 					m_settingsWheel->Active = true;
 				}
 				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1))
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 
 					m_settingsWheel->Active = false;
 				}
@@ -1116,12 +1112,12 @@ public:
 				}
 				if (m_settingsWheel->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 
 					m_settingsWheel->Active = false;
 				}
@@ -1136,7 +1132,7 @@ public:
 	{
 		if (m_suspended)
 			return;
-		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard/* && m_searchField->HasInputFocus()*/)
 			return;
 
 		m_timeSinceButtonReleased[buttonCode] = 0;
@@ -1148,24 +1144,24 @@ public:
 			{
 				if (!m_filterSelection->Active)
 				{
-					g_guiRenderer->SetInputFocus(nullptr);
+					//g_guiRenderer->SetInputFocus(nullptr);
 
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
 					m_filterSelection->Active = !m_filterSelection->Active;
 				}
 				else
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 					m_filterSelection->Active = !m_filterSelection->Active;
 				}
 			}
@@ -1175,14 +1171,14 @@ public:
 			{
 				if (!m_showScores)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, -200.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, -200.0f, 0.2f)), true);
 					m_showScores = !m_showScores;
 				}
 				else
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, 0.0f, 0.2f)), true);
+					//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+					//	new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, 0.0f, 0.2f)), true);
 					m_showScores = !m_showScores;
 				}
 			}
@@ -1208,12 +1204,12 @@ public:
 			}
 			else if (key == SDLK_ESCAPE)
 			{
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 
 				m_settingsWheel->Active = false;
 			}
@@ -1231,12 +1227,12 @@ public:
 			}
 			else if (key == SDLK_ESCAPE)
 			{
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
+				//m_canvas->AddAnimation(Ref<IGUIAnimation>(
+				//	new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 				m_filterSelection->Active = !m_filterSelection->Active;
 			}
 		}
@@ -1281,10 +1277,10 @@ public:
 			}
 			else if (key == SDLK_TAB)
 			{
-				if (m_searchField->HasInputFocus())
-					g_guiRenderer->SetInputFocus(nullptr);
-				else
-					g_guiRenderer->SetInputFocus(m_searchField.GetData());
+				//if (m_searchField->HasInputFocus())
+				//	g_guiRenderer->SetInputFocus(nullptr);
+				//else
+				//	g_guiRenderer->SetInputFocus(m_searchField.GetData());
 			}
 		}
 	}
@@ -1300,7 +1296,7 @@ public:
 			m_dbUpdateTimer.Restart();
 		}
         
-		m_filterStatus->SetText(Utility::ConvertToWString(m_filterSelection->GetStatusText()));
+		//m_filterStatus->SetText(Utility::ConvertToWString(m_filterSelection->GetStatusText()));
 
         // Tick navigation
 		if (!IsSuspended())
@@ -1384,7 +1380,7 @@ public:
 		if (m_lockMouse)
 			m_lockMouse.Release();
 
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
@@ -1392,10 +1388,10 @@ public:
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
 
-		OnSearchTermChanged(m_searchField->GetText());
-		
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//OnSearchTermChanged(m_searchField->GetText());
+		//
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 	}
 };
 

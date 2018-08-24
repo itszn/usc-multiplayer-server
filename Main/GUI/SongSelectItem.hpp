@@ -1,6 +1,4 @@
 #pragma once
-#include <GUI/GUIElement.hpp>
-#include <GUI/Canvas.hpp>
 #include "SongSelectStyle.hpp"
 #include <Beatmap/MapDatabase.hpp>
 
@@ -57,13 +55,13 @@ private:
 // Song select item
 //	either shows only artist and title in compact mode
 //	or shows all the difficulties
-class SongSelectItem : public Canvas
+class SongSelectItem
 {
 public:
 	SongSelectItem(Ref<SongSelectStyle> style);
-	virtual void PreRender(GUIRenderData rd, GUIElementBase*& inputElement) override;
-	virtual void Render(GUIRenderData rd) override;
-	virtual Vector2 GetDesiredSize(GUIRenderData rd) override;
+	virtual void PreRender();
+	virtual void Render();
+	virtual Vector2 GetDesiredSize();
 
 	// Assigns/Updates the map to be displayed on this item
 	// TODO(local): Change this to SetEntry or something
@@ -94,7 +92,7 @@ private:
 };
 
 // Song statistics window on the left
-class SongStatistics : public Canvas
+class SongStatistics
 {
 public:
 	SongStatistics(Ref<SongSelectStyle> style);

@@ -1,20 +1,15 @@
 #pragma once
 #include "stdafx.h"
-#include <GUI/GUIElement.hpp>
-#include <GUI/Panel.hpp>
-#include <GUI/LayoutBox.hpp>
-#include <GUI/Canvas.hpp>
-#include <GUI/Label.hpp>
 #include <Beatmap/BeatmapPlayback.hpp>
 #include "Game.hpp"
 
 
-class SongTitleArtist : public Panel
+class SongTitleArtist
 {
 public:
 	SongTitleArtist(String title, String artist, class PlayingSongInfo* info);
-	virtual void PreRender(GUIRenderData rd, GUIElementBase*& inputElement) override;
-	virtual void Render(GUIRenderData rd) override;
+	virtual void PreRender();
+	virtual void Render();
 	float progress = 0.5f;
 	float BPM = 120.f;
 	float hiSpeed = 1.5f;
@@ -31,35 +26,30 @@ private:
 	class PlayingSongInfo* m_psi;
 };
 
-class SongProgressBar : public GUIElementBase
+class SongProgressBar
 {
 public:
 	SongProgressBar();
-	virtual void Render(GUIRenderData rd) override;
-	virtual Vector2 GetDesiredSize(GUIRenderData rd) override;
+	virtual void Render();
+	virtual Vector2 GetDesiredSize();
 	float progress = 0.5f;
 
 };
 
-class PlayingSongInfo : public Canvas
+class PlayingSongInfo
 {
 public:
 	PlayingSongInfo(Game& game);
-	virtual void PreRender(GUIRenderData rd, GUIElementBase*& inputElement) override;
-	virtual void Render(GUIRenderData rd) override;
-	virtual Vector2 GetDesiredSize(GUIRenderData rd) override;
+	virtual void PreRender();
+	virtual void Render();
+	virtual Vector2 GetDesiredSize();
 	void SetProgress(float progress);
 	void SetBPM(float bpm);
 	void SetHiSpeed(float hiSpeed);
 	void SetJacket(Texture jacket);
-
 	Material progressMaterial;
 
 private:
-
-
-	Ref<LayoutBox> m_layout;
-	Ref<Panel> m_jacket;
 	Ref<SongTitleArtist> m_titleArtist;
 	//Ref<Panel> m_titlePanel;
 	//Ref<Panel> m_artistPanel;

@@ -1,13 +1,12 @@
 #pragma once
-#include <GUI/LayoutBox.hpp>
 
-class PerformanceGraph : public GUIElementBase
+class PerformanceGraph
 {
 public:
 	PerformanceGraph();
-	virtual void PreRender(GUIRenderData rd, GUIElementBase*& inputElement);
-	virtual void Render(GUIRenderData rd);
-	virtual Vector2 GetDesiredSize(GUIRenderData rd);
+	virtual void PreRender();
+	virtual void Render();
+	virtual Vector2 GetDesiredSize();
 
 	Texture borderTexture;
 	Texture graphTex;

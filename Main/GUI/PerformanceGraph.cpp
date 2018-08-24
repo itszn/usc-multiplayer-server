@@ -1,22 +1,21 @@
 #include "stdafx.h"
 #include "PerformanceGraph.hpp"
-#include <GUI/GUIRenderer.hpp>
 
 PerformanceGraph::PerformanceGraph()
 {
 
 }
-void PerformanceGraph::PreRender(GUIRenderData rd, GUIElementBase*& inputElement)
+void PerformanceGraph::PreRender()
 {
 }
-void PerformanceGraph::Render(GUIRenderData rd)
+void PerformanceGraph::Render()
 {
-	rd.guiRenderer->RenderButton(rd.area, borderTexture, border);
-	Rect inner = border.Apply(rd.area);
-	rd.guiRenderer->RenderGraph(inner, graphTex, upperColor, lowerColor, colorBorder);
+	//rd.guiRenderer->RenderButton(rd.area, borderTexture, border);
+	//Rect inner = border.Apply(rd.area);
+	//rd.guiRenderer->RenderGraph(inner, graphTex, upperColor, lowerColor, colorBorder);
 }
 
-Vector2 PerformanceGraph::GetDesiredSize(GUIRenderData rd)
+Vector2 PerformanceGraph::GetDesiredSize()
 {
-	return rd.area.size;
+	return Vector2();
 }

@@ -8,13 +8,6 @@
 #include "Track.hpp"
 #include "Camera.hpp"
 #include "Background.hpp"
-#include <GUI/GUI.hpp>
-#include <GUI/CommonGUIStyle.hpp>
-#include <GUI/Button.hpp>
-#include <GUI/Slider.hpp>
-#include <GUI/ScrollBox.hpp>
-#include <GUI/SettingsBar.hpp>
-#include <GUI/Spinner.hpp>
 #include "HealthGauge.hpp"
 #include "Shared/Jobs.hpp"
 #include "ScoreScreen.hpp"
@@ -31,8 +24,8 @@ class SettingsScreen_Impl : public SettingsScreen
 private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
-	Ref<SettingsBar> m_settings;
-	SettingBarSetting* m_sensSetting;
+	//Ref<SettingsBar> m_settings;
+	//SettingBarSetting* m_sensSetting;
 
 	Vector<String> m_speedMods = { "XMod", "MMod", "CMod" };
 	Vector<String> m_laserModes = { "Keyboard", "Mouse", "Controller" };
@@ -74,9 +67,9 @@ private:
 
 	};
 
-	Button* m_buttonButtons[7];
-	Button* m_laserButtons[2];
-	Panel* m_laserColorPanels[2];
+	//Button* m_buttonButtons[7];
+	//Button* m_laserButtons[2];
+	//Panel* m_laserColorPanels[2];
 
 	Texture m_whiteTex;
 
@@ -164,7 +157,7 @@ private:
 
 	void SetSens(float sens)
 	{
-		m_settings->SetValue(m_sensSetting, sens);
+		//m_settings->SetValue(m_sensSetting, sens);
 	}
 
 	void Exit()
@@ -232,7 +225,7 @@ public:
 	bool Init()
 	{
 		m_guiStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
+		//m_canvas = Utility::MakeRef(new Canvas());
 		m_gamePads = g_gameWindow->GetGamepadDeviceNames();
 		m_skins = Path::GetSubDirs("./skins/");
 
@@ -290,235 +283,235 @@ public:
 
 
 		//Options select
-		ScrollBox* scroller = new ScrollBox(m_guiStyle);
+		//ScrollBox* scroller = new ScrollBox(m_guiStyle);
 
-		Canvas::Slot* slot = m_canvas->Add(scroller->MakeShared());
+		//Canvas::Slot* slot = m_canvas->Add(scroller->MakeShared());
 
-		slot->anchor = Anchor(0.1f, 0.f, 0.9f, 1.f);
-		//slot->autoSizeX = true;
-		//slot->alignment = Vector2(0.5, 0.0);
-		
-		LayoutBox* box = new LayoutBox();
-		box->layoutDirection = LayoutBox::Vertical;
-		scroller->SetContent(box->MakeShared());
-		LayoutBox::Slot* btnSlot;
-		// Start Button & Knob buttons
-		{
-			LayoutBox* stBox = new LayoutBox();
+		//slot->anchor = Anchor(0.1f, 0.f, 0.9f, 1.f);
+		////slot->autoSizeX = true;
+		////slot->alignment = Vector2(0.5, 0.0);
+		//
+		//LayoutBox* box = new LayoutBox();
+		//box->layoutDirection = LayoutBox::Vertical;
+		//scroller->SetContent(box->MakeShared());
+		//LayoutBox::Slot* btnSlot;
+		//// Start Button & Knob buttons
+		//{
+		//	LayoutBox* stBox = new LayoutBox();
 
-			stBox->layoutDirection = LayoutBox::Horizontal;
-			{
-				Button* stBtn = new Button(m_guiStyle);
-				m_laserButtons[0] = stBtn;
-				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetLL);
-				stBtn->SetText(L"LL");
-				stBtn->SetFontSize(32);
-				btnSlot = stBox->Add(stBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->padding = Margin(60.f, 2.f);
+		//	stBox->layoutDirection = LayoutBox::Horizontal;
+		//	{
+		//		Button* stBtn = new Button(m_guiStyle);
+		//		m_laserButtons[0] = stBtn;
+		//		stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetLL);
+		//		stBtn->SetText(L"LL");
+		//		stBtn->SetFontSize(32);
+		//		btnSlot = stBox->Add(stBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->padding = Margin(60.f, 2.f);
 
-			}
-			{
-				Button* stBtn = new Button(m_guiStyle);
-				m_buttonButtons[0] = stBtn;
-				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_ST);
-				stBtn->SetText(L"Start");
-				stBtn->SetFontSize(32);
-				btnSlot = stBox->Add(stBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->alignment = Vector2(.5f, 0.f);
-			}
-			{
-				Button* stBtn = new Button(m_guiStyle);
-				m_laserButtons[1] = stBtn;
-				stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetRL);
-				stBtn->SetText(L"RL");
-				stBtn->SetFontSize(32);
-				btnSlot = stBox->Add(stBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->alignment = Vector2(1.f, 0.f);
-				btnSlot->padding = Margin(60.f, 2.f);
+		//	}
+		//	{
+		//		Button* stBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[0] = stBtn;
+		//		stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_ST);
+		//		stBtn->SetText(L"Start");
+		//		stBtn->SetFontSize(32);
+		//		btnSlot = stBox->Add(stBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->alignment = Vector2(.5f, 0.f);
+		//	}
+		//	{
+		//		Button* stBtn = new Button(m_guiStyle);
+		//		m_laserButtons[1] = stBtn;
+		//		stBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetRL);
+		//		stBtn->SetText(L"RL");
+		//		stBtn->SetFontSize(32);
+		//		btnSlot = stBox->Add(stBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->alignment = Vector2(1.f, 0.f);
+		//		btnSlot->padding = Margin(60.f, 2.f);
 
-			}
-			LayoutBox::Slot* stSlot = box->Add(stBox->MakeShared());
-			stSlot->alignment = Vector2(0.5f, 0.f);
-		}
-		// BT Buttons
-		{
-			LayoutBox* btBox = new LayoutBox();
-			btBox->layoutDirection = LayoutBox::Horizontal;
+		//	}
+		//	LayoutBox::Slot* stSlot = box->Add(stBox->MakeShared());
+		//	stSlot->alignment = Vector2(0.5f, 0.f);
+		//}
+		//// BT Buttons
+		//{
+		//	LayoutBox* btBox = new LayoutBox();
+		//	btBox->layoutDirection = LayoutBox::Horizontal;
 
-			{
-				Button* btaBtn = new Button(m_guiStyle);
-				m_buttonButtons[1] = btaBtn;
-				btaBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTA);
-				btaBtn->SetText(L"BT-A");
-				btaBtn->SetFontSize(32);
-				btnSlot = btBox->Add(btaBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->fillX = true;
-			}
-			{
-				Button* btbBtn = new Button(m_guiStyle);
-				m_buttonButtons[2] = btbBtn;
-				btbBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTB);
-				btbBtn->SetText(L"BT-B");
-				btbBtn->SetFontSize(32);
-				btnSlot = btBox->Add(btbBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->fillX = true;
-			}
-			{
-				Button* btcBtn = new Button(m_guiStyle);
-				m_buttonButtons[3] = btcBtn;
-				btcBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTC);
-				btcBtn->SetText(L"BT-C");
-				btcBtn->SetFontSize(32);
-				btnSlot = btBox->Add(btcBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->fillX = true;
-			}
-			{
-				Button* btdBtn = new Button(m_guiStyle);
-				m_buttonButtons[4] = btdBtn;
-				btdBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTD);
-				btdBtn->SetText(L"BT-D");
-				btdBtn->SetFontSize(32);
-				btnSlot = btBox->Add(btdBtn->MakeShared());
-				btnSlot->padding = Margin(2);
-				btnSlot->fillX = true;
-			}
-			LayoutBox::Slot* btSlot = box->Add(btBox->MakeShared());
-			btSlot->alignment = Vector2(0.5f, 0.f);
-		}
-		// FX Buttons
-		{
-			LayoutBox* fxBox = new LayoutBox();
+		//	{
+		//		Button* btaBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[1] = btaBtn;
+		//		btaBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTA);
+		//		btaBtn->SetText(L"BT-A");
+		//		btaBtn->SetFontSize(32);
+		//		btnSlot = btBox->Add(btaBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->fillX = true;
+		//	}
+		//	{
+		//		Button* btbBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[2] = btbBtn;
+		//		btbBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTB);
+		//		btbBtn->SetText(L"BT-B");
+		//		btbBtn->SetFontSize(32);
+		//		btnSlot = btBox->Add(btbBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->fillX = true;
+		//	}
+		//	{
+		//		Button* btcBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[3] = btcBtn;
+		//		btcBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTC);
+		//		btcBtn->SetText(L"BT-C");
+		//		btcBtn->SetFontSize(32);
+		//		btnSlot = btBox->Add(btcBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->fillX = true;
+		//	}
+		//	{
+		//		Button* btdBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[4] = btdBtn;
+		//		btdBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_BTD);
+		//		btdBtn->SetText(L"BT-D");
+		//		btdBtn->SetFontSize(32);
+		//		btnSlot = btBox->Add(btdBtn->MakeShared());
+		//		btnSlot->padding = Margin(2);
+		//		btnSlot->fillX = true;
+		//	}
+		//	LayoutBox::Slot* btSlot = box->Add(btBox->MakeShared());
+		//	btSlot->alignment = Vector2(0.5f, 0.f);
+		//}
+		//// FX Buttons
+		//{
+		//	LayoutBox* fxBox = new LayoutBox();
 
-			fxBox->layoutDirection = LayoutBox::Horizontal;
-			{
-				Button* fxlBtn = new Button(m_guiStyle);
-				m_buttonButtons[5] = fxlBtn;
-				fxlBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXL);
-				fxlBtn->SetText(L"FX-L");
-				fxlBtn->SetFontSize(32);
-				btnSlot = fxBox->Add(fxlBtn->MakeShared());
-				btnSlot->padding = Margin(20.f,2.f);
-				btnSlot->fillX = true;
-				btnSlot->alignment = Vector2(0.25f, 0.f);
-			}
-			{
-				Button* fxrBtn = new Button(m_guiStyle);
-				m_buttonButtons[6] = fxrBtn;
-				fxrBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXR);
-				fxrBtn->SetText(L"FX-R");
-				fxrBtn->SetFontSize(32);
-				btnSlot = fxBox->Add(fxrBtn->MakeShared());
-				btnSlot->padding = Margin(20.f, 2.f);
-				btnSlot->alignment = Vector2(0.75f, 0.f);
-				btnSlot->fillX = true;
-			}
-			LayoutBox::Slot* fxSlot = box->Add(fxBox->MakeShared());
-			fxSlot->alignment = Vector2(0.5f, 0.f);
-		}
+		//	fxBox->layoutDirection = LayoutBox::Horizontal;
+		//	{
+		//		Button* fxlBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[5] = fxlBtn;
+		//		fxlBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXL);
+		//		fxlBtn->SetText(L"FX-L");
+		//		fxlBtn->SetFontSize(32);
+		//		btnSlot = fxBox->Add(fxlBtn->MakeShared());
+		//		btnSlot->padding = Margin(20.f,2.f);
+		//		btnSlot->fillX = true;
+		//		btnSlot->alignment = Vector2(0.25f, 0.f);
+		//	}
+		//	{
+		//		Button* fxrBtn = new Button(m_guiStyle);
+		//		m_buttonButtons[6] = fxrBtn;
+		//		fxrBtn->OnPressed.Add(this, &SettingsScreen_Impl::SetKey_FXR);
+		//		fxrBtn->SetText(L"FX-R");
+		//		fxrBtn->SetFontSize(32);
+		//		btnSlot = fxBox->Add(fxrBtn->MakeShared());
+		//		btnSlot->padding = Margin(20.f, 2.f);
+		//		btnSlot->alignment = Vector2(0.75f, 0.f);
+		//		btnSlot->fillX = true;
+		//	}
+		//	LayoutBox::Slot* fxSlot = box->Add(fxBox->MakeShared());
+		//	fxSlot->alignment = Vector2(0.5f, 0.f);
+		//}
 
-		// Laser sens calibration button
-		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) != InputDevice::Keyboard)
-		{
-			Button* calButton = new Button(m_guiStyle);
-			calButton->OnPressed.Add(this, &SettingsScreen_Impl::CalibrateSens);
-			calButton->SetText(L"Calibrate Laser Sensitivity");
-			calButton->SetFontSize(32);
-			btnSlot = box->Add(calButton->MakeShared());
-			btnSlot->alignment = Vector2(0.5f, 0.f);
-		}
+		//// Laser sens calibration button
+		//if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) != InputDevice::Keyboard)
+		//{
+		//	Button* calButton = new Button(m_guiStyle);
+		//	calButton->OnPressed.Add(this, &SettingsScreen_Impl::CalibrateSens);
+		//	calButton->SetText(L"Calibrate Laser Sensitivity");
+		//	calButton->SetFontSize(32);
+		//	btnSlot = box->Add(calButton->MakeShared());
+		//	btnSlot->alignment = Vector2(0.5f, 0.f);
+		//}
 
-		// Setting bar
-		{
-			SettingsBar* sb = new SettingsBar(m_guiStyle);
-			
-			m_settings = Ref<SettingsBar>(sb);
+		//// Setting bar
+		//{
+		//	SettingsBar* sb = new SettingsBar(m_guiStyle);
+		//	
+		//	m_settings = Ref<SettingsBar>(sb);
 
-			sb->AddSetting(&m_masterVolume, 0.f, 1.0f, "Master Volume");
-			sb->AddSetting(&m_antialiasing, m_aaModes, m_aaModes.size(), "Anti Aliasing");
-			sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
-			sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
-			m_sensSetting = sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
-			sb->AddSetting(&m_globalOffset, 1, 5, "Global offset", "ms");
-			sb->AddSetting(&m_inputOffset, 1, 5, "Input offset", "ms");
-			sb->AddSetting(&m_bounceGuard, 1, 5, "Button bounce guard", "ms");
-			sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");
-			sb->AddSetting(&m_hispeed, 0.25f, 10.0f, "HiSpeed");
-			sb->AddSetting(&m_modSpeed, 50.0f, 1500.0f, "ModSpeed");
-			if (m_gamePads.size() > 0)
-			{
-				sb->AddSetting(&m_selectedGamepad, m_gamePads, m_gamePads.size(), "Selected Controller");
+		//	sb->AddSetting(&m_masterVolume, 0.f, 1.0f, "Master Volume");
+		//	sb->AddSetting(&m_antialiasing, m_aaModes, m_aaModes.size(), "Anti Aliasing");
+		//	sb->AddSetting(&m_buttonMode, m_buttonModes, m_buttonModes.size(), "Button Input Mode");
+		//	sb->AddSetting(&m_laserMode, m_laserModes, m_laserModes.size(), "Laser Input Mode");
+		//	m_sensSetting = sb->AddSetting(&m_laserSens, 0.f, 20.0f, "Laser Sensitivity");
+		//	sb->AddSetting(&m_globalOffset, 1, 5, "Global offset", "ms");
+		//	sb->AddSetting(&m_inputOffset, 1, 5, "Input offset", "ms");
+		//	sb->AddSetting(&m_bounceGuard, 1, 5, "Button bounce guard", "ms");
+		//	sb->AddSetting(&m_speedMod, m_speedMods, m_speedMods.size(), "Speed mod");
+		//	sb->AddSetting(&m_hispeed, 0.25f, 10.0f, "HiSpeed");
+		//	sb->AddSetting(&m_modSpeed, 50.0f, 1500.0f, "ModSpeed");
+		//	if (m_gamePads.size() > 0)
+		//	{
+		//		sb->AddSetting(&m_selectedGamepad, m_gamePads, m_gamePads.size(), "Selected Controller");
 
-			}
-			if (m_skins.size() > 0)
-				sb->AddSetting(&m_selectedSkin, m_skins, m_skins.size(), "Selected Skin");
-			sb->AddSetting(m_laserColors, 0.0, 360.0f, "Left Laser Color");
-			sb->AddSetting(m_laserColors + 1, 0.0, 360.0f, "Right Laser Color");
-
-
-			LayoutBox::Slot* slot = box->Add(sb->MakeShared());
-			slot->fillX = true;
-		}
-
-		// Laser Colors
-		{
-			Label* laserColorLabel = new Label();
-			laserColorLabel->SetText(L"Laser Colors:");
-			laserColorLabel->SetFontSize(20);
-			box->Add(laserColorLabel->MakeShared());
+		//	}
+		//	if (m_skins.size() > 0)
+		//		sb->AddSetting(&m_selectedSkin, m_skins, m_skins.size(), "Selected Skin");
+		//	sb->AddSetting(m_laserColors, 0.0, 360.0f, "Left Laser Color");
+		//	sb->AddSetting(m_laserColors + 1, 0.0, 360.0f, "Right Laser Color");
 
 
-			// Make white square texture
-			m_whiteTex = TextureRes::Create(g_gl);
-			m_whiteTex->Init(Vector2i(50, 50), Graphics::TextureFormat::RGBA8);
+		//	LayoutBox::Slot* slot = box->Add(sb->MakeShared());
+		//	slot->fillX = true;
+		//}
 
-			Colori pixels[2500];
-
-			for (size_t i = 0; i < 2500; i++)
-			{
-				pixels[i] = Colori(255,255,255,255);
-			}
-
-			m_whiteTex->SetData(Vector2i(50, 50), pixels);
-
-			LayoutBox* colorBox = new LayoutBox();
-			colorBox->layoutDirection = LayoutBox::Horizontal;
-
-			{
-				Panel* lpanel = new Panel();
-				m_laserColorPanels[0] = lpanel;
-				lpanel->texture = m_whiteTex;
-				LayoutBox::Slot* lslot = colorBox->Add(lpanel->MakeShared());
-
-			}
-
-			{
-				Panel* rpanel = new Panel();
-				m_laserColorPanels[1] = rpanel;
-				rpanel->texture = m_whiteTex;
-				LayoutBox::Slot* rslot = colorBox->Add(rpanel->MakeShared());
-				rslot->padding = Margin(20, 0);
-
-			}
-			LayoutBox::Slot* slot = box->Add(colorBox->MakeShared());
-			slot->fillX = true;
-			slot->fillY = true;
-
-		}
+		//// Laser Colors
+		//{
+		//	Label* laserColorLabel = new Label();
+		//	laserColorLabel->SetText(L"Laser Colors:");
+		//	laserColorLabel->SetFontSize(20);
+		//	box->Add(laserColorLabel->MakeShared());
 
 
-		Button* exitBtn = new Button(m_guiStyle);
-		exitBtn->OnPressed.Add(this, &SettingsScreen_Impl::Exit);
-		exitBtn->SetText(L"Back");
-		exitBtn->SetFontSize(32);
-		btnSlot = box->Add(exitBtn->MakeShared());
-		btnSlot->padding = Margin(2);
-		btnSlot->alignment = Vector2(0.5f, 0.f);
+		//	// Make white square texture
+		//	m_whiteTex = TextureRes::Create(g_gl);
+		//	m_whiteTex->Init(Vector2i(50, 50), Graphics::TextureFormat::RGBA8);
+
+		//	Colori pixels[2500];
+
+		//	for (size_t i = 0; i < 2500; i++)
+		//	{
+		//		pixels[i] = Colori(255,255,255,255);
+		//	}
+
+		//	m_whiteTex->SetData(Vector2i(50, 50), pixels);
+
+		//	LayoutBox* colorBox = new LayoutBox();
+		//	colorBox->layoutDirection = LayoutBox::Horizontal;
+
+		//	{
+		//		Panel* lpanel = new Panel();
+		//		m_laserColorPanels[0] = lpanel;
+		//		lpanel->texture = m_whiteTex;
+		//		LayoutBox::Slot* lslot = colorBox->Add(lpanel->MakeShared());
+
+		//	}
+
+		//	{
+		//		Panel* rpanel = new Panel();
+		//		m_laserColorPanels[1] = rpanel;
+		//		rpanel->texture = m_whiteTex;
+		//		LayoutBox::Slot* rslot = colorBox->Add(rpanel->MakeShared());
+		//		rslot->padding = Margin(20, 0);
+
+		//	}
+		//	LayoutBox::Slot* slot = box->Add(colorBox->MakeShared());
+		//	slot->fillX = true;
+		//	slot->fillY = true;
+
+		//}
+
+
+		//Button* exitBtn = new Button(m_guiStyle);
+		//exitBtn->OnPressed.Add(this, &SettingsScreen_Impl::Exit);
+		//exitBtn->SetText(L"Back");
+		//exitBtn->SetFontSize(32);
+		//btnSlot = box->Add(exitBtn->MakeShared());
+		//btnSlot->padding = Margin(2);
+		//btnSlot->alignment = Vector2(0.5f, 0.f);
 
 		return true;
 	}
@@ -529,29 +522,29 @@ public:
 		{
 			if (m_buttonMode == 1)
 			{
-				m_buttonButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerKeys[i])));
+				//m_buttonButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerKeys[i])));
 			}
 			else
 			{
-				m_buttonButtons[i]->SetText(Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardKeys[i]))));
+				//m_buttonButtons[i]->SetText(Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardKeys[i]))));
 			}
 		}
 		for (size_t i = 0; i < 2; i++)
 		{
 			if (m_laserMode == 2)
 			{
-				m_laserButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerLaserKeys[i])));
+				//m_laserButtons[i]->SetText(Utility::WSprintf(L"%d", g_gameConfig.GetInt(m_controllerLaserKeys[i])));
 			}
 			else
 			{
-				m_laserButtons[i]->SetText(Utility::WSprintf(
+				/*m_laserButtons[i]->SetText(Utility::WSprintf(
 					L"%ls/%ls", 
 					Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardLaserKeys[i * 2]))),
 					Utility::ConvertToWString(SDL_GetKeyName(g_gameConfig.GetInt(m_keyboardLaserKeys[i * 2 + 1])))
-					));
+					));*/
 			}
 
-			m_laserColorPanels[i]->color = Color::FromHSV(m_laserColors[i], 1.f, 1.f);
+			//m_laserColorPanels[i]->color = Color::FromHSV(m_laserColors[i], 1.f, 1.f);
 
 
 		}
@@ -559,12 +552,12 @@ public:
 
 	virtual void OnSuspend()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 	}
 };
 
@@ -580,7 +573,7 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
 	Ref<Gamepad> m_gamepad;
-	Label* m_prompt;
+	//Label* m_prompt;
 	GameConfigKeys m_key;
 	bool m_isGamepad;
 	int m_gamepadIndex;
@@ -600,39 +593,39 @@ public:
 
 	bool Init()
 	{
-		m_guiStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
+		//m_guiStyle = g_commonGUIStyle;
+		//m_canvas = Utility::MakeRef(new Canvas());
 
-		//Prompt Text
-		LayoutBox* box = new LayoutBox();
-		Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
-		slot->anchor = Anchor(0.5f, 0.5f);
-		slot->autoSizeX = true;
-		slot->autoSizeY = true;
-		slot->alignment = Vector2(0.5f, 0.5f);
+		////Prompt Text
+		//LayoutBox* box = new LayoutBox();
+		//Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
+		//slot->anchor = Anchor(0.5f, 0.5f);
+		//slot->autoSizeX = true;
+		//slot->autoSizeY = true;
+		//slot->alignment = Vector2(0.5f, 0.5f);
 
-		m_prompt = new Label();
-		m_prompt->SetText(L"Press Key");
-		m_prompt->SetFontSize(100);
-		box->Add(m_prompt->MakeShared());
-		if (m_knobs)
-			m_prompt->SetText(L"Press Left Key");
+		//m_prompt = new Label();
+		//m_prompt->SetText(L"Press Key");
+		//m_prompt->SetFontSize(100);
+		//box->Add(m_prompt->MakeShared());
+		//if (m_knobs)
+		//	m_prompt->SetText(L"Press Left Key");
 
 
-		if (m_isGamepad)
-		{
-			m_prompt->SetText(L"Press Button");
-			m_gamepad = g_gameWindow->OpenGamepad(m_gamepadIndex);
-			if (m_knobs)
-			{
-				m_prompt->SetText(L"Turn Knob");
-				for (size_t i = 0; i < m_gamepad->NumAxes(); i++)
-				{
-					m_gamepadAxes.Add(m_gamepad->GetAxis(i));
-				}
-			}
-			m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
-		}
+		//if (m_isGamepad)
+		//{
+		//	m_prompt->SetText(L"Press Button");
+		//	m_gamepad = g_gameWindow->OpenGamepad(m_gamepadIndex);
+		//	if (m_knobs)
+		//	{
+		//		m_prompt->SetText(L"Turn Knob");
+		//		for (size_t i = 0; i < m_gamepad->NumAxes(); i++)
+		//		{
+		//			m_gamepadAxes.Add(m_gamepad->GetAxis(i));
+		//		}
+		//	}
+		//	m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
+		//}
 
 		return true;
 	}
@@ -698,7 +691,7 @@ public:
 				default:
 					break;
 				}
-				m_prompt->SetText(L"Press Right Key");
+				//m_prompt->SetText(L"Press Right Key");
 				m_completed = true;
 			}
 			else
@@ -721,12 +714,12 @@ public:
 
 	virtual void OnSuspend()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 	}
 };
 
@@ -742,7 +735,7 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
 	Ref<Gamepad> m_gamepad;
-	Label* m_prompt;
+	//Label* m_prompt;
 	bool m_state = false;
 	float m_delta = 0.f;
 	float m_currentSetting = 0.f;
@@ -761,25 +754,25 @@ public:
 	bool Init()
 	{
 		m_guiStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
+		//m_canvas = Utility::MakeRef(new Canvas());
 
 		//Prompt Text
-		LayoutBox* box = new LayoutBox();
-		Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
-		slot->anchor = Anchor(0.5f, 0.5f);
-		slot->autoSizeX = true;
+		//LayoutBox* box = new LayoutBox();
+		//Canvas::Slot* slot = m_canvas->Add(box->MakeShared());
+		//slot->anchor = Anchor(0.5f, 0.5f);
+		/*slot->autoSizeX = true;
 		slot->autoSizeY = true;
-		slot->alignment = Vector2(0.5f, 0.5f);
+		slot->alignment = Vector2(0.5f, 0.5f);*/
 		g_input.GetInputLaserDir(0); //poll because there might be something idk
-		m_prompt = new Label();
-		m_prompt->SetText(L"Press Start Twice"); //Need to press twice because controller polling weirdness
-		m_prompt->SetFontSize(100);
+		//m_prompt = new Label();
+		//m_prompt->SetText(L"Press Start Twice"); //Need to press twice because controller polling weirdness
+		//m_prompt->SetFontSize(100);
 		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Controller)
 			m_currentSetting = g_gameConfig.GetFloat(GameConfigKeys::Controller_Sensitivity);
 		else
 			m_currentSetting = g_gameConfig.GetFloat(GameConfigKeys::Mouse_Sensitivity);
 
-		box->Add(m_prompt->MakeShared());
+		//box->Add(m_prompt->MakeShared());
 		g_input.OnButtonPressed.Add(this, &LaserSensCalibrationScreen_Impl::OnButtonPressed);
 		return true;
 	}
@@ -790,7 +783,7 @@ public:
 		if (m_state)
 		{	
 			float sens = 6.0 / (m_delta / m_currentSetting);
-			m_prompt->SetText(Utility::WSprintf(L"Turn left knob one revolution clockwise \nand then press start.\nCurrent Sens: %.2f", sens));
+			//m_prompt->SetText(Utility::WSprintf(L"Turn left knob one revolution clockwise \nand then press start.\nCurrent Sens: %.2f", sens));
 		}
 		else
 		{
@@ -812,7 +805,7 @@ public:
 				}
 				else
 				{
-					m_prompt->SetText(L"Turn left knob one revolution clockwise \nand then press start.");
+					//m_prompt->SetText(L"Turn left knob one revolution clockwise \nand then press start.");
 					m_delta = 0;
 					m_state = !m_state;
 				}
@@ -832,12 +825,12 @@ public:
 
 	virtual void OnSuspend()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 	}
 };
 

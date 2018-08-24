@@ -2,8 +2,6 @@
 #include "ScoreScreen.hpp"
 #include "Application.hpp"
 #include "GameConfig.hpp"
-#include <GUI/GUI.hpp>
-#include <GUI/CommonGUIStyle.hpp>
 #include <Audio/Audio.hpp>
 #include <Beatmap/MapDatabase.hpp>
 #include "Scoring.hpp"
@@ -24,9 +22,9 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
 	Ref<HealthGauge> m_gauge;
-	Ref<Panel> m_jacket;
+	//Ref<Panel> m_jacket;
 	Ref<Canvas> m_timingStatsCanvas;
-	Ref<LayoutBox> m_itemBox;
+	//Ref<LayoutBox> m_itemBox;
 	MapDatabase m_mapDatabase;
 	// Things for score screen
 	Graphics::Font m_specialFont;
@@ -98,285 +96,285 @@ public:
 	}
 	~ScoreScreen_Impl()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 
 	AsyncAssetLoader loader;
 	virtual bool AsyncLoad() override
 	{
 		m_guiStyle = g_commonGUIStyle;
+		String gaugePath = "gauges/normal/";
+		m_gauge = Ref<HealthGauge>(new HealthGauge());
+		if ((m_flags & GameFlags::Hard) != GameFlags::None)
+		{
+			gaugePath = "gauges/hard/";
+			m_gauge->colorBorder = 0.3f;
+			m_gauge->lowerColor = Colori(200, 50, 0);
+			m_gauge->upperColor = Colori(255, 100, 0);
+		}
 
-		m_canvas = Utility::MakeRef(new Canvas());
+		loader.AddTexture(m_gauge->fillTexture, gaugePath + "gauge_fill.png");
+		loader.AddTexture(m_gauge->frontTexture, gaugePath + "gauge_front.png");
+		loader.AddTexture(m_gauge->backTexture, gaugePath + "gauge_back.png");
+		loader.AddTexture(m_gauge->maskTexture, gaugePath + "gauge_mask.png");
+		loader.AddMaterial(m_gauge->fillMaterial, "gauge");
+		m_gauge->rate = m_finalGaugeValue;
+		//m_canvas = Utility::MakeRef(new Canvas());
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 		// Font
 		CheckedLoad(m_specialFont = FontRes::Create(g_gl,"skins/" + skin + "/fonts/divlit_custom.ttf"));
 		CheckedLoad(m_applause = g_audio->CreateSample("skins/" + skin + "/audio/applause.wav"));
 
-		// Background
-		Panel* fullBg = new Panel();
-		loader.AddTexture(fullBg->texture, "score/bg.png");
-		fullBg->color = Color(1.0f);
-		{
-			Canvas::Slot* slot = m_canvas->Add(fullBg->MakeShared());
-			slot->anchor = Anchors::Full;
-			slot->SetZOrder(-2);
-		}
-		
-		Canvas* innerCanvas = new Canvas();
-		Canvas::Slot* innerSlot = m_canvas->Add(innerCanvas->MakeShared());
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
+		//// Background
+		//Panel* fullBg = new Panel();
+		//loader.AddTexture(fullBg->texture, "score/bg.png");
+		//fullBg->color = Color(1.0f);
+		//{
+		//	Canvas::Slot* slot = m_canvas->Add(fullBg->MakeShared());
+		//	slot->anchor = Anchors::Full;
+		//	slot->SetZOrder(-2);
+		//}
+		//
+		//Canvas* innerCanvas = new Canvas();
+		//Canvas::Slot* innerSlot = m_canvas->Add(innerCanvas->MakeShared());
+		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
 
-		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		//Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
 
-		Vector2 bottomRight = topLeft + canvasRes;
+		//Vector2 bottomRight = topLeft + canvasRes;
 
-		innerSlot->allowOverflow = true;
-		topLeft /= g_resolution;
-		bottomRight /= g_resolution;
+		//innerSlot->allowOverflow = true;
+		//topLeft /= g_resolution;
+		//bottomRight /= g_resolution;
 
-		if (g_aspectRatio < 640.f / 480.f)
-			innerSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
-		else
-			innerSlot->anchor = Anchors::Full;
+		//if (g_aspectRatio < 640.f / 480.f)
+		//	innerSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
+		//else
+		//	innerSlot->anchor = Anchors::Full;
 
-		
-		// Border
-		Panel* border = new Panel();
-		border->color = Color::Black.WithAlpha(0.25f);
-		{
-			Canvas::Slot* slot = innerCanvas->Add(border->MakeShared());
-			slot->anchor = Anchors::Full;
-			slot->padding = Margin(0, 30);
-			slot->SetZOrder(-1);
-		}
+		//
+		//// Border
+		//Panel* border = new Panel();
+		//border->color = Color::Black.WithAlpha(0.25f);
+		//{
+		//	Canvas::Slot* slot = innerCanvas->Add(border->MakeShared());
+		//	slot->anchor = Anchors::Full;
+		//	slot->padding = Margin(0, 30);
+		//	slot->SetZOrder(-1);
+		//}
 
-		float screenSplit = 0.35f;
-		float sidePadding = 40.0f;
+		//float screenSplit = 0.35f;
+		//float sidePadding = 40.0f;
 
-		// Song info container
-		{
-			// Contains all song info
-			LayoutBox* songInfoContainer = new LayoutBox();
-			songInfoContainer->layoutDirection = LayoutBox::Horizontal;
-			{
-				Canvas::Slot* slot = innerCanvas->Add(songInfoContainer->MakeShared());
-				slot->anchor = Anchor(0.0f, 0.0f, 1.0f, screenSplit);
-				slot->padding = Margin(sidePadding * scale);
-				slot->padding.top = (30 + 20) * scale;
-				slot->padding.bottom = (20) * scale;
-				slot->alignment = Vector2(0.0f, 0.5f);
-			}
+		//// Song info container
+		//{
+		//	// Contains all song info
+		//	LayoutBox* songInfoContainer = new LayoutBox();
+		//	songInfoContainer->layoutDirection = LayoutBox::Horizontal;
+		//	{
+		//		Canvas::Slot* slot = innerCanvas->Add(songInfoContainer->MakeShared());
+		//		slot->anchor = Anchor(0.0f, 0.0f, 1.0f, screenSplit);
+		//		slot->padding = Margin(sidePadding * scale);
+		//		slot->padding.top = (30 + 20) * scale;
+		//		slot->padding.bottom = (20) * scale;
+		//		slot->alignment = Vector2(0.0f, 0.5f);
+		//	}
 
-			// Jacket image
-			Panel* jacketImage = new Panel();
-			m_jacket = Ref<Panel>(jacketImage);
-			jacketImage->texture = m_jacketImage;
-			jacketImage->imageFillMode = FillMode::Fit;
-			{
-				LayoutBox::Slot* slot = songInfoContainer->Add(jacketImage->MakeShared());
-				slot->fillY = true;
-				slot->alignment = Vector2(0.0f, 0.0f);
-			}
+		//	// Jacket image
+		//	Panel* jacketImage = new Panel();
+		//	m_jacket = Ref<Panel>(jacketImage);
+		//	jacketImage->texture = m_jacketImage;
+		//	jacketImage->imageFillMode = FillMode::Fit;
+		//	{
+		//		LayoutBox::Slot* slot = songInfoContainer->Add(jacketImage->MakeShared());
+		//		slot->fillY = true;
+		//		slot->alignment = Vector2(0.0f, 0.0f);
+		//	}
 
-			// Metadata container
-			LayoutBox* metadataContainer = new LayoutBox();
-			metadataContainer->layoutDirection = LayoutBox::Vertical;
-			{
-				LayoutBox::Slot* slot = songInfoContainer->Add(metadataContainer->MakeShared());
-				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding.left = 30 * scale;
-			}
-			auto AddMetadataLine = [&](const String& text)
-			{
-				Label* label = new Label();
-				label->SetText(Utility::ConvertToWString(text));
-				label->SetFontSize(48 * scale);
-				LayoutBox::Slot* slot = metadataContainer->Add(label->MakeShared());
-			};
-			// Title/Artist/Effector/Etc.
-			AddMetadataLine(m_beatmapSettings.title + Utility::Sprintf(" [%d]", m_beatmapSettings.level));
-			AddMetadataLine(m_beatmapSettings.artist);
-			AddMetadataLine("Effected By: " + m_beatmapSettings.effector);
-		}
+		//	// Metadata container
+		//	LayoutBox* metadataContainer = new LayoutBox();
+		//	metadataContainer->layoutDirection = LayoutBox::Vertical;
+		//	{
+		//		LayoutBox::Slot* slot = songInfoContainer->Add(metadataContainer->MakeShared());
+		//		slot->alignment = Vector2(0.0f, 0.5f);
+		//		slot->padding.left = 30 * scale;
+		//	}
+		//	auto AddMetadataLine = [&](const String& text)
+		//	{
+		//		Label* label = new Label();
+		//		label->SetText(Utility::ConvertToWString(text));
+		//		label->SetFontSize(48 * scale);
+		//		LayoutBox::Slot* slot = metadataContainer->Add(label->MakeShared());
+		//	};
+		//	// Title/Artist/Effector/Etc.
+		//	AddMetadataLine(m_beatmapSettings.title + Utility::Sprintf(" [%d]", m_beatmapSettings.level));
+		//	AddMetadataLine(m_beatmapSettings.artist);
+		//	AddMetadataLine("Effected By: " + m_beatmapSettings.effector);
+		//}
 
-		// Main score container
-		{
-			Panel* scoreContainerBg = new Panel();
-			scoreContainerBg->color = Color::Black.WithAlpha(0.5f);
-			{
-				Canvas::Slot* slot = innerCanvas->Add(scoreContainerBg->MakeShared());
-				slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f);
-				slot->padding = Margin(0, 0, 0, 50);
-			}
+		//// Main score container
+		//{
+		//	Panel* scoreContainerBg = new Panel();
+		//	scoreContainerBg->color = Color::Black.WithAlpha(0.5f);
+		//	{
+		//		Canvas::Slot* slot = innerCanvas->Add(scoreContainerBg->MakeShared());
+		//		slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f);
+		//		slot->padding = Margin(0, 0, 0, 50);
+		//	}
 
-			LayoutBox* scoreContainer = new LayoutBox();
-			scoreContainer->layoutDirection = LayoutBox::Horizontal;
-			{
-				Canvas::Slot* slot = innerCanvas->Add(scoreContainer->MakeShared());
-				slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f); 
-				slot->padding = Margin(0, 0, 0, 50);
-			}
+		//	LayoutBox* scoreContainer = new LayoutBox();
+		//	scoreContainer->layoutDirection = LayoutBox::Horizontal;
+		//	{
+		//		Canvas::Slot* slot = innerCanvas->Add(scoreContainer->MakeShared());
+		//		slot->anchor = Anchor(0.0f, screenSplit, 1.0f, 1.0f); 
+		//		slot->padding = Margin(0, 0, 0, 50);
+		//	}
 
 
 
-			// Score and graph
-			LayoutBox* scoreAndGraph = new LayoutBox();
-			scoreAndGraph->layoutDirection = LayoutBox::Vertical;
-			{
-				LayoutBox::Slot* slot = scoreContainer->Add(scoreAndGraph->MakeShared());
-				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding = Margin(20 * scale, 10 * scale);
-				slot->fillX = true;
-				slot->fillY = true;
-				slot->fillAmount = 1.0f;
-			}
+		//	// Score and graph
+		//	LayoutBox* scoreAndGraph = new LayoutBox();
+		//	scoreAndGraph->layoutDirection = LayoutBox::Vertical;
+		//	{
+		//		LayoutBox::Slot* slot = scoreContainer->Add(scoreAndGraph->MakeShared());
+		//		slot->alignment = Vector2(0.0f, 0.5f);
+		//		slot->padding = Margin(20 * scale, 10 * scale);
+		//		slot->fillX = true;
+		//		slot->fillY = true;
+		//		slot->fillAmount = 1.0f;
+		//	}
 
-			Label* score = new Label();
-			score->SetText(Utility::WSprintf(L"%08d", m_score));
-			score->SetFont(m_specialFont);
-			score->SetFontSize(80 * scale);
-			score->color = Color(0.75f);
-			score->SetTextOptions(FontRes::Monospace);
-			{
-				LayoutBox::Slot* slot = scoreAndGraph->Add(score->MakeShared());
-				slot->padding = Margin(0, 0, 0, 20 * scale);
-				slot->fillX = false;
-				slot->alignment = Vector2(0.5f, 0.0f);
-			}
+		//	Label* score = new Label();
+		//	score->SetText(Utility::WSprintf(L"%08d", m_score));
+		//	score->SetFont(m_specialFont);
+		//	score->SetFontSize(80 * scale);
+		//	score->color = Color(0.75f);
+		//	score->SetTextOptions(FontRes::Monospace);
+		//	{
+		//		LayoutBox::Slot* slot = scoreAndGraph->Add(score->MakeShared());
+		//		slot->padding = Margin(0, 0, 0, 20 * scale);
+		//		slot->fillX = false;
+		//		slot->alignment = Vector2(0.5f, 0.0f);
+		//	}
 
-			Label* perfomanceTitle = new Label();
-			perfomanceTitle->SetText(L"Performance");
-			perfomanceTitle->SetFont(m_specialFont);
-			perfomanceTitle->SetFontSize(40 * scale);
-			perfomanceTitle->color = Color(0.6f);
-			{
-				LayoutBox::Slot* slot = scoreAndGraph->Add(perfomanceTitle->MakeShared());
-				slot->padding = Margin(5 * scale, 0, 0, 5 * scale);
-				slot->alignment = Vector2(0.0f, 0.0f);
-			}
+		//	Label* perfomanceTitle = new Label();
+		//	perfomanceTitle->SetText(L"Performance");
+		//	perfomanceTitle->SetFont(m_specialFont);
+		//	perfomanceTitle->SetFontSize(40 * scale);
+		//	perfomanceTitle->color = Color(0.6f);
+		//	{
+		//		LayoutBox::Slot* slot = scoreAndGraph->Add(perfomanceTitle->MakeShared());
+		//		slot->padding = Margin(5 * scale, 0, 0, 5 * scale);
+		//		slot->alignment = Vector2(0.0f, 0.0f);
+		//	}
 
-			PerformanceGraph* graphPanel = new PerformanceGraph();
-			if ((m_flags & GameFlags::Hard) != GameFlags::None)
-			{
-				graphPanel->colorBorder = 0.3f;
-				graphPanel->upperColor = Colori(255, 100, 0);
-				graphPanel->lowerColor = Colori(200, 50, 0);
-			}
-			loader.AddTexture(graphPanel->borderTexture, "ui/button.png");
+		//	PerformanceGraph* graphPanel = new PerformanceGraph();
+		//	if ((m_flags & GameFlags::Hard) != GameFlags::None)
+		//	{
+		//		graphPanel->colorBorder = 0.3f;
+		//		graphPanel->upperColor = Colori(255, 100, 0);
+		//		graphPanel->lowerColor = Colori(200, 50, 0);
+		//	}
+		//	loader.AddTexture(graphPanel->borderTexture, "ui/button.png");
 
-			graphPanel->graphTex = m_graphTex;
+		//	graphPanel->graphTex = m_graphTex;
 
-			graphPanel->border = Margini(5);
-			{
-				LayoutBox::Slot* slot = scoreAndGraph->Add(graphPanel->MakeShared());
-				slot->fillY = true;
-				slot->fillX = true;
-				slot->padding = Margin(0, 0);
-			}
+		//	graphPanel->border = Margini(5);
+		//	{
+		//		LayoutBox::Slot* slot = scoreAndGraph->Add(graphPanel->MakeShared());
+		//		slot->fillY = true;
+		//		slot->fillX = true;
+		//		slot->padding = Margin(0, 0);
+		//	}
 
-			// Grade and hits
-			LayoutBox* gradePanel = new LayoutBox();
-			gradePanel->layoutDirection = LayoutBox::Vertical;
-			{
-				LayoutBox::Slot* slot = scoreContainer->Add(gradePanel->MakeShared());
-				slot->alignment = Vector2(0.0f, 0.5f);
-				slot->padding = Margin(30 * scale, 10 * scale);
-				slot->fillX = true;
-				slot->fillY = true;
-			}
+		//	// Grade and hits
+		//	LayoutBox* gradePanel = new LayoutBox();
+		//	gradePanel->layoutDirection = LayoutBox::Vertical;
+		//	{
+		//		LayoutBox::Slot* slot = scoreContainer->Add(gradePanel->MakeShared());
+		//		slot->alignment = Vector2(0.0f, 0.5f);
+		//		slot->padding = Margin(30 * scale, 10 * scale);
+		//		slot->fillX = true;
+		//		slot->fillY = true;
+		//	}
 
-			String gradeImagePath = String("score") + Path::sep + Scoring::CalculateGrade(m_score) + ".png";
-			Panel* gradeImage = new Panel();
-			loader.AddTexture(gradeImage->texture, gradeImagePath);
-			gradeImage->imageFillMode = FillMode::Fit;
-			{
-				LayoutBox::Slot* slot = gradePanel->Add(gradeImage->MakeShared());
-				slot->fillX = true;
-				slot->fillY = true;
-				slot->fillAmount = 0.7f;
-			}
+		//	String gradeImagePath = String("score") + Path::sep + Scoring::CalculateGrade(m_score) + ".png";
+		//	Panel* gradeImage = new Panel();
+		//	loader.AddTexture(gradeImage->texture, gradeImagePath);
+		//	gradeImage->imageFillMode = FillMode::Fit;
+		//	{
+		//		LayoutBox::Slot* slot = gradePanel->Add(gradeImage->MakeShared());
+		//		slot->fillX = true;
+		//		slot->fillY = true;
+		//		slot->fillAmount = 0.7f;
+		//	}
 
-			// Hit items
-			m_itemBox = Ref<LayoutBox>(new LayoutBox());
-			m_itemBox->layoutDirection = LayoutBox::Vertical;
-			{
-				LayoutBox::Slot* slot = gradePanel->Add(m_itemBox->MakeShared());
-				slot->fillX = true;
-				slot->fillY = true;
-				slot->padding = Margin(0, 20);
-			}
+		//	// Hit items
+		//	m_itemBox = Ref<LayoutBox>(new LayoutBox());
+		//	m_itemBox->layoutDirection = LayoutBox::Vertical;
+		//	{
+		//		LayoutBox::Slot* slot = gradePanel->Add(m_itemBox->MakeShared());
+		//		slot->fillX = true;
+		//		slot->fillY = true;
+		//		slot->padding = Margin(0, 20);
+		//	}
 
-			String gaugePath = "gauges/normal/";
-			m_gauge = Ref<HealthGauge>(new HealthGauge());
-			if ((m_flags & GameFlags::Hard) != GameFlags::None)
-			{
-				gaugePath = "gauges/hard/";
-				m_gauge->colorBorder = 0.3f;
-				m_gauge->lowerColor = Colori(200, 50, 0);
-				m_gauge->upperColor = Colori(255, 100, 0);
-			}
 
-			loader.AddTexture(m_gauge->fillTexture, gaugePath + "gauge_fill.png");
-			loader.AddTexture(m_gauge->frontTexture, gaugePath + "gauge_front.png");
-			loader.AddTexture(m_gauge->backTexture, gaugePath + "gauge_back.png");
-			loader.AddTexture(m_gauge->maskTexture, gaugePath + "gauge_mask.png");
-			loader.AddMaterial(m_gauge->fillMaterial, "gauge");
-			m_gauge->rate = m_finalGaugeValue;
-			{
-				LayoutBox::Slot* slot = scoreContainer->Add(m_gauge.As<GUIElementBase>());
-				slot->fillY = true;
-			}
+		//	{
+		//		LayoutBox::Slot* slot = scoreContainer->Add(m_gauge.As<GUIElementBase>());
+		//		slot->fillY = true;
+		//	}
 
-			{
-				m_timingStatsCanvas = Ref<Canvas>(new Canvas());
-				Canvas::Slot* slot = innerCanvas->Add(m_timingStatsCanvas->MakeShared());
-				slot->anchor = Anchor(0, 0.75, 0.25, 1);
+		//	{
+		//		m_timingStatsCanvas = Ref<Canvas>(new Canvas());
+		//		Canvas::Slot* slot = innerCanvas->Add(m_timingStatsCanvas->MakeShared());
+		//		slot->anchor = Anchor(0, 0.75, 0.25, 1);
 
-				Panel* statBackground = new Panel();
-				statBackground->color = Color(0, 0, 0).WithAlpha(0.75f);
-				slot = m_timingStatsCanvas->Add(statBackground->MakeShared());
-				slot->anchor = Anchors::Full;
+		//		Panel* statBackground = new Panel();
+		//		statBackground->color = Color(0, 0, 0).WithAlpha(0.75f);
+		//		slot = m_timingStatsCanvas->Add(statBackground->MakeShared());
+		//		slot->anchor = Anchors::Full;
 
-				LayoutBox* statsList = new LayoutBox();
-				statsList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
+		//		LayoutBox* statsList = new LayoutBox();
+		//		statsList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
 
-				{
-					Label* timingStat = new Label();
-					timingStat->SetText(Utility::WSprintf(L"Early: %d / Late: %d", m_timedHits[0], m_timedHits[1]));
-					timingStat->SetFontSize(24 * scale);
-					LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
-					boxSlot->fillX = true;
-					boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
-				}
-				{
-					Label* timingStat = new Label();
-					timingStat->SetText(Utility::WSprintf(L"Mean hit delta: %.2fms", m_meanHitDelta));
-					timingStat->SetFontSize(24 * scale);
-					LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
-					boxSlot->fillX = true;
-					boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
-				}
-				{
-					Label* timingStat = new Label();
-					timingStat->SetText(Utility::WSprintf(L"Median hit delta: %dms", m_medianHitDelta));
-					timingStat->SetFontSize(24 * scale);
-					LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
-					boxSlot->fillX = true;
-					boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
-				}
-				slot = m_timingStatsCanvas->Add(statsList->MakeShared());
-				slot->anchor = Anchors::Full;
-				m_timingStatsCanvas->visibility = Visibility::Hidden;
-			}
+		//		{
+		//			Label* timingStat = new Label();
+		//			timingStat->SetText(Utility::WSprintf(L"Early: %d / Late: %d", m_timedHits[0], m_timedHits[1]));
+		//			timingStat->SetFontSize(24 * scale);
+		//			LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
+		//			boxSlot->fillX = true;
+		//			boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
+		//		}
+		//		{
+		//			Label* timingStat = new Label();
+		//			timingStat->SetText(Utility::WSprintf(L"Mean hit delta: %.2fms", m_meanHitDelta));
+		//			timingStat->SetFontSize(24 * scale);
+		//			LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
+		//			boxSlot->fillX = true;
+		//			boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
+		//		}
+		//		{
+		//			Label* timingStat = new Label();
+		//			timingStat->SetText(Utility::WSprintf(L"Median hit delta: %dms", m_medianHitDelta));
+		//			timingStat->SetFontSize(24 * scale);
+		//			LayoutBox::Slot* boxSlot = statsList->Add(timingStat->MakeShared());
+		//			boxSlot->fillX = true;
+		//			boxSlot->padding = Margin(3 * scale, 3 * scale, 0, 0);
+		//		}
+		//		slot = m_timingStatsCanvas->Add(statsList->MakeShared());
+		//		slot->anchor = Anchors::Full;
+		//		m_timingStatsCanvas->visibility = Visibility::Hidden;
+		//	}
 
-		}
+		//}
 
-		// Load hit textures (Good, Perfect, Miss)
-		loader.AddTexture(m_categorizedHitTextures[3], "score/scorec.png"); // Max combo
-		loader.AddTexture(m_categorizedHitTextures[2], "score/score2.png");
-		loader.AddTexture(m_categorizedHitTextures[1], "score/score1.png");
-		loader.AddTexture(m_categorizedHitTextures[0], "score/score0.png");
+		//// Load hit textures (Good, Perfect, Miss)
+		//loader.AddTexture(m_categorizedHitTextures[3], "score/scorec.png"); // Max combo
+		//loader.AddTexture(m_categorizedHitTextures[2], "score/score2.png");
+		//loader.AddTexture(m_categorizedHitTextures[1], "score/score1.png");
+		//loader.AddTexture(m_categorizedHitTextures[0], "score/score0.png");
 
 		return loader.Load();
 	}
@@ -385,8 +383,8 @@ public:
 		if(!loader.Finalize())
 			return false;
 
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
+		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
 
 		// Make gauge material transparent
 		m_gauge->fillMaterial->opaque = false;
@@ -394,35 +392,35 @@ public:
 		// Add indicators for ammounts of miss/good/perfect hits
 		auto AddScoreRow = [&](Texture texture, int32 count)
 		{
-			Canvas* canvas = new Canvas();
-			LayoutBox::Slot* slot4 = m_itemBox->Add(canvas->MakeShared());
-			slot4->fillX = true;
-			slot4->fillY = false;
-			slot4->alignment = Vector2(0.0f, 0.5f);
-			slot4->padding = Margin(0, 5);
-			slot4->allowOverflow = true;
-			Panel* icon = new Panel();
-			icon->color = Color::White;
-			icon->texture = texture;
-			icon->imageFillMode = FillMode::Fit;
-			icon->imageAlignment = Vector2(0.5, 0.5);
-			Canvas::Slot* canvasSlot = canvas->Add(icon->MakeShared());
-			canvasSlot->anchor = Anchor(0.0f, 0.33f, 0.5f, 1.0f); /// TODO: Remove Y offset and center properly
-			canvasSlot->autoSizeX = true;
-			canvasSlot->autoSizeY = true;
-			canvasSlot->alignment = Vector2(0.0f, 0.5f);
+			//Canvas* canvas = new Canvas();
+			//LayoutBox::Slot* slot4 = m_itemBox->Add(canvas->MakeShared());
+			//slot4->fillX = true;
+			//slot4->fillY = false;
+			//slot4->alignment = Vector2(0.0f, 0.5f);
+			//slot4->padding = Margin(0, 5);
+			//slot4->allowOverflow = true;
+			//Panel* icon = new Panel();
+			//icon->color = Color::White;
+			//icon->texture = texture;
+			//icon->imageFillMode = FillMode::Fit;
+			//icon->imageAlignment = Vector2(0.5, 0.5);
+			//Canvas::Slot* canvasSlot = canvas->Add(icon->MakeShared());
+			//canvasSlot->anchor = Anchor(0.0f, 0.33f, 0.5f, 1.0f); /// TODO: Remove Y offset and center properly
+			//canvasSlot->autoSizeX = true;
+			//canvasSlot->autoSizeY = true;
+			//canvasSlot->alignment = Vector2(0.0f, 0.5f);
 
-			Label* countLabel = new Label();
-			countLabel->SetFont(m_specialFont);
-			countLabel->SetFontSize(64 * scale);
-			countLabel->SetTextOptions(FontRes::Monospace);
-			countLabel->color = Color(0.5f);
-			countLabel->SetText(Utility::WSprintf(L"%05d", count));
-			canvasSlot = canvas->Add(countLabel->MakeShared());
-			canvasSlot->anchor = Anchor(0.5f, 0.0f, 1.0f, 1.0f); 
-			canvasSlot->autoSizeX = true;
-			canvasSlot->autoSizeY = true;
-			canvasSlot->alignment = Vector2(1.0f, 0.5f);
+			//Label* countLabel = new Label();
+			//countLabel->SetFont(m_specialFont);
+			//countLabel->SetFontSize(64 * scale);
+			//countLabel->SetTextOptions(FontRes::Monospace);
+			//countLabel->color = Color(0.5f);
+			//countLabel->SetText(Utility::WSprintf(L"%05d", count));
+			//canvasSlot = canvas->Add(countLabel->MakeShared());
+			//canvasSlot->anchor = Anchor(0.5f, 0.0f, 1.0f, 1.0f); 
+			//canvasSlot->autoSizeX = true;
+			//canvasSlot->autoSizeY = true;
+			//canvasSlot->alignment = Vector2(1.0f, 0.5f);
 		};
 
 		// Add hit statistics
@@ -436,8 +434,8 @@ public:
 	bool Init() override
 	{
 		// Add to screen
-		Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		rootSlot->anchor = Anchors::Full;
+		//Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//rootSlot->anchor = Anchors::Full;
 
 		// Play score screen sound
 		m_applause->Play();
@@ -462,7 +460,7 @@ public:
 		if(m_jacketImage == m_songSelectStyle->loadingJacketImage)
 		{
 			m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
-			m_jacket->texture = m_jacketImage;
+			//m_jacket->texture = m_jacketImage;
 		}
 	}
 	virtual void Tick(float deltaTime) override
@@ -474,20 +472,20 @@ public:
 
 		m_startPressed = g_input.GetButton(Input::Button::BT_S);
 
-		if (g_input.GetButton(Input::Button::FX_0))
-			m_timingStatsCanvas->visibility = Visibility::Visible;
-		else
-			m_timingStatsCanvas->visibility = Visibility::Hidden;
+		if (g_input.GetButton(Input::Button::FX_0)) {}
+			//m_timingStatsCanvas->visibility = Visibility::Visible;
+		else {}
+			//m_timingStatsCanvas->visibility = Visibility::Hidden;
 	}
 
 	virtual void OnSuspend()
 	{
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
 	}
 
 };

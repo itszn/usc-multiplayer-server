@@ -24,9 +24,7 @@
 #include "SDL2/SDL_keycode.h"
 #endif
 
-#include "GUI/GUI.hpp"
 #include "GUI/HealthGauge.hpp"
-#include "GUI/SettingsBar.hpp"
 #include "GUI/PlayingSongInfo.hpp"
 
 // Try load map helper
@@ -83,9 +81,9 @@ private:
 	Ref<Canvas> m_canvas;
 	Ref<HealthGauge> m_scoringGauge;
 	Ref<PlayingSongInfo> m_psi;
-	Ref<SettingsBar> m_settingsBar;
+	//Ref<SettingsBar> m_settingsBar;
 	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Label> m_scoreText;
+	//Ref<Label> m_scoreText;
 
 	Graphics::Font m_fontDivlit;
 
@@ -197,7 +195,7 @@ public:
 		// Save hispeed
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>()); 
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>()); 
 
 		// In case the cursor was still hidden
 		g_gameWindow->SetCursorVisible(true); 
@@ -459,22 +457,22 @@ public:
 	virtual bool Init() override
 	{
 		// Add to root canvas to be rendered (this makes the HUD visible)
-		Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		if (g_aspectRatio < 640.f / 480.f)
-		{
-			Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
+		//if (g_aspectRatio < 640.f / 480.f)
+		//{
+		//	Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
 
-			Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		//	Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
 
-			Vector2 bottomRight = topLeft + canvasRes;
-			rootSlot->allowOverflow = true;
-			topLeft /= g_resolution;
-			bottomRight /= g_resolution;
+		//	Vector2 bottomRight = topLeft + canvasRes;
+		//	rootSlot->allowOverflow = true;
+		//	topLeft /= g_resolution;
+		//	bottomRight /= g_resolution;
 
-			rootSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
-		}
-		else
-			rootSlot->anchor = Anchors::Full;
+		//	rootSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
+		//}
+		//else
+		//	rootSlot->anchor = Anchors::Full;
 		return true;
 	}
 
@@ -548,7 +546,7 @@ public:
 		m_camera.SetRollIntensity(m_rollIntensity);
 
 		// Set track zoom
-		if(!m_settingsBar->IsShown()) // Overridden settings?
+		if(false) // Overridden settings?
 		{
 			m_camera.pZoom = m_playback.GetZoom(0);
 			m_camera.pPitch = m_playback.GetZoom(1);
@@ -696,152 +694,156 @@ public:
 		CheckedLoad(m_fontDivlit = FontRes::Create(g_gl, "skins/" + skin + "/fonts/divlit_custom.ttf"));
 		m_guiStyle = g_commonGUIStyle;
 
-		// Game GUI canvas
-		m_canvas = Utility::MakeRef(new Canvas());
+		//// Game GUI canvas
+		//m_canvas = Utility::MakeRef(new Canvas());
 
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-		Vector2 bottomRight = topLeft + canvasRes;
-		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
-		canvasRes.y = bottomRight.y - topLeft.y;
+		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		//Vector2 bottomRight = topLeft + canvasRes;
+		//topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
+		//canvasRes.y = bottomRight.y - topLeft.y;
 
-		float scale = canvasRes.x / 640.f;
+		//float scale = canvasRes.x / 640.f;
 
 
-		if (g_aspectRatio < 1.0)
+		//if (g_aspectRatio < 1.0)
+		//{
+		//	//Top Fill
+		//	{
+		//		Panel* topPanel = new Panel();
+		//		loader.AddTexture(topPanel->texture, "fill_top.png");
+		//		topPanel->color = Color::White;
+		//		topPanel->imageFillMode = FillMode::Fit;
+		//		topPanel->imageAlignment = Vector2(0.5, 0.0);
+		//		Canvas::Slot* topSlot = m_canvas->Add(topPanel->MakeShared());
+
+		//		float topPanelTop = topLeft.y / canvasRes.y;
+
+		//		topSlot->anchor = Anchor(0.0, -topPanelTop, 1.0, 1.0);
+		//		topSlot->alignment = Vector2(0.5, 1.0);
+		//		topSlot->allowOverflow = true;
+		//	}
+
+		//	//Bottom Fill
+		//	{
+		//		Panel* bottomPanel = new Panel();
+		//		loader.AddTexture(bottomPanel->texture, "fill_bottom.png");
+		//		bottomPanel->color = Color::White;
+		//		bottomPanel->imageFillMode = FillMode::Fit;
+		//		bottomPanel->imageAlignment = Vector2(0.5, 1.0);
+		//		Canvas::Slot* bottomSlot = m_canvas->Add(bottomPanel->MakeShared());
+
+		//		float canvasBottom = topLeft.y + canvasRes.y;
+		//		float pixelsTobottom = g_resolution.y - canvasBottom;
+		//		float bottomPanelbottom = pixelsTobottom / canvasRes.y;
+
+		//		bottomSlot->anchor = Anchor(0.0, 0.0, 1.0, 1.0 + bottomPanelbottom);
+		//		bottomSlot->alignment = Vector2(0.5, 1.0);
+		//		bottomSlot->allowOverflow = true;
+		//	}
+		//}
+
+		//{
+
+
+
+
+		//	Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
+		//	slot->anchor = Anchor(0.0, 0.25, 1.0, 0.8);
+		//	slot->alignment = Vector2(1.0f, 0.5f);
+		//	slot->autoSizeX = true;
+		//	slot->autoSizeY = true;
+		//}
+
+		//// Setting bar
+		//{
+		//	uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
+
+		//	SettingsBar* sb = new SettingsBar(m_guiStyle);
+		//	m_settingsBar = Ref<SettingsBar>(sb);
+		//	sb->AddSetting(&m_camera.pZoom, -1.0f, 1.0f, "Bottom Zoom");
+		//	sb->AddSetting(&m_camera.pPitch, -1.0f, 1.0f, "Top Zoom");
+		//	sb->AddSetting(&(m_track->roll), 0.0f, 1.0f, "Track roll");
+		//	sb->AddSetting(m_camera.pitchOffsets + portrait, 0.0f, 1.0f, "Crit Line Height");
+		//	sb->AddSetting(m_camera.fovs + portrait, 0.0f, 180.0f, "FOV");
+		//	sb->AddSetting(m_camera.baseRadius + portrait, 0.0f, 2.0f, "Base distance to track");
+		//	sb->AddSetting(m_camera.basePitch + portrait, 0.0f, -180.0f, "Base pitch");
+		//	sb->AddSetting(&(m_track->trackLength), 4.0f, 20.0f, "Track Length");
+		//	sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
+		//	sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f / 32.0f, 1.0f, "Laser Distance Leniency");
+		//	sb->AddSetting(&m_shakeAmount, 0.3, 10.0f, "Screen Shake Amount");
+		//	sb->AddSetting(&m_shakeDuration, 0.0, 1.0f, "Screen Shake Duration");
+		//	sb->AddSetting(&m_camera.cameraShakeX, -3.0f, 3.0f, "Screen Shake X");
+		//	sb->AddSetting(&m_camera.cameraShakeY, -3.0f, 3.0f, "Screen Shake Y");
+		//	sb->AddSetting(&m_camera.cameraShakeZ, -3.0f, 3.0f, "Screen Shake Z");
+		//	sb->AddSetting(m_audioPlayback.GetPlaybackSpeedPtr(), 0.01f, 2.0f, "Playback Speed");
+		//	m_settingsBar->SetShow(false);
+
+		//	Canvas::Slot* settingsSlot = m_canvas->Add(sb->MakeShared());
+		//	settingsSlot->anchor = Anchor(0.75f, 0.0f, 1.0f, 1.0f);
+		//	settingsSlot->autoSizeX = false;
+		//	settingsSlot->autoSizeY = false;
+		//	settingsSlot->SetZOrder(2);
+		//}
+
+		//// Score
+		//{
+		//	Panel* scorePanel = new Panel();
+		//	loader.AddTexture(scorePanel->texture, "scoring_base.png");
+		//	scorePanel->color = Color::White;
+		//	scorePanel->imageFillMode = FillMode::Fit;
+
+		//	Canvas::Slot* scoreSlot = m_canvas->Add(scorePanel->MakeShared());
+		//	scoreSlot->anchor = Anchor(0.75, 0.0, 1.0, 1.0);
+		//	scoreSlot->alignment = Vector2(1.0f, 0.0f);
+		//	scoreSlot->autoSizeX = true;
+		//	scoreSlot->autoSizeY = true;
+
+		//	m_scoreText = Ref<Label>(new Label());
+		//	m_scoreText->SetFontSize(32 * scale);
+		//	m_scoreText->SetText(Utility::WSprintf(L"%08d", 0));
+		//	m_scoreText->SetFont(m_fontDivlit);
+		//	m_scoreText->SetTextOptions(FontRes::Monospace);
+		//	// Padding for this specific font
+		//	Margin textPadding = Margin(0, 10, 0, 0);
+
+		//	Panel::Slot* slot = scorePanel->SetContent(m_scoreText.As<GUIElementBase>());
+		//	slot->padding = (Margin(20, 0, 10, 30) + textPadding) * scale;
+
+		//	slot->alignment = Vector2(0.5f, 0.5f);
+		//}
+
+
+		//// Song info
+		//{
+		//	Canvas::Slot* psiSlot = m_canvas->Add(psi->MakeShared());
+		//	psiSlot->autoSizeY = true;
+		//	psiSlot->autoSizeX = true;
+		//	psiSlot->anchor = Anchors::TopLeft;
+		//	psiSlot->alignment = Vector2(0.0f, 0.0f);
+		//	psiSlot->padding = Margin(10, 10, 0, 0);
+
+		//}
+
+		m_scoringGauge = Utility::MakeRef(new HealthGauge());
+		String gaugePath = "gauges/normal/";
+		if ((m_flags & GameFlags::Hard) != GameFlags::None)
 		{
-			//Top Fill
-			{
-				Panel* topPanel = new Panel();
-				loader.AddTexture(topPanel->texture, "fill_top.png");
-				topPanel->color = Color::White;
-				topPanel->imageFillMode = FillMode::Fit;
-				topPanel->imageAlignment = Vector2(0.5, 0.0);
-				Canvas::Slot* topSlot = m_canvas->Add(topPanel->MakeShared());
-
-				float topPanelTop = topLeft.y / canvasRes.y;
-
-				topSlot->anchor = Anchor(0.0, -topPanelTop, 1.0, 1.0);
-				topSlot->alignment = Vector2(0.5, 1.0);
-				topSlot->allowOverflow = true;
-			}
-
-			//Bottom Fill
-			{
-				Panel* bottomPanel = new Panel();
-				loader.AddTexture(bottomPanel->texture, "fill_bottom.png");
-				bottomPanel->color = Color::White;
-				bottomPanel->imageFillMode = FillMode::Fit;
-				bottomPanel->imageAlignment = Vector2(0.5, 1.0);
-				Canvas::Slot* bottomSlot = m_canvas->Add(bottomPanel->MakeShared());
-
-				float canvasBottom = topLeft.y + canvasRes.y;
-				float pixelsTobottom = g_resolution.y - canvasBottom;
-				float bottomPanelbottom = pixelsTobottom / canvasRes.y;
-
-				bottomSlot->anchor = Anchor(0.0, 0.0, 1.0, 1.0 + bottomPanelbottom);
-				bottomSlot->alignment = Vector2(0.5, 1.0);
-				bottomSlot->allowOverflow = true;
-			}
+			gaugePath = "gauges/hard/";
+			m_scoringGauge->colorBorder = 0.3f;
+			m_scoringGauge->lowerColor = Colori(200, 50, 0);
+			m_scoringGauge->upperColor = Colori(255, 100, 0);
 		}
+		// Gauge
+		loader.AddTexture(m_scoringGauge->fillTexture, gaugePath + "gauge_fill.png");
+		loader.AddTexture(m_scoringGauge->frontTexture, gaugePath + "gauge_front.png");
+		loader.AddTexture(m_scoringGauge->backTexture, gaugePath + "gauge_back.png");
+		loader.AddTexture(m_scoringGauge->maskTexture, gaugePath + "gauge_mask.png");
+		loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
 
-		{
-			m_scoringGauge = Utility::MakeRef(new HealthGauge());
-			String gaugePath = "gauges/normal/";
-			if ((m_flags & GameFlags::Hard) != GameFlags::None)
-			{
-				gaugePath = "gauges/hard/";
-				m_scoringGauge->colorBorder = 0.3f;
-				m_scoringGauge->lowerColor = Colori(200,50,0);
-				m_scoringGauge->upperColor = Colori(255,100,0);
-			}
-
-			// Gauge
-			loader.AddTexture(m_scoringGauge->fillTexture, gaugePath + "gauge_fill.png");
-			loader.AddTexture(m_scoringGauge->frontTexture, gaugePath + "gauge_front.png");
-			loader.AddTexture(m_scoringGauge->backTexture, gaugePath + "gauge_back.png");
-			loader.AddTexture(m_scoringGauge->maskTexture, gaugePath + "gauge_mask.png");
-			loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
-
-			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
-			slot->anchor = Anchor(0.0, 0.25, 1.0, 0.8);
-			slot->alignment = Vector2(1.0f, 0.5f);
-			slot->autoSizeX = true;
-			slot->autoSizeY = true;
-		}
-
-		// Setting bar
-		{
-			uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
-
-			SettingsBar* sb = new SettingsBar(m_guiStyle);
-			m_settingsBar = Ref<SettingsBar>(sb);
-			sb->AddSetting(&m_camera.pZoom, -1.0f, 1.0f, "Bottom Zoom");
-			sb->AddSetting(&m_camera.pPitch, -1.0f, 1.0f, "Top Zoom");
-			sb->AddSetting(&(m_track->roll), 0.0f, 1.0f, "Track roll");
-			sb->AddSetting(m_camera.pitchOffsets + portrait, 0.0f, 1.0f, "Crit Line Height");
-			sb->AddSetting(m_camera.fovs + portrait, 0.0f, 180.0f, "FOV");
-			sb->AddSetting(m_camera.baseRadius + portrait, 0.0f, 2.0f, "Base distance to track");
-			sb->AddSetting(m_camera.basePitch + portrait, 0.0f, -180.0f, "Base pitch");
-			sb->AddSetting(&(m_track->trackLength), 4.0f, 20.0f, "Track Length");
-			sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
-			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f / 32.0f, 1.0f, "Laser Distance Leniency");
-			sb->AddSetting(&m_shakeAmount, 0.3, 10.0f, "Screen Shake Amount");
-			sb->AddSetting(&m_shakeDuration, 0.0, 1.0f, "Screen Shake Duration");
-			sb->AddSetting(&m_camera.cameraShakeX, -3.0f, 3.0f, "Screen Shake X");
-			sb->AddSetting(&m_camera.cameraShakeY, -3.0f, 3.0f, "Screen Shake Y");
-			sb->AddSetting(&m_camera.cameraShakeZ, -3.0f, 3.0f, "Screen Shake Z");
-			sb->AddSetting(m_audioPlayback.GetPlaybackSpeedPtr(), 0.01f, 2.0f, "Playback Speed");
-			m_settingsBar->SetShow(false);
-
-			Canvas::Slot* settingsSlot = m_canvas->Add(sb->MakeShared());
-			settingsSlot->anchor = Anchor(0.75f, 0.0f, 1.0f, 1.0f);
-			settingsSlot->autoSizeX = false;
-			settingsSlot->autoSizeY = false;
-			settingsSlot->SetZOrder(2);
-		}
-
-		// Score
-		{
-			Panel* scorePanel = new Panel();
-			loader.AddTexture(scorePanel->texture, "scoring_base.png");
-			scorePanel->color = Color::White;
-			scorePanel->imageFillMode = FillMode::Fit;
-
-			Canvas::Slot* scoreSlot = m_canvas->Add(scorePanel->MakeShared());
-			scoreSlot->anchor = Anchor(0.75, 0.0, 1.0, 1.0);
-			scoreSlot->alignment = Vector2(1.0f, 0.0f);
-			scoreSlot->autoSizeX = true;
-			scoreSlot->autoSizeY = true;
-
-			m_scoreText = Ref<Label>(new Label());
-			m_scoreText->SetFontSize(32 * scale);
-			m_scoreText->SetText(Utility::WSprintf(L"%08d", 0));
-			m_scoreText->SetFont(m_fontDivlit);
-			m_scoreText->SetTextOptions(FontRes::Monospace);
-			// Padding for this specific font
-			Margin textPadding = Margin(0, 10, 0, 0);
-
-			Panel::Slot* slot = scorePanel->SetContent(m_scoreText.As<GUIElementBase>());
-			slot->padding = (Margin(20, 0, 10, 30) + textPadding) * scale;
-
-			slot->alignment = Vector2(0.5f, 0.5f);
-		}
-
-
-		// Song info
-		{
-			PlayingSongInfo* psi = new PlayingSongInfo(*this);
-			m_psi = Ref<PlayingSongInfo>(psi);
-			loader.AddMaterial(m_psi->progressMaterial, "progressBar");
-			Canvas::Slot* psiSlot = m_canvas->Add(psi->MakeShared());
-			psiSlot->autoSizeY = true;
-			psiSlot->autoSizeX = true;
-			psiSlot->anchor = Anchors::TopLeft;
-			psiSlot->alignment = Vector2(0.0f, 0.0f);
-			psiSlot->padding = Margin(10, 10, 0, 0);
-
-		}
+		PlayingSongInfo* psi = new PlayingSongInfo(*this);
+		m_psi = Ref<PlayingSongInfo>(psi);
+		loader.AddMaterial(m_psi->progressMaterial, "progressBar");
 
 		return true;
 	}
@@ -1143,20 +1145,22 @@ public:
 	virtual void RenderDebugHUD(float deltaTime)
 	{
 		// Render debug overlay elements
-		RenderQueue& debugRq = g_guiRenderer->Begin();
+		//RenderQueue& debugRq = g_guiRenderer->Begin();
 		auto RenderText = [&](const String& text, const Vector2& pos, const Color& color = Color::White)
 		{
-			return g_guiRenderer->RenderText(text, pos, color);
+			return Vector2();
+			//return g_guiRenderer->RenderText(text, pos, color);
 		};
 
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-		Vector2 bottomRight = topLeft + canvasRes;
-		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
+		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		//Vector2 bottomRight = topLeft + canvasRes;
+		//topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
 
 		const BeatmapSettings& bms = m_beatmap->GetMapSettings();
 		const TimingPoint& tp = m_playback.GetCurrentTimingPoint();
-		Vector2 textPos = topLeft + Vector2i(5, 0);
+		//Vector2 textPos = topLeft + Vector2i(5, 0);
+		Vector2 textPos = Vector2i(5, 0);
 		textPos.y += RenderText(bms.title, textPos).y;
 		textPos.y += RenderText(bms.artist, textPos).y;
 		textPos.y += RenderText(Utility::Sprintf("%.2f FPS", g_application->GetRenderFPS()), textPos).y;
@@ -1221,7 +1225,7 @@ public:
 			textPos.y += RenderText(text, textPos, c).y;
 		}
 
-		g_guiRenderer->End();
+		//g_guiRenderer->End();
 	}
 
 	void OnLaserSlamHit(LaserObjectState* object)
@@ -1299,10 +1303,10 @@ public:
 	void OnScoreChanged(uint32 newScore)
 	{
 		// Update score text
-		if(m_scoreText)
-		{
-			m_scoreText->SetText(Utility::WSprintf(L"%08d", newScore));
-		}
+		//if(m_scoreText)
+		//{
+		//	m_scoreText->SetText(Utility::WSprintf(L"%08d", newScore));
+		//}
 	}
 
 	// These functions control if FX button DSP's are muted or not
@@ -1423,12 +1427,12 @@ public:
 		else if(key == SDLK_F8)
 		{
 			m_renderDebugHUD = !m_renderDebugHUD;
-			m_psi->visibility = m_renderDebugHUD ? Visibility::Collapsed : Visibility::Visible;
+			//m_psi->visibility = m_renderDebugHUD ? Visibility::Collapsed : Visibility::Visible;
 		}
 		else if(key == SDLK_TAB)
 		{
-			g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
-			m_settingsBar->SetShow(!m_settingsBar->IsShown());
+			//g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
+			//m_settingsBar->SetShow(!m_settingsBar->IsShown());
 		}
 	}
 	void m_OnButtonPressed(Input::Button buttonCode)

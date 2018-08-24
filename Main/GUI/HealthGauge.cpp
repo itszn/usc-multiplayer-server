@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <GUI/GUIRenderer.hpp>
 #include "HealthGauge.hpp"
 #include "Application.hpp"
 
@@ -7,16 +6,16 @@ HealthGauge::HealthGauge()
 {
 }
 
-void HealthGauge::Render(GUIRenderData rd)
+void HealthGauge::Render()
 {
 	// Calculate bar placement to fit parent rectangle
-	Rect barArea = GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area);
-	float elementScale = barArea.size.x / frontTexture->GetSize().x; // Scale of the original bar
-	GUISlotBase::ApplyAlignment(Vector2(0.5f), barArea, rd.area);
+	//Rect barArea = GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area);
+	//float elementScale = barArea.size.x / frontTexture->GetSize().x; // Scale of the original bar
+	//GUISlotBase::ApplyAlignment(Vector2(0.5f), barArea, rd.area);
 
-	// Optional Bg?
-	if(backTexture)
-		rd.guiRenderer->RenderRect(barArea, Color::White, backTexture);
+	//// Optional Bg?
+	//if(backTexture)
+	//	rd.guiRenderer->RenderRect(barArea, Color::White, backTexture);
 
 	MaterialParameterSet params;
 	params.SetParameter("mainTex", fillTexture);
@@ -24,8 +23,8 @@ void HealthGauge::Render(GUIRenderData rd)
 	params.SetParameter("rate", rate);
 
 	Transform transform;
-	transform *= Transform::Translation(rd.area.pos);
-	transform *= Transform::Scale(Vector3(rd.area.size.x, rd.area.size.y, 1.0f));
+	//transform *= Transform::Translation(rd.area.pos);
+	//transform *= Transform::Scale(Vector3(rd.area.size.x, rd.area.size.y, 1.0f));
 
 
 	Color color;
@@ -38,13 +37,14 @@ void HealthGauge::Render(GUIRenderData rd)
 		color = lowerColor;
 	}
 	params.SetParameter("barColor", color);
-	rd.rq->Draw(transform, rd.guiRenderer->guiQuad, fillMaterial, params);
+	//rd.rq->Draw(transform, rd.guiRenderer->guiQuad, fillMaterial, params);
 
-	// Draw frame last
-	rd.guiRenderer->RenderRect(barArea, Color::White, frontTexture);
+	//// Draw frame last
+	//rd.guiRenderer->RenderRect(barArea, Color::White, frontTexture);
 }
 
-Vector2 HealthGauge::GetDesiredSize(GUIRenderData rd)
+Vector2 HealthGauge::GetDesiredSize()
 {
-	return GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area).size;
+	//return GUISlotBase::ApplyFill(FillMode::Fit, frontTexture->GetSize(), rd.area).size;
+	return Vector2();
 }
