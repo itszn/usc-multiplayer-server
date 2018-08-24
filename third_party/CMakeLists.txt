@@ -6,6 +6,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src)
 add_library(nanovg nanovg/src/nanovg.c)
 target_include_directories(nanovg PUBLIC nanovg/src)
 
+add_subdirectory(lua-5.3.5)
+
 if(WIN32)
 	# Use bundled third party libraries on windows
 	add_subdirectory(freetype)

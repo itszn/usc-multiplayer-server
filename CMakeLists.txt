@@ -86,6 +86,7 @@ if(MSVC)
 	set_target_properties(freetype PROPERTIES FOLDER "Third Party")
 	set_target_properties(SDL2 PROPERTIES FOLDER "Third Party")
     set_target_properties(nanovg PROPERTIES FOLDER "Third Party")
+    set_target_properties(lua PROPERTIES FOLDER "Third Party")
 	
 	# My libraries in the libraries folder
 	set_target_properties(Shared PROPERTIES FOLDER Libraries)

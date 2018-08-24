@@ -14,6 +14,12 @@
 #include "GameConfig.hpp"
 #include "Input.hpp"
 #include "TransitionScreen.hpp"
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+}
 #include "nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
@@ -26,6 +32,7 @@
 GameConfig g_gameConfig;
 OpenGL* g_gl = nullptr;
 NVGcontext* g_vg = nullptr;
+lua_State* g_lua = nullptr;
 Graphics::Window* g_gameWindow = nullptr;
 Application* g_application = nullptr;
 JobSheduler* g_jobSheduler = nullptr;
@@ -161,6 +168,18 @@ void Application::m_SaveConfig()
 	}
 }
 
+static int luatest(lua_State* L)
+{
+	const char* text = luaL_checkstring(L, 1);
+	nvgBeginPath(g_vg);
+	nvgFontFace(g_vg, "fallback");
+	nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
+	nvgFontSize(g_vg, 20);
+	nvgFillColor(g_vg, nvgRGB(255, 200, 0));
+	nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 20, text, 0);
+	return 0;
+}
+
 bool Application::m_Init()
 {
 	ProfilerScope $("Application Setup");
@@ -279,8 +298,10 @@ bool Application::m_Init()
 		}
 		g_vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.ttf");
-
+		LoadScript("test");
+		lua_register(g_lua, "Test", luatest);
 	}
+
 
 	// call the initial OnWindowResized now that we have intialized OpenGL
 	m_OnWindowResized(g_resolution);
@@ -425,6 +446,8 @@ void Application::m_MainLoop()
 	}
 }
 
+
+
 void Application::m_Tick()
 {
 	// Handle input first
@@ -447,7 +470,12 @@ void Application::m_Tick()
 		{
 			tickable->Render(m_deltaTime);
 		}
-
+		lua_getglobal(g_lua, "render");
+		if (lua_pcall(g_lua, 0, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
+		}
+	
 		// Time to render GUI
 		//g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
 		nvgBeginPath(g_vg);
@@ -600,6 +628,19 @@ Sample Application::LoadSample(const String& name, const bool& external)
 	Sample ret = g_audio->CreateSample(path);
 	assert(ret);
 	return ret;
+}
+
+bool Application::LoadScript(const String & name)
+{
+	g_lua = luaL_newstate();
+	luaL_openlibs(g_lua);
+	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	if (luaL_dofile(g_lua, path.c_str()))
+	{
+		Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
+		return false;
+	}
+	return true;
 }
 
 float Application::GetRenderFPS() const

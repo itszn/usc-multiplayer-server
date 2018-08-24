@@ -37,6 +37,8 @@ target_link_libraries(Main Audio)
 target_link_libraries(Main GUI)
 target_link_libraries(Main Beatmap)
 target_link_libraries(Main nanovg)
+target_link_libraries(Main lua)
+
 
 if(WIN32)
 	# Bundled libraries

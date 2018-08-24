@@ -51,7 +51,7 @@ public:
 	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
-
+	bool LoadScript(const String& name);
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;
 
@@ -64,7 +64,6 @@ private:
 	bool m_Init();
 	void m_MainLoop();
 	void m_Tick();
-
 	void m_Cleanup();
 	void m_OnKeyPressed(int32 key);
 	void m_OnKeyReleased(int32 key);
