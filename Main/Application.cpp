@@ -23,6 +23,7 @@ extern "C"
 #include "nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
+#include "GUI/nanovg_lua.h"
 #ifdef _WIN32
 #include "SDL_keycode.h"
 #else
@@ -31,8 +32,6 @@ extern "C"
 
 GameConfig g_gameConfig;
 OpenGL* g_gl = nullptr;
-NVGcontext* g_vg = nullptr;
-lua_State* g_lua = nullptr;
 Graphics::Window* g_gameWindow = nullptr;
 Application* g_application = nullptr;
 JobSheduler* g_jobSheduler = nullptr;
@@ -298,8 +297,6 @@ bool Application::m_Init()
 		}
 		g_vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.ttf");
-		LoadScript("test");
-		lua_register(g_lua, "Test", luatest);
 	}
 
 
@@ -307,28 +304,6 @@ bool Application::m_Init()
 	m_OnWindowResized(g_resolution);
 
 	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
-
-	{
-		ProfilerScope $1("GUI Init");
-
-		// GUI Rendering
-		//g_guiRenderer = new GUIRenderer();
-		//if (!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
-		//{
-		//	Logf("Failed to initialize GUI renderer", Logger::Error);
-		//	return false;
-		//}
-	}
-
-	{
-		ProfilerScope $1("Loading common GUI elements");
-		// Load GUI style for common elements
-		//g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
-	}
-
-	// Create root canvas
-	//g_rootCanvas = Ref<Canvas>(new Canvas());
-
 	return true;
 }
 void Application::m_MainLoop()
@@ -470,11 +445,11 @@ void Application::m_Tick()
 		{
 			tickable->Render(m_deltaTime);
 		}
-		lua_getglobal(g_lua, "render");
-		if (lua_pcall(g_lua, 0, 0, 0) != 0)
-		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
-		}
+		//lua_getglobal(g_lua, "render");
+		//if (lua_pcall(g_lua, 0, 0, 0) != 0)
+		//{
+		//	Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
+		//}
 	
 		// Time to render GUI
 		//g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
@@ -630,17 +605,19 @@ Sample Application::LoadSample(const String& name, const bool& external)
 	return ret;
 }
 
-bool Application::LoadScript(const String & name)
+lua_State* Application::LoadScript(const String & name)
 {
-	g_lua = luaL_newstate();
-	luaL_openlibs(g_lua);
+	lua_State* s = luaL_newstate();
+	luaL_openlibs(s);
 	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
-	if (luaL_dofile(g_lua, path.c_str()))
+	if (luaL_dofile(s, path.c_str()))
 	{
-		Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
-		return false;
+		Logf("Lua error: %s", Logger::Error, lua_tostring(s, -1));
+		lua_close(s);
+		return nullptr;
 	}
-	return true;
+	m_SetNvgLuaBindings(s);
+	return s;
 }
 
 float Application::GetRenderFPS() const
@@ -693,7 +670,6 @@ void Application::m_OnWindowResized(const Vector2i& newSize)
 	g_gl->SetViewport(newSize);
 	glViewport(0, 0, newSize.x, newSize.y);
 	glScissor(0, 0, newSize.x, newSize.y);
-
 	// Set in config
 	if (g_gameWindow->IsFullscreen()){
 		g_gameConfig.Set(GameConfigKeys::FullscreenMonitorIndex, g_gameWindow->GetDisplayIndex());
@@ -701,4 +677,33 @@ void Application::m_OnWindowResized(const Vector2i& newSize)
 		g_gameConfig.Set(GameConfigKeys::ScreenWidth, newSize.x);
 		g_gameConfig.Set(GameConfigKeys::ScreenHeight, newSize.y);
 	}
+}
+
+static int lGetMousePos(lua_State* L)
+{
+	Vector2i pos = g_gameWindow->GetMousePos();
+	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, pos.y);
+	return 2;
+}
+
+static int lGetResolution(lua_State* L)
+{
+	lua_pushnumber(L, g_resolution.x);
+	lua_pushnumber(L, g_resolution.y);
+	return 2;
+}
+
+void Application::m_SetNvgLuaBindings(lua_State * state)
+{
+	lua_register(state, "BeginPath", lBeginPath);
+	lua_register(state, "Rect", lRect);
+	lua_register(state, "Fill", lFill);
+	lua_register(state, "FillColor", lFillColor);
+	lua_register(state, "Text", lText);
+	lua_register(state, "TextAlign", lTextAlign);
+	lua_register(state, "FontFace", lFontFace);
+	lua_register(state, "FontSize", lFontSize);
+	lua_register(state, "GetMousePos", lGetMousePos);
+	lua_register(state, "GetResolution", lGetResolution);
 }

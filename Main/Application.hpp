@@ -51,7 +51,7 @@ public:
 	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
-	bool LoadScript(const String& name);
+	class lua_State* LoadScript(const String& name);
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;
 
@@ -68,6 +68,7 @@ private:
 	void m_OnKeyPressed(int32 key);
 	void m_OnKeyReleased(int32 key);
 	void m_OnWindowResized(const Vector2i& newSize);
+	void m_SetNvgLuaBindings(class lua_State* state);
 
 	RenderState m_renderStateBase;
 	Vector<String> m_commandLine;
