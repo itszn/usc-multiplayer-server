@@ -36,6 +36,9 @@ public:
 	// Current running map path (full file path)
 	String GetCurrentMapPath();
 
+	// Current loaded skin;
+	String GetCurrentSkin();
+
 	// Retrieves application command line parameters
 	const Vector<String>& GetAppCommandLine() const;
 

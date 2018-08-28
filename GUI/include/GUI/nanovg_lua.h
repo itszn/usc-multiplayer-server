@@ -65,3 +65,79 @@ static int lTextAlign(lua_State* L /*int align*/)
 	nvgTextAlign(g_vg, luaL_checkinteger(L, 1));
 	return 0;
 }
+static int lCreateImage(lua_State* L /*const char* filename, int imageflags */)
+{
+	const char* filename = luaL_checkstring(L, 1);
+	int imageflags = luaL_checkinteger(L, 2);
+	int handle = nvgCreateImage(g_vg, filename, imageflags);
+	if (handle != 0)
+	{
+		lua_pushnumber(L, handle);
+		return 1;
+	}
+	return 0;
+}
+static int lImagePatternFill(lua_State* L /*int image, float alpha*/)
+{
+	int image = luaL_checkinteger(L, 1);
+	float alpha = luaL_checknumber(L, 2);
+	int w, h;
+	nvgImageSize(g_vg, image, &w, &h);
+	nvgFillPaint(g_vg, nvgImagePattern(g_vg, 0, 0, w, h, 0, image, alpha));
+	return 0;
+}
+static int lImageRect(lua_State* L /*float x, float y, float w, float h, int image, float alpha, float angle*/)
+{
+	float x, y, w, h, alpha, angle;
+	int image;
+	x = luaL_checknumber(L, 1);
+	y = luaL_checknumber(L, 2);
+	w = luaL_checknumber(L, 3);
+	h = luaL_checknumber(L, 4);
+	image = luaL_checkinteger(L, 5);
+	alpha = luaL_checknumber(L, 6);
+	angle = luaL_checknumber(L, 7);
+
+	int imgH, imgW;
+	nvgImageSize(g_vg, image, &imgW, &imgH);
+	float scaleX, scaleY;
+	scaleX = w / imgW;
+	scaleY = h / imgH;
+	nvgTranslate(g_vg, x, y);
+	nvgRotate(g_vg, angle);
+	nvgScale(g_vg, scaleX, scaleY);
+	nvgFillPaint(g_vg, nvgImagePattern(g_vg, 0, 0, imgW, imgH, 0, image, alpha));
+	nvgRect(g_vg, 0, 0, imgW, imgH);
+	nvgFill(g_vg);
+	nvgScale(g_vg, 1.0 / scaleX, 1.0 / scaleY);
+	nvgRotate(g_vg, -angle);
+	nvgTranslate(g_vg, -x, -y);
+	return 0;
+}
+static int lScale(lua_State* L /*float x, float y*/)
+{
+	float x, y;
+	x = luaL_checknumber(L, 1);
+	y = luaL_checknumber(L, 2);
+	nvgScale(g_vg, x, y);
+	return 0;
+}
+static int lTranslate(lua_State* L /*float x, float y*/)
+{
+	float x, y;
+	x = luaL_checknumber(L, 1);
+	y = luaL_checknumber(L, 2);
+	nvgTranslate(g_vg, x, y);
+	return 0;
+}
+static int lRotate(lua_State* L /*float angle*/)
+{
+	float angle = luaL_checknumber(L, 1);
+	nvgRotate(g_vg, angle);
+	return 0;
+}
+static int lResetTransform(lua_State* L)
+{
+	nvgResetTransform(g_vg);
+	return 0;
+}

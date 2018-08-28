@@ -22,31 +22,31 @@ end;
 draw_button = function(name, x, y, hoverindex)
     local rx = x - (buttonWidth / 2);
     local ty = y - (buttonHeight / 2);
-    BeginPath();
-    FillColor(0,128,255);
+    gfx.BeginPath();
+    gfx.FillColor(0,128,255);
     if mouse_clipped(rx,ty, buttonWidth, buttonHeight) then
        hovered = hoverindex; 
-       FillColor(255,128,0);
+       gfx.FillColor(255,128,0);
     end
-    Rect(rx - buttonBorder,
+    gfx.Rect(rx - buttonBorder,
         ty - buttonBorder, 
         buttonWidth + (buttonBorder * 2), 
         buttonHeight + (buttonBorder * 2));
-    Fill();
-    BeginPath();
-    FillColor(40,40,40);
-    Rect(rx, ty, buttonWidth, buttonHeight);
-    Fill();
-    BeginPath();
-    FillColor(255,255,255);
-    TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
-    FontSize(40);
-    Text(name, x, y);
+    gfx.Fill();
+    gfx.BeginPath();
+    gfx.FillColor(40,40,40);
+    gfx.Rect(rx, ty, buttonWidth, buttonHeight);
+    gfx.Fill();
+    gfx.BeginPath();
+    gfx.FillColor(255,255,255);
+    gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
+    gfx.FontSize(40);
+    gfx.Text(name, x, y);
 end;
 
 render = function(deltaTime)
-    resx,resy = GetResolution();
-    mposx,mposy = GetMousePos();
+    resx,resy = game.GetResolution();
+    mposx,mposy = game.GetMousePos();
     buttonY = resy / 2;
     hovered = 0;
     draw_button("Start", resx / 2, buttonY, 1);
@@ -55,10 +55,10 @@ render = function(deltaTime)
     buttonY = buttonY + 100;
     draw_button("Exit", resx / 2, buttonY, 3);
     
-    BeginPath();
-    FillColor(255,255,255);
-    FontSize(120);
-    Text("unnamed_sdvx_clone", resx / 2, resy / 2 - 150);
+    gfx.BeginPath();
+    gfx.FillColor(255,255,255);
+    gfx.FontSize(120);
+    gfx.Text("unnamed_sdvx_clone", resx / 2, resy / 2 - 150);
 end;
 
 mouse_pressed = function(button)

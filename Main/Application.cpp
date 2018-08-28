@@ -538,6 +538,11 @@ String Application::GetCurrentMapPath()
 	return m_lastMapPath;
 }
 
+String Application::GetCurrentSkin()
+{
+	return m_skin;
+}
+
 const Vector<String>& Application::GetAppCommandLine() const
 {
 	return m_commandLine;
@@ -610,13 +615,13 @@ lua_State* Application::LoadScript(const String & name)
 	lua_State* s = luaL_newstate();
 	luaL_openlibs(s);
 	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	m_SetNvgLuaBindings(s);
 	if (luaL_dofile(s, path.c_str()))
 	{
 		Logf("Lua error: %s", Logger::Error, lua_tostring(s, -1));
 		lua_close(s);
 		return nullptr;
 	}
-	m_SetNvgLuaBindings(s);
 	return s;
 }
 
@@ -694,16 +699,56 @@ static int lGetResolution(lua_State* L)
 	return 2;
 }
 
+static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
+{
+	const char* filename = luaL_checkstring(L, 1);
+	int imageflags = luaL_checkinteger(L, 2);
+	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + filename;
+	int handle = nvgCreateImage(g_vg, path.c_str(), imageflags);
+	if (handle != 0)
+	{
+		lua_pushnumber(L, handle);
+		return 1;
+	}
+	return 0;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
-	lua_register(state, "BeginPath", lBeginPath);
-	lua_register(state, "Rect", lRect);
-	lua_register(state, "Fill", lFill);
-	lua_register(state, "FillColor", lFillColor);
-	lua_register(state, "Text", lText);
-	lua_register(state, "TextAlign", lTextAlign);
-	lua_register(state, "FontFace", lFontFace);
-	lua_register(state, "FontSize", lFontSize);
-	lua_register(state, "GetMousePos", lGetMousePos);
-	lua_register(state, "GetResolution", lGetResolution);
+	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
+	{
+		lua_pushstring(state, name);
+		lua_pushcfunction(state, func);
+		lua_settable(state, -3);
+	};
+
+	//gfx
+	{
+		lua_newtable(state);
+		pushFuncToTable("BeginPath", lBeginPath);
+		pushFuncToTable("Rect", lRect);
+		pushFuncToTable("Fill", lFill);
+		pushFuncToTable("FillColor", lFillColor);
+		pushFuncToTable("CreateImage", lCreateImage);
+		pushFuncToTable("CreateSkinImage", lCreateSkinImage);
+		pushFuncToTable("ImagePatternFill", lImagePatternFill);
+		pushFuncToTable("ImageRect", lImageRect);
+		pushFuncToTable("Text", lText);
+		pushFuncToTable("TextAlign", lTextAlign);
+		pushFuncToTable("FontFace", lFontFace);
+		pushFuncToTable("FontSize", lFontSize);
+		pushFuncToTable("Translate", lTranslate);
+		pushFuncToTable("Scale", lScale);
+		pushFuncToTable("Rotate", lRotate);
+		pushFuncToTable("ResetTransform", lResetTransform);
+		lua_setglobal(state, "gfx");
+	}
+
+	//game
+	{
+		lua_newtable(state);
+		pushFuncToTable("GetMousePos", lGetMousePos);
+		pushFuncToTable("GetResolution", lGetResolution);
+		lua_setglobal(state, "game");
+	}
 }

@@ -46,6 +46,8 @@ private:
 
 	void MousePressed(MouseButton button)
 	{
+		if (IsSuspended())
+			return;
 		lua_getglobal(m_lua, "mouse_pressed");
 		lua_pushnumber(m_lua, (int32)button);
 		if (lua_pcall(m_lua, 1, 1, 0) != 0)
