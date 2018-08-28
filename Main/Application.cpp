@@ -699,6 +699,14 @@ static int lGetResolution(lua_State* L)
 	return 2;
 }
 
+static int lLog(lua_State* L)
+{
+	String msg = luaL_checkstring(L, 1);
+	int severity = luaL_checkinteger(L, 2);
+	Log(msg, (Logger::Severity)severity);
+	return 0;
+}
+
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
 {
 	const char* filename = luaL_checkstring(L, 1);
@@ -749,6 +757,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		lua_newtable(state);
 		pushFuncToTable("GetMousePos", lGetMousePos);
 		pushFuncToTable("GetResolution", lGetResolution);
+		pushFuncToTable("Log", lLog);
 		lua_setglobal(state, "game");
 	}
 }
