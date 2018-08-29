@@ -49,6 +49,7 @@ render = function(deltaTime)
     mposx,mposy = game.GetMousePos();
     buttonY = resy / 2;
     hovered = 0;
+    gfx.LoadSkinFont("segoeui.ttf");
     draw_button("Start", resx / 2, buttonY, 1);
     buttonY = buttonY + 100;
     draw_button("Settings", resx / 2, buttonY, 2);

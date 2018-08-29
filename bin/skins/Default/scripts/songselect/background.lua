@@ -13,5 +13,4 @@ render = function(deltaTime)
     gfx.BeginPath();
     gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
-    gfx.Text("Song select", resx/2, resy/2);
 end

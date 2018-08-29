@@ -1,13 +1,7 @@
 # All third party libraries
 cmake_minimum_required(VERSION 3.4)
 
-#nanovg
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src)
-add_library(nanovg nanovg/src/nanovg.c)
-target_include_directories(nanovg PUBLIC nanovg/src)
-
 add_subdirectory(lua-5.3.5)
-
 if(WIN32)
 	# Use bundled third party libraries on windows
 	add_subdirectory(freetype)
@@ -18,3 +12,14 @@ if(WIN32)
 	add_subdirectory(libogg-1.3.2)
 	add_subdirectory(libvorbis-1.3.5)
 endif(WIN32)
+
+#nanovg
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src)
+add_library(nanovg nanovg/src/nanovg.c)
+target_include_directories(nanovg PUBLIC nanovg/src)
+if(WIN32)
+    target_link_libraries(nanovg freetype)
+else(WIN32)
+	target_link_libraries(nanovg ${FREETYPE_LIBRARIES})
+endif(WIN32)
+add_definitions(-DFONS_USE_FREETYPE)

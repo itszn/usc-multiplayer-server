@@ -7,6 +7,19 @@
 NVGcontext* g_vg;
 
 
+static int LoadFont(const char* name, const char* filename)
+{
+	if (nvgFindFont(g_vg, name) != -1)
+	{
+		nvgFontFace(g_vg, name);
+		return 0;
+	}
+
+	nvgFontFaceId(g_vg, nvgCreateFont(g_vg, name, filename));
+	nvgAddFallbackFont(g_vg, name, "fallback");
+	return 0;
+}
+
 static int lBeginPath(lua_State* L)
 {
 	nvgBeginPath(g_vg);
@@ -141,3 +154,11 @@ static int lResetTransform(lua_State* L)
 	nvgResetTransform(g_vg);
 	return 0;
 }
+static int lLoadFont(lua_State* L /*const char* name, const char* filename*/)
+{
+	const char* name = luaL_checkstring(L, 1);
+	const char* filename = luaL_checkstring(L, 2);
+	LoadFont(name, filename);
+	return 0;
+}
+

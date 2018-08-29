@@ -9,14 +9,17 @@ TEXT_ALIGN_BOTTOM	= 32;
 TEXT_ALIGN_BASELINE	= 64;
 
 local jacket = nil;
+local selectedIndex = 1;
 
 render = function(deltaTime)
     resx,resy = game.GetResolution();
     gfx.BeginPath();
+    gfx.LoadSkinFont("segoeui.ttf");
     gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
-    gfx.Text("Song select", resx/2, resy/2);
+    gfx.FillColor(255,255,255);
     if songwheel.songs ~= nil then
+        gfx.Text(songwheel.songs[selectedIndex].title, resx/2, resy/2);
         if jacket == nil then
             jacket = gfx.CreateImage(songwheel.songs[1].path .. "/" .. songwheel.songs[1].difficulties[1].jacketPath, 0);
         end;
@@ -25,3 +28,8 @@ render = function(deltaTime)
         gfx.ImageRect(0,0,100,100,jacket,1,0);
     end
 end
+
+set_index = function(newIndex)
+    game.Log(songwheel.songs[newIndex].title, 3);
+    selectedIndex = newIndex;
+end;

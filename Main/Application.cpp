@@ -167,18 +167,6 @@ void Application::m_SaveConfig()
 	}
 }
 
-static int luatest(lua_State* L)
-{
-	const char* text = luaL_checkstring(L, 1);
-	nvgBeginPath(g_vg);
-	nvgFontFace(g_vg, "fallback");
-	nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
-	nvgFontSize(g_vg, 20);
-	nvgFillColor(g_vg, nvgRGB(255, 200, 0));
-	nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 20, text, 0);
-	return 0;
-}
-
 bool Application::m_Init()
 {
 	ProfilerScope $("Application Setup");
@@ -296,7 +284,7 @@ bool Application::m_Init()
 			return false;
 		}
 		g_vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.ttf");
+		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.otf");
 	}
 
 
@@ -721,6 +709,14 @@ static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags 
 	return 0;
 }
 
+static int lLoadSkinFont(lua_State* L /*const char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	String path = "skins/" + g_application->GetCurrentSkin() + "/fonts/" + name;
+	LoadFont(name, path.c_str());
+	return 0;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -749,6 +745,8 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Scale", lScale);
 		pushFuncToTable("Rotate", lRotate);
 		pushFuncToTable("ResetTransform", lResetTransform);
+		pushFuncToTable("LoadFont", lLoadFont);
+		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
 		lua_setglobal(state, "gfx");
 	}
 

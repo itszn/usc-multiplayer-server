@@ -18,7 +18,7 @@
 extern "C" {
 #include "lua.h"
 }
-
+#include <iterator>
 
 /*
 	Song preview player with fade-in/out
@@ -256,6 +256,17 @@ public:
 			static const int32 numItems = 10;
 			m_currentlySelectedMapId = it->second.GetMap()->id;
 			int32 istart;
+
+			//set index in lua
+			uint32 selectedPosition = std::distance(srcCollection.begin(), it);
+			lua_getglobal(m_lua, "set_index");
+			lua_pushinteger(m_lua, selectedPosition + 1);
+			if (lua_pcall(m_lua, 1, 0, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				assert(false);
+			}
+
 			for(istart = 0; istart > -numItems;)
 			{
 				if(it == srcCollection.begin())
@@ -482,6 +493,7 @@ private:
 			m_PushStringToTable("title", song.second.GetDifficulties()[0]->settings.title.c_str());
 			m_PushStringToTable("artist", song.second.GetDifficulties()[0]->settings.artist.c_str());
 			m_PushStringToTable("bpm", song.second.GetDifficulties()[0]->settings.bpm.c_str());
+			m_PushIntToTable("id", song.second.GetMap()->id);
 			m_PushStringToTable("path", song.second.GetMap()->path.c_str());
 			int diffIndex = 0;
 			lua_pushstring(m_lua, "difficulties");
@@ -494,6 +506,7 @@ private:
 				m_PushStringToTable("jacketPath", settings.jacketPath.c_str());
 				m_PushIntToTable("level", settings.level);
 				m_PushIntToTable("difficulty", settings.difficulty);
+				m_PushIntToTable("id", diff->id);
 				m_PushStringToTable("effector", settings.effector.c_str());
 				lua_pushstring(m_lua, "scores");
 				lua_newtable(m_lua);
