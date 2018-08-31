@@ -18,15 +18,19 @@ render = function(deltaTime)
     gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
     gfx.FillColor(255,255,255);
-    if songwheel.songs ~= nil then
-        gfx.Text(songwheel.songs[selectedIndex].title, resx/2, resy/2);
-        if jacket == nil then
-            jacket = gfx.CreateImage(songwheel.songs[1].path .. "/" .. songwheel.songs[1].difficulties[1].jacketPath, 0);
-        end;
-    end;
-    if jacket ~= nil then
-        gfx.ImageRect(0,0,100,100,jacket,1,0);
+    if songwheel.songs[1] ~= nil then
+        for i,song in ipairs(songwheel.songs) do
+            offset = i - selectedIndex
+            offset = offset * 50
+            gfx.BeginPath();
+            if i == selectedIndex then
+                gfx.FastText("--> " .. song.title .. " <--", resx/2, resy/2 + offset, 40, TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE)
+            else
+                gfx.FastText(song.title, resx/2, resy/2 + offset, 40, TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE)
+            end
+        end
     end
+    gfx.ResetTransform();
 end
 
 set_index = function(newIndex)

@@ -13,16 +13,18 @@ local selectedLevel = 1;
 local selectedFolder = 1;
 
 render = function(deltaTime, shown)
+    if not shown then
+        return
+    end
     resx,resy = game.GetResolution();
     gfx.BeginPath();
+    gfx.LoadSkinFont("segoeui.ttf");
     gfx.TextAlign(TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
-    if shown then
-        if selectingFolders then
-            gfx.Text(filters.folder[selectedFolder], 0, resy/2);
-        else
-            gfx.Text(filters.level[selectedLevel], 0, resy/2);
-        end
+    if selectingFolders then
+        gfx.FastText(filters.folder[selectedFolder], 0, resy/2, 40, TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
+    else
+        gfx.FastText(filters.level[selectedLevel], 0, resy/2, 40, TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
     end
 end
 

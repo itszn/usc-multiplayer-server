@@ -19,7 +19,6 @@ extern "C" {
 #include "lua.h"
 }
 #include <iterator>
-
 /*
 	Song preview player with fade-in/out
 */
@@ -791,7 +790,6 @@ public:
 	bool Init()
 	{
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/settingswheel"));
-
 		m_gameFlags = GameFlags::None;
 
 		AddSetting(L"Hard Guage", GameFlags::Hard);
@@ -800,7 +798,6 @@ public:
 		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);
 		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
-
 	}
 	virtual void Render(float deltaTime)
 	{
@@ -935,96 +932,10 @@ private:
 public:
 	bool Init() override
 	{
+//		Logf("%i", Logger::Info, __LINE__);
 		m_commonGUIStyle = g_commonGUIStyle;
 		m_style = SongSelectStyle::Get(g_application);
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/background"));
-		//m_canvas = Utility::MakeRef(new Canvas());
-
-		// Load textures for song select
-
-		//// Split between statistics and selection wheel (in percentage)
-		//const float screenSplit = 0.0f;
-
-		//// Statistics window
-		//m_statisticsWindow = Ref<SongStatistics>(new SongStatistics(m_style));
-		//Canvas::Slot* statisticsSlot = m_canvas->Add(m_statisticsWindow.As<GUIElementBase>());
-		//statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
-		//statisticsSlot->SetZOrder(2);
-
-		//for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
-		//{
-		//	m_timeSinceButtonPressed[(Input::Button)i] = 0;
-		//	m_timeSinceButtonReleased[(Input::Button)i] = 0;
-		//}
-
-
-
-		//Panel* background = new Panel();
-		//background->imageFillMode = FillMode::Fill;
-		//background->texture = g_application->LoadTexture("bg.png");
-		//background->color = Color(0.5f);
-		//Canvas::Slot* bgSlot = m_canvas->Add(background->MakeShared());
-		//bgSlot->anchor = Anchors::Full;
-		//bgSlot->SetZOrder(-2);
-
-		//LayoutBox* box = new LayoutBox();
-		//Canvas::Slot* boxSlot = m_canvas->Add(box->MakeShared());
-		//boxSlot->anchor = Anchor(screenSplit, 0, 1.0f, 1.0f);
-		//box->layoutDirection = LayoutBox::Vertical;
-		//{
-		//	m_searchField = Ref<TextInputField>(new TextInputField(m_commonGUIStyle));
-		//	LayoutBox::Slot* searchFieldSlot = box->Add(m_searchField.As<GUIElementBase>());
-		//	searchFieldSlot->fillX = true;
-		//	m_searchField->OnTextUpdated.Add(this, &SongSelect_Impl::OnSearchTermChanged);
-
-		//	m_filterStatus = Ref<Label>(new Label());
-		//	m_filterStatus->SetFontSize(40);
-		//	m_filterStatus->SetText(L"All / All");
-		//	LayoutBox::Slot* filterLabelSlot = box->Add(m_filterStatus->MakeShared());
-
-		//	LayoutBox::Slot* selectionSlot = box->Add(m_selectionWheel.As<GUIElementBase>());
-		//	selectionSlot->fillY = true;
-			
-
-
-		//	
-		//}
-
-		//{
-		//	m_fadePanel = Ref<Panel>(new Panel());
-		//	m_fadePanel->color = Color(0.f);
-		//	m_fadePanel->color.w = 0.0f;
-		//	Canvas::Slot* panelSlot = m_canvas->Add(m_fadePanel->MakeShared());
-		//	panelSlot->anchor = Anchors::Full;
-		//}
-
-		//{
-		//	m_scoreCanvas = Ref<Canvas>(new Canvas());
-		//	Canvas::Slot* slot = m_canvas->Add(m_scoreCanvas->MakeShared());
-		//	slot->anchor = Anchor(1.0,0.0,2.0,10.0);
-
-		//	Panel* scoreBg = new Panel();
-		//	scoreBg->color = Color(Vector3(0.5), 1.0);
-		//	slot = m_scoreCanvas->Add(scoreBg->MakeShared());
-		//	slot->anchor = Anchors::Full;
-
-		//	m_scoreList = Ref<LayoutBox>(new LayoutBox());
-		//	m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
-		//	slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
-		//	slot->anchor = Anchors::Full;
-		//}
-
-		//{
-		//	Canvas::Slot* slot = m_canvas->Add(m_settingsWheel->MakeShared());
-		//	slot->anchor = Anchor(0.0, -1.0, 1.0, 0.0);
-		//}
-
-		//{
-		//	Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
-		//	slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
-		//}
-		// Select interface sound
-		// Set up input
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
 		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);
 		m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
@@ -1045,7 +956,6 @@ public:
 
 		m_mapDatabase.OnMapsAdded.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsAdded);
 		m_mapDatabase.OnMapsUpdated.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsUpdated);
-		m_mapDatabase.OnMapsRemoved.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsRemoved);
 		m_mapDatabase.OnMapsCleared.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsCleared);
 		m_mapDatabase.StartSearching();
 

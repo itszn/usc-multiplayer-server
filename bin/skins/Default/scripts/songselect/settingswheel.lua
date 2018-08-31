@@ -11,9 +11,10 @@ TEXT_ALIGN_BASELINE	= 64;
 render = function(deltaTime, shown)
     resx,resy = game.GetResolution();
     gfx.BeginPath();
+    gfx.LoadSkinFont("segoeui.ttf");
     gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
     if shown then
-        gfx.Text("Settings wheel", resx/2, resy/2);
+        gfx.FastText("Settings wheel", resx/2, resy/2, 40, TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
     end
 end

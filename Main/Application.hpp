@@ -1,6 +1,5 @@
 #pragma once
 #include <Audio/Sample.hpp>
-
 extern class OpenGL* g_gl;
 extern class NVGcontext* g_vg;
 extern class Graphics::Window* g_gameWindow;
@@ -44,6 +43,7 @@ public:
 
 	// Gets a basic template for a render state, with all the application variables initialized
 	RenderState GetRenderStateBase() const;
+	RenderQueue* GetRenderQueueBase();
 
 #ifdef LoadImage
 #undef LoadImage
@@ -54,9 +54,11 @@ public:
 	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
+	Font LoadFont(const String& name, const bool& external = false);
 	class lua_State* LoadScript(const String& name);
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;
+	Material GetFontMaterial() const;
 
 	Transform GetGUIProjection() const;
 
@@ -74,7 +76,10 @@ private:
 	void m_SetNvgLuaBindings(class lua_State* state);
 
 	RenderState m_renderStateBase;
+	RenderQueue m_renderQueueBase;
 	Vector<String> m_commandLine;
+	Map<String, Font> m_fonts;
+	Material m_fontMaterial;
 
 	String m_lastMapPath;
 	class Beatmap* m_currentMap = nullptr;

@@ -287,6 +287,8 @@ bool Application::m_Init()
 		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.otf");
 	}
 
+	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
+	m_fontMaterial->opaque = false;
 
 	// call the initial OnWindowResized now that we have intialized OpenGL
 	m_OnWindowResized(g_resolution);
@@ -426,21 +428,17 @@ void Application::m_Tick()
 	if(g_resolution.x > 0 && g_resolution.y > 0)
 	{
 		glClearColor(0, 0, 0, 0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		nvgBeginFrame(g_vg, g_resolution.x, g_resolution.y, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		nvgBeginFrame(g_vg, g_resolution.x, g_resolution.y, 1);
+		m_renderQueueBase = RenderQueue(g_gl, m_renderStateBase);
 		// Render all items
 		for(auto& tickable : g_tickables)
 		{
 			tickable->Render(m_deltaTime);
 		}
-		//lua_getglobal(g_lua, "render");
-		//if (lua_pcall(g_lua, 0, 0, 0) != 0)
-		//{
-		//	Logf("Lua error: %s", Logger::Error, lua_tostring(g_lua, -1));
-		//}
-	
-		// Time to render GUI
-		//g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
+		m_renderStateBase.projectionTransform = GetGUIProjection();
+		glCullFace(GL_FRONT);
+		m_renderQueueBase.Process();
 		nvgBeginPath(g_vg);
 		nvgFontFace(g_vg, "fallback");
 		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
@@ -540,6 +538,11 @@ RenderState Application::GetRenderStateBase() const
 	return m_renderStateBase;
 }
 
+RenderQueue* Application::GetRenderQueueBase()
+{
+	return &m_renderQueueBase;
+}
+
 Graphics::Image Application::LoadImage(const String& name)
 {
 	String path = String("skins/") + m_skin + String("/textures/") + name;
@@ -598,6 +601,23 @@ Sample Application::LoadSample(const String& name, const bool& external)
 	return ret;
 }
 
+Font Application::LoadFont(const String & name, const bool & external)
+{
+	Font* cached = m_fonts.Find(name);
+	if (cached)
+		return *cached;
+
+	String path;
+	if (external)
+		path = name;
+	else
+		path = String("skins/") + m_skin + String("/fonts/") + name;
+
+	Font newFont = FontRes::Create(g_gl, path);
+	m_fonts.Add(name, newFont);
+	return newFont;
+}
+
 lua_State* Application::LoadScript(const String & name)
 {
 	lua_State* s = luaL_newstate();
@@ -616,6 +636,11 @@ lua_State* Application::LoadScript(const String & name)
 float Application::GetRenderFPS() const
 {
 	return 1.0f / g_avgRenderDelta;
+}
+
+Material Application::GetFontMaterial() const
+{
+	return m_fontMaterial;
 }
 
 Transform Application::GetGUIProjection() const
@@ -695,6 +720,46 @@ static int lLog(lua_State* L)
 	return 0;
 }
 
+static int lFastText(lua_State* L /*String utf8string, float x, float y, int size, int nvgtextalign*/)
+{
+	float x, y;
+	String inputText = luaL_checkstring(L, 1);
+	x = luaL_checknumber(L, 2);
+	y = luaL_checknumber(L, 3);
+	int size = luaL_checkinteger(L, 4);
+	int align = luaL_checkinteger(L, 5);
+	WString text = Utility::ConvertToWString(inputText);
+	Text te = g_application->LoadFont("segoeui.ttf")->CreateText(text, size);
+	Transform textTransform;
+	textTransform *= Transform::Translation(Vector2(x, y));
+
+	//vertical alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_MIDDLE) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y / 2));
+	}
+
+	//horizontal alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_CENTER) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x / 2, 0));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_RIGHT) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x, 0));
+	}
+
+
+	MaterialParameterSet params;
+	params.SetParameter("color", Vector4(1.f, 1.f, 1.f, 1.f));
+	g_application->GetRenderQueueBase()->Draw(textTransform, te, g_application->GetFontMaterial(), params);
+	return 0;
+}
+
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
 {
 	const char* filename = luaL_checkstring(L, 1);
@@ -747,6 +812,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("ResetTransform", lResetTransform);
 		pushFuncToTable("LoadFont", lLoadFont);
 		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
+		pushFuncToTable("FastText", lFastText);
 		lua_setglobal(state, "gfx");
 	}
 

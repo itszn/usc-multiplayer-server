@@ -6,7 +6,6 @@
 
 NVGcontext* g_vg;
 
-
 static int LoadFont(const char* name, const char* filename)
 {
 	if (nvgFindFont(g_vg, name) != -1)
@@ -33,9 +32,15 @@ static int lText(lua_State* L /*const char* s, float x, float y*/)
 	s = luaL_checkstring(L, 1);
 	x = luaL_checknumber(L, 2);
 	y = luaL_checknumber(L, 3);
+	nvgText(g_vg, x, y, s, NULL);
+	return 0;
+}
+static int guiText(const char* s, float x, float y)
+{
 	nvgText(g_vg, x, y, s, 0);
 	return 0;
 }
+
 static int lFontFace(lua_State* L /*const char* s*/)
 {
 	const char* s;
