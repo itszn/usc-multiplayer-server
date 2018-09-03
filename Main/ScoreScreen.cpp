@@ -15,6 +15,11 @@
 #else
 #include "SDL2/SDL_keycode.h"
 #endif
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+}
 
 class ScoreScreen_Impl : public ScoreScreen
 {
@@ -30,10 +35,11 @@ private:
 	Graphics::Font m_specialFont;
 	Sample m_applause;
 	Texture m_categorizedHitTextures[4];
-
+	lua_State* m_lua;
 	bool m_autoplay;
 	bool m_autoButtons;
 	bool m_startPressed;
+	bool m_showStats;
 	uint32 m_score;
 	uint32 m_maxCombo;
 	uint32 m_categorizedHits[3];
@@ -50,6 +56,25 @@ private:
 	Texture m_jacketImage;
 	Texture m_graphTex;
 	GameFlags m_flags;
+
+	void m_PushStringToTable(const char* name, String data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushstring(m_lua, data.c_str());
+		lua_settable(m_lua, -3);
+	}
+	void m_PushFloatToTable(const char* name, float data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushnumber(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushIntToTable(const char* name, int data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushinteger(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
 
 public:
 	ScoreScreen_Impl(class Game* game)
@@ -382,6 +407,28 @@ public:
 	{
 		if(!loader.Finalize())
 			return false;
+		m_lua = g_application->LoadScript("result");
+		//set lua table
+		lua_newtable(m_lua);
+		m_PushIntToTable("score", m_score);
+		m_PushFloatToTable("gauge", m_finalGaugeValue);
+		m_PushIntToTable("misses", m_categorizedHits[0]);
+		m_PushIntToTable("goods", m_categorizedHits[1]);
+		m_PushIntToTable("perfects", m_categorizedHits[2]);
+		m_PushIntToTable("maxCombo", m_maxCombo);
+		m_PushIntToTable("level", m_beatmapSettings.level);
+		m_PushIntToTable("difficulty", m_beatmapSettings.difficulty);
+		m_PushStringToTable("title", m_beatmapSettings.title);
+		m_PushStringToTable("artist", m_beatmapSettings.artist);
+		m_PushStringToTable("effector", m_beatmapSettings.effector);
+		m_PushStringToTable("bpm", m_beatmapSettings.bpm);
+		m_PushStringToTable("jacketPath", m_jacketPath);
+		m_PushIntToTable("medianHitDelta", m_medianHitDelta);
+		m_PushFloatToTable("meanHitDelta", m_meanHitDelta);
+		m_PushIntToTable("earlies", m_timedHits[0]);
+		m_PushIntToTable("lates", m_timedHits[1]);
+		///TODO: push gauge samples and maybe complete hit stats
+		lua_setglobal(m_lua, "result");
 
 		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
 		//float scale = Math::Min(canvasRes.x / 640.f, canvasRes.y / 480.f) / 2.f;
@@ -456,11 +503,13 @@ public:
 	}
 	virtual void Render(float deltaTime) override
 	{
-		// Poll for loaded jacket image
-		if(m_jacketImage == m_songSelectStyle->loadingJacketImage)
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		lua_pushboolean(m_lua, m_showStats);
+		if (lua_pcall(m_lua, 2, 0, 0) != 0)
 		{
-			m_jacketImage = m_songSelectStyle->GetJacketThumnail(m_jacketPath);
-			//m_jacket->texture = m_jacketImage;
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
 		}
 	}
 	virtual void Tick(float deltaTime) override
@@ -472,10 +521,10 @@ public:
 
 		m_startPressed = g_input.GetButton(Input::Button::BT_S);
 
-		if (g_input.GetButton(Input::Button::FX_0)) {}
-			//m_timingStatsCanvas->visibility = Visibility::Visible;
-		else {}
-			//m_timingStatsCanvas->visibility = Visibility::Hidden;
+		if (g_input.GetButton(Input::Button::FX_0))
+			m_showStats = true;
+		else
+			m_showStats = false;
 	}
 
 	virtual void OnSuspend()

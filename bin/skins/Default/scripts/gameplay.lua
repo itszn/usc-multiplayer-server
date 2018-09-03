@@ -4,13 +4,13 @@ local jacket = nil
 
 render = function(deltaTime)
     if jacket == nil then
-        jacket = gfx.CreateImage(gameplay.JacketPath, 0)
+        jacket = gfx.CreateImage(gameplay.jacketPath, 0)
     end
     gfx.BeginPath()
     gfx.TextAlign(0)
     gfx.FontSize(20)
-    gfx.Text(gameplay.Title, 5, 20);
-    gfx.Text(gameplay.Artist, 5, 40);
+    gfx.Text(gameplay.title, 5, 20);
+    gfx.Text(gameplay.artist, 5, 40);
     gfx.Text("COMBO: " .. tostring(combo), 5, 60);
     gfx.Text("SCORE: " .. tostring(score), 5, 80);
     gfx.Text("PROGRESS: " .. string.format("%.f", gameplay.progress * 100) .. "%", 5, 100);

@@ -402,11 +402,11 @@ public:
 		//Set gameplay table
 		{
 			lua_newtable(m_lua);
-			pushStringToTable("JacketPath", jacketPath);
-			pushStringToTable("Title", mapSettings.title);
-			pushStringToTable("Artist", mapSettings.artist);
-			pushIntToTable("Difficulty", mapSettings.difficulty);
-			pushIntToTable("Level", mapSettings.level);
+			pushStringToTable("jacketPath", jacketPath);
+			pushStringToTable("title", mapSettings.title);
+			pushStringToTable("artist", mapSettings.artist);
+			pushIntToTable("difficulty", mapSettings.difficulty);
+			pushIntToTable("level", mapSettings.level);
 			lua_setglobal(m_lua, "gameplay");
 		}
 
@@ -1078,6 +1078,11 @@ public:
 		lua_pushstring(m_lua, "bpm");
 		lua_pushnumber(m_lua, m_currentTiming->GetBPM());
 		lua_settable(m_lua, -3);
+		//gauge
+		lua_pushstring(m_lua, "gauge");
+		lua_pushnumber(m_lua, m_scoring.currentGauge);
+		lua_settable(m_lua, -3);
+
 		lua_setglobal(m_lua, "gameplay");
 
 		m_lastMapTime = playbackPositionMs;
