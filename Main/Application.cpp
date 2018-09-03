@@ -791,6 +791,13 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		lua_settable(state, -3);
 	};
 
+	auto pushIntToTable = [&](const char* name, int data)
+	{
+		lua_pushstring(state, name);
+		lua_pushinteger(state, data);
+		lua_settable(state, -3);
+	};
+
 	//gfx
 	{
 		lua_newtable(state);
@@ -813,6 +820,14 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("LoadFont", lLoadFont);
 		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
 		pushFuncToTable("FastText", lFastText);
+		//constants
+		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
+		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);
+		pushIntToTable("TEXT_ALIGN_CENTER", NVGalign::NVG_ALIGN_CENTER);
+		pushIntToTable("TEXT_ALIGN_LEFT", NVGalign::NVG_ALIGN_LEFT);
+		pushIntToTable("TEXT_ALIGN_MIDDLE", NVGalign::NVG_ALIGN_MIDDLE);
+		pushIntToTable("TEXT_ALIGN_RIGHT", NVGalign::NVG_ALIGN_RIGHT);
+		pushIntToTable("TEXT_ALIGN_TOP", NVGalign::NVG_ALIGN_TOP);
 		lua_setglobal(state, "gfx");
 	}
 

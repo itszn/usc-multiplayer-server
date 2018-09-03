@@ -19,12 +19,12 @@ render = function(deltaTime, shown)
     resx,resy = game.GetResolution();
     gfx.BeginPath();
     gfx.LoadSkinFont("segoeui.ttf");
-    gfx.TextAlign(TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
+    gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
     if selectingFolders then
-        gfx.FastText(filters.folder[selectedFolder], 0, resy/2, 40, TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
+        gfx.FastText(filters.folder[selectedFolder], 0, resy/2, 40, gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_MIDDLE);
     else
-        gfx.FastText(filters.level[selectedLevel], 0, resy/2, 40, TEXT_ALIGN_LEFT + TEXT_ALIGN_MIDDLE);
+        gfx.FastText(filters.level[selectedLevel], 0, resy/2, 40, gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_MIDDLETEXT_ALIGN_MIDDLE);
     end
 end
 

@@ -5,16 +5,6 @@ local buttonWidth = 250;
 local buttonHeight = 75;
 local buttonBorder = 2;
 
---Horizontal alignment
-TEXT_ALIGN_LEFT 	= 1;
-TEXT_ALIGN_CENTER 	= 2;
-TEXT_ALIGN_RIGHT 	= 4;
---Vertical alignment
-TEXT_ALIGN_TOP 		= 8;
-TEXT_ALIGN_MIDDLE	= 16;
-TEXT_ALIGN_BOTTOM	= 32;
-TEXT_ALIGN_BASELINE	= 64;
-
 mouse_clipped = function(x,y,w,h)
     return mposx > x and mposy > y and mposx < x+w and mposy < y+h;
 end;
@@ -39,7 +29,7 @@ draw_button = function(name, x, y, hoverindex)
     gfx.Fill();
     gfx.BeginPath();
     gfx.FillColor(255,255,255);
-    gfx.TextAlign(TEXT_ALIGN_CENTER + TEXT_ALIGN_MIDDLE);
+    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE);
     gfx.FontSize(40);
     gfx.Text(name, x, y);
 end;

@@ -24,6 +24,12 @@
 #include "SDL2/SDL_keycode.h"
 #endif
 
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+}
+
 #include "GUI/HealthGauge.hpp"
 #include "GUI/PlayingSongInfo.hpp"
 
@@ -116,6 +122,9 @@ private:
 	// Current background visualization
 	Background* m_background = nullptr;
 	Background* m_foreground = nullptr;
+
+	// Lua state
+	lua_State* m_lua;
 
 	// Currently active timing point
 	const TimingPoint* m_currentTiming;
@@ -370,6 +379,36 @@ public:
 		/// TODO: Load this async
 		CheckedLoad(m_background = CreateBackground(this));
 		CheckedLoad(m_foreground = CreateBackground(this, true));
+
+		//Lua
+		CheckedLoad(m_lua = g_application->LoadScript("gameplay"));
+
+		auto pushStringToTable = [&](const char* name, String data)
+		{
+			lua_pushstring(m_lua, name);
+			lua_pushstring(m_lua, data.c_str());
+			lua_settable(m_lua, -3);
+		};
+		auto pushIntToTable = [&](const char* name, int data)
+		{
+			lua_pushstring(m_lua, name);
+			lua_pushinteger(m_lua, data);
+			lua_settable(m_lua, -3);
+		};
+
+		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
+		// Try to load beatmap jacket image
+		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
+		//Set gameplay table
+		{
+			lua_newtable(m_lua);
+			pushStringToTable("JacketPath", jacketPath);
+			pushStringToTable("Title", mapSettings.title);
+			pushStringToTable("Artist", mapSettings.artist);
+			pushIntToTable("Difficulty", mapSettings.difficulty);
+			pushIntToTable("Level", mapSettings.level);
+			lua_setglobal(m_lua, "gameplay");
+		}
 
 		// Do this here so we don't get input events while still loading
 		m_scoring.SetFlags(m_flags);
@@ -679,6 +718,15 @@ public:
 		glFlush();
 		// Render foreground
 		m_foreground->Render(deltaTime);
+
+		// Render Lua HUD
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 
 		// Render debug hud if enabled
 		if(m_renderDebugHUD)
@@ -994,13 +1042,6 @@ public:
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
 
 
-		// Update song info display
-		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
-		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
-		m_psi->SetHiSpeed(m_hispeed);
-		m_psi->SetBPM((float)m_currentTiming->GetBPM());
-
-
 		// Update hispeed
 		if (g_input.GetButton(Input::Button::BT_S))
 		{
@@ -1016,7 +1057,28 @@ public:
 			}
 		}
 
+		// Update song info display
+		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
+		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
+		m_psi->SetHiSpeed(m_hispeed);
+		m_psi->SetBPM((float)m_currentTiming->GetBPM());
 
+
+		//set lua
+		lua_getglobal(m_lua, "gameplay");
+		//progress
+		lua_pushstring(m_lua, "progress");
+		lua_pushnumber(m_lua, (float)playbackPositionMs / (*lastObj)->time);
+		lua_settable(m_lua, -3);
+		//hispeed
+		lua_pushstring(m_lua, "hispeed");
+		lua_pushnumber(m_lua, m_hispeed);
+		lua_settable(m_lua, -3);
+		//bpm
+		lua_pushstring(m_lua, "bpm");
+		lua_pushnumber(m_lua, m_currentTiming->GetBPM());
+		lua_settable(m_lua, -3);
+		lua_setglobal(m_lua, "gameplay");
 
 		m_lastMapTime = playbackPositionMs;
 		
@@ -1273,6 +1335,13 @@ public:
 			{
 				m_track->timedHitEffect->late = late;
 				m_track->timedHitEffect->Reset(0.75f);
+				lua_getglobal(m_lua, "near_hit");
+				lua_pushboolean(m_lua, late);
+				if (lua_pcall(m_lua, 1, 0, 0) != 0)
+				{
+					Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+					assert(false);
+				}
 			}
 
 			// Create hit effect particle
@@ -1299,14 +1368,23 @@ public:
 	void OnComboChanged(uint32 newCombo)
 	{
 		m_comboAnimation.Restart();
+		lua_getglobal(m_lua, "update_combo");
+		lua_pushinteger(m_lua, newCombo);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 	}
 	void OnScoreChanged(uint32 newScore)
 	{
-		// Update score text
-		//if(m_scoreText)
-		//{
-		//	m_scoreText->SetText(Utility::WSprintf(L"%08d", newScore));
-		//}
+		lua_getglobal(m_lua, "update_score");
+		lua_pushinteger(m_lua, newScore);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 	}
 
 	// These functions control if FX button DSP's are muted or not
@@ -1392,6 +1470,13 @@ public:
 		if (m_scoring.timeSinceLaserUsed[object->index] > 3.0f)
 		{
 			m_track->SendLaserAlert(object->index);
+			lua_getglobal(m_lua, "laser_alert");
+			lua_pushboolean(m_lua, object->index == 1);
+			if (lua_pcall(m_lua, 1, 0, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				assert(false);
+			}
 		}
 	}
 

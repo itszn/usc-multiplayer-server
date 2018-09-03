@@ -791,13 +791,13 @@ public:
 	{
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/settingswheel"));
 		m_gameFlags = GameFlags::None;
-
 		AddSetting(L"Hard Guage", GameFlags::Hard);
 		AddSetting(L"Mirror", GameFlags::Mirror);
 		AddSetting(L"Random", GameFlags::Random);
 		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);
 		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
+		return true;
 	}
 	virtual void Render(float deltaTime)
 	{
@@ -932,7 +932,6 @@ private:
 public:
 	bool Init() override
 	{
-//		Logf("%i", Logger::Info, __LINE__);
 		m_commonGUIStyle = g_commonGUIStyle;
 		m_style = SongSelectStyle::Get(g_application);
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/background"));
