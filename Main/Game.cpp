@@ -91,8 +91,6 @@ private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	//Ref<Label> m_scoreText;
 
-	Graphics::Font m_fontDivlit;
-
 	// Texture of the map jacket image, if available
 	Image m_jacketImage;
 	Texture m_jacketTexture;
@@ -363,11 +361,10 @@ public:
 			m_jacketTexture = TextureRes::Create(g_gl, m_jacketImage);
 			m_psi->SetJacket(m_jacketTexture);
 		}
+		g_application->LoadGauge((m_flags & GameFlags::Hard) != GameFlags::None);
 
 		if(!loader.Finalize())
 			return false;
-
-		m_scoringGauge->fillMaterial->opaque = false;
 
 		// Load particle material
 		m_particleSystem = ParticleSystemRes::Create(g_gl);
@@ -659,7 +656,7 @@ public:
 		}
 		m_track->DrawOverlays(scoringRq);
 		float comboZoom = Math::Max(0.0f, (1.0f - (m_comboAnimation.SecondsAsFloat() / 0.2f)) * 0.5f);
-		m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
+		//m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
 
 		// Render queues
 		renderQueue.Process();
@@ -739,7 +736,6 @@ public:
 	bool InitHUD()
 	{
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
-		CheckedLoad(m_fontDivlit = FontRes::Create(g_gl, "skins/" + skin + "/fonts/divlit_custom.ttf"));
 		m_guiStyle = g_commonGUIStyle;
 
 		//// Game GUI canvas
@@ -873,21 +869,8 @@ public:
 
 		//}
 
-		m_scoringGauge = Utility::MakeRef(new HealthGauge());
-		String gaugePath = "gauges/normal/";
-		if ((m_flags & GameFlags::Hard) != GameFlags::None)
-		{
-			gaugePath = "gauges/hard/";
-			m_scoringGauge->colorBorder = 0.3f;
-			m_scoringGauge->lowerColor = Colori(200, 50, 0);
-			m_scoringGauge->upperColor = Colori(255, 100, 0);
-		}
-		// Gauge
-		loader.AddTexture(m_scoringGauge->fillTexture, gaugePath + "gauge_fill.png");
-		loader.AddTexture(m_scoringGauge->frontTexture, gaugePath + "gauge_front.png");
-		loader.AddTexture(m_scoringGauge->backTexture, gaugePath + "gauge_back.png");
-		loader.AddTexture(m_scoringGauge->maskTexture, gaugePath + "gauge_mask.png");
-		loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
+
+
 
 		PlayingSongInfo* psi = new PlayingSongInfo(*this);
 		m_psi = Ref<PlayingSongInfo>(psi);
@@ -1030,8 +1013,6 @@ public:
 		}
 
 		// Update scoring gauge
-		m_scoringGauge->rate = m_scoring.currentGauge;
-
 
 		int32 gaugeSampleSlot = playbackPositionMs;
 		gaugeSampleSlot /= m_gaugeSampleRate;
@@ -1068,7 +1049,7 @@ public:
 		lua_getglobal(m_lua, "gameplay");
 		//progress
 		lua_pushstring(m_lua, "progress");
-		lua_pushnumber(m_lua, (float)playbackPositionMs / (*lastObj)->time);
+		lua_pushnumber(m_lua, Math::Clamp((float)playbackPositionMs / (*lastObj)->time,0.f,1.f));
 		lua_settable(m_lua, -3);
 		//hispeed
 		lua_pushstring(m_lua, "hispeed");
@@ -1081,6 +1062,10 @@ public:
 		//gauge
 		lua_pushstring(m_lua, "gauge");
 		lua_pushnumber(m_lua, m_scoring.currentGauge);
+		lua_settable(m_lua, -3);
+		//combo state
+		lua_pushstring(m_lua, "comboState");
+		lua_pushnumber(m_lua, m_scoring.comboState);
 		lua_settable(m_lua, -3);
 
 		lua_setglobal(m_lua, "gameplay");

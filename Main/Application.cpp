@@ -14,6 +14,7 @@
 #include "GameConfig.hpp"
 #include "Input.hpp"
 #include "TransitionScreen.hpp"
+#include "GUI/HealthGauge.hpp"
 extern "C"
 {
 #include "lua.h"
@@ -289,7 +290,8 @@ bool Application::m_Init()
 
 	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
 	m_fontMaterial->opaque = false;
-
+	m_gauge = new HealthGauge();
+	LoadGauge(false);
 	// call the initial OnWindowResized now that we have intialized OpenGL
 	m_OnWindowResized(g_resolution);
 
@@ -379,7 +381,7 @@ void Application::m_MainLoop()
 			// Calculate actual deltatime for timing calculations
 			currentTime = appTimer.SecondsAsFloat();
 			float actualDeltaTime = currentTime - m_lastRenderTime;
-			g_avgRenderDelta = g_avgRenderDelta * 0.75f + actualDeltaTime * 0.25f; // Calculate avg
+			g_avgRenderDelta = g_avgRenderDelta * 0.98f + actualDeltaTime * 0.02f; // Calculate avg
 
 			m_deltaTime = actualDeltaTime;
 			m_lastRenderTime = currentTime;
@@ -411,8 +413,6 @@ void Application::m_MainLoop()
 	}
 }
 
-
-
 void Application::m_Tick()
 {
 	// Handle input first
@@ -437,15 +437,17 @@ void Application::m_Tick()
 			tickable->Render(m_deltaTime);
 		}
 		m_renderStateBase.projectionTransform = GetGUIProjection();
-		glCullFace(GL_FRONT);
-		m_renderQueueBase.Process();
+		nvgReset(g_vg);
 		nvgBeginPath(g_vg);
 		nvgFontFace(g_vg, "fallback");
-		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
 		nvgFontSize(g_vg, 20);
+		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
 		nvgFillColor(g_vg, nvgRGB(0, 200, 255));
-		nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 5, "nanovg branch", 0);
+		String fpsText = Utility::Sprintf("%.1fFPS", GetRenderFPS());
+		nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 5, fpsText.c_str(), 0);
 		nvgEndFrame(g_vg);
+		m_renderQueueBase.Process();
+		glCullFace(GL_FRONT);
 		// Swap buffers
 		g_gl->SwapBuffers();
 	}
@@ -633,6 +635,39 @@ lua_State* Application::LoadScript(const String & name)
 	return s;
 }
 
+void Application::LoadGauge(bool hard)
+{
+	String gaugePath = "gauges/normal/";
+	if (hard)
+	{
+		gaugePath = "gauges/hard/";
+		m_gauge->colorBorder = 0.3f;
+		m_gauge->lowerColor = Colori(200, 50, 0);
+		m_gauge->upperColor = Colori(255, 100, 0);
+	}
+	else
+	{
+		m_gauge->colorBorder = 0.7f;
+		m_gauge->lowerColor = Colori(0, 204, 255);
+		m_gauge->upperColor = Colori(255, 102, 255);
+	}
+	m_gauge->fillTexture = LoadTexture(gaugePath + "gauge_fill.png");
+	m_gauge->frontTexture = LoadTexture(gaugePath + "gauge_front.png");
+	m_gauge->backTexture = LoadTexture(gaugePath + "gauge_back.png");
+	m_gauge->maskTexture = LoadTexture(gaugePath + "gauge_mask.png");
+	m_gauge->fillMaterial = LoadMaterial("gauge");
+	m_gauge->fillMaterial->opaque = false;
+	m_gauge->baseMaterial = LoadMaterial("guiTex");
+	m_gauge->baseMaterial->opaque = false;
+}
+
+void Application::DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
+{
+	m_gauge->rate = rate;
+	Mesh m = MeshGenerators::Quad(g_gl, Vector2(x, y), Vector2(w, h));
+	m_gauge->Render(m, deltaTime);
+}
+
 float Application::GetRenderFPS() const
 {
 	return 1.0f / g_avgRenderDelta;
@@ -717,6 +752,19 @@ static int lLog(lua_State* L)
 	String msg = luaL_checkstring(L, 1);
 	int severity = luaL_checkinteger(L, 2);
 	Log(msg, (Logger::Severity)severity);
+	return 0;
+}
+
+static int lDrawGauge(lua_State* L)
+{
+	float rate, x, y, w, h, deltaTime;
+	rate = luaL_checknumber(L, 1);
+	x = luaL_checknumber(L, 2);
+	y = luaL_checknumber(L, 3);
+	w = luaL_checknumber(L, 4);
+	h = luaL_checknumber(L, 5);
+	deltaTime = luaL_checknumber(L, 6);
+	g_application->DrawGauge(rate, x, y, w, h, deltaTime);
 	return 0;
 }
 
@@ -820,6 +868,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("LoadFont", lLoadFont);
 		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
 		pushFuncToTable("FastText", lFastText);
+		pushFuncToTable("DrawGauge", lDrawGauge);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
 		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);

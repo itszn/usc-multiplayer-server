@@ -146,8 +146,6 @@ public:
 		m_gauge->rate = m_finalGaugeValue;
 		//m_canvas = Utility::MakeRef(new Canvas());
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
-		// Font
-		CheckedLoad(m_specialFont = FontRes::Create(g_gl,"skins/" + skin + "/fonts/divlit_custom.ttf"));
 		CheckedLoad(m_applause = g_audio->CreateSample("skins/" + skin + "/audio/applause.wav"));
 
 		//// Background

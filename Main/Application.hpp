@@ -56,10 +56,11 @@ public:
 	Sample LoadSample(const String& name, const bool& external = false);
 	Font LoadFont(const String& name, const bool& external = false);
 	class lua_State* LoadScript(const String& name);
+	void LoadGauge(bool hard);
+	void DrawGauge(float rate, float x, float y, float w, float h, float deltaTime);
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;
 	Material GetFontMaterial() const;
-
 	Transform GetGUIProjection() const;
 
 private:
@@ -80,6 +81,7 @@ private:
 	Vector<String> m_commandLine;
 	Map<String, Font> m_fonts;
 	Material m_fontMaterial;
+	class HealthGauge* m_gauge;
 
 	String m_lastMapPath;
 	class Beatmap* m_currentMap = nullptr;
