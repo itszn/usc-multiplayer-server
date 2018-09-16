@@ -500,7 +500,7 @@ private:
 		m_CleanupMapIndex();
 
 		// Select Maps
-		DBStatement mapScan = m_database.Query("SELECT rowid,path FROM Maps ORDER BY " + m_sortField);
+		DBStatement mapScan = m_database.Query("SELECT rowid,path FROM Maps ORDER BY " + m_sortField + " COLLATE NOCASE");
 		while(mapScan.StepRow())
 		{
 			MapIndex* map = new MapIndex();
