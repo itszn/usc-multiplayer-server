@@ -27,6 +27,8 @@ public:
 	MapTime hittableObjectLeave = 500;
 	MapTime alertLaserThreshold = 1500;
 	MapTime audioOffset = 0;
+	bool cMod = false;
+	float cModSpeed = 400;
 
 
 	// Gets all linear objects that fall within the given time range:

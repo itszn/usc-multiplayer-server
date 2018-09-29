@@ -538,7 +538,10 @@ public:
 	virtual void Render(float deltaTime) override
 	{
 		// 8 beats (2 measures) in view at 1x hi-speed
-		m_track->SetViewRange(8.0f / (m_hispeed)); 
+		if (m_usecMod)
+			m_track->SetViewRange(1.0 / m_playback.cModSpeed);
+		else
+			m_track->SetViewRange(8.0f / (m_hispeed)); 
 
 
 		// Get render state from the camera
@@ -568,6 +571,10 @@ public:
 
 		// Get objects in range
 		MapTime msViewRange = m_playback.ViewDistanceToDuration(m_track->GetViewRange());
+		if (m_usecMod)
+		{
+			msViewRange = 480000.0 / m_playback.cModSpeed;
+		}
 		m_currentObjectSet = m_playback.GetObjectsInRange(msViewRange);
 		// Sort objects to draw
 		m_currentObjectSet.Sort([](const TObjectState<void>* a, const TObjectState<void>* b)
@@ -893,13 +900,13 @@ public:
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
 		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
 		m_playback.Reset();
-
-		/// TODO: c-mod is broken, might need something in the viewrange calculation stuff
         // If c-mod is used
-        if (m_usecMod)
-        {
-            m_playback.OnTimingPointChanged.Add(this, &Game_Impl::OnTimingPointChanged);
-        }
+		if (m_usecMod)
+		{
+			m_playback.OnTimingPointChanged.Add(this, &Game_Impl::OnTimingPointChanged);
+		}
+		m_playback.cMod = m_usecMod;
+		m_playback.cModSpeed = m_hispeed * m_playback.GetCurrentTimingPoint().GetBPM();
 		// Register input bindings
 		m_scoring.OnButtonMiss.Add(this, &Game_Impl::OnButtonMiss);
 		m_scoring.OnLaserSlamHit.Add(this, &Game_Impl::OnLaserSlamHit);
@@ -1009,6 +1016,8 @@ public:
 				if ((m_usecMod || m_usemMod) && change != 0.0f)
 				{
 					g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
+					m_modSpeed = m_hispeed * (float)m_currentTiming->GetBPM();
+					m_playback.cModSpeed = m_modSpeed;
 				}
 			}
 		}
