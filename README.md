@@ -32,18 +32,23 @@ Make sure you use a *plain* text editor like Notepad, Notepad++ or gedit; NOT a 
 If something breaks in the song database, delete "maps.db". **Please note this will also wipe saved scores.**
 
 ## Controls
-### Game (Customizable, read 'Readme_Input.txt'):
-- BTN (White notes): \[D\] \[F\] \[J\] \[K\]
-- FX (Yellow notes) = \[C\] \[M\]
-- VOL-L (Cyan laser, Move left / right) = \[W\] \[E\]
-- VOL-R (Magenta laser) = \[O\] \[P\]
-- Quit song & go back to song selection \[Esc\]
+### Default bindings (Customizable):
+- Start: \[1\]
+- BTN (White notes , A/B/C/D): \[D\] \[F\] \[J\] \[K\]
+- FX (Yellow notes, L/R): \[C\] \[M\]
+- VOL-L (Cyan laser, Move left / right): \[W\] \[E\]
+- VOL-R (Magenta laser): \[O\] \[P\]
 
 ### Song Select:
-- Use the arrow keys to select a song and difficulty
+- Use the arrow keys or knobs to select a song and difficulty
 - Use \[Page Down\]/\[Page Up\] to scroll faster
-- Press \[Enter\] to start a song
-- Press \[Ctrl\]+\[Enter\] to start song with autoplay
+- Press \[F2\] to select a random song
+- Press \[Enter\] or \[Start\] to start a song
+- Press \[Ctrl\]+\[Start\] to start song with autoplay
+- Press \[FX-L\] to open up filter select to filter the displayed songs
+- Press \[Start\] when selecting filters to toggle between level and folder filters
+- Press \[FX-R\] to display a score list for the currently selected song
+- Press \[FX-L\] + \[FX-R\] to open up game settings (Hard gauge, Random, Mirror, etc.)
 - Use the Search bar on the top to search for songs
 
 ## How to run:
