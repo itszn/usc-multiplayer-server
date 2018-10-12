@@ -745,6 +745,14 @@ public:
 	{
 		return m_gameFlags;
 	}
+	void ClearSettings()
+	{
+		m_gameFlags = (GameFlags)0;
+		for (size_t i = 0; i < m_guiElements.size(); i++)
+		{
+			m_guiElements[(GameFlags)(1 << i)]->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[(GameFlags)(1 << i)]));
+		}
+	}
 
 private:
 	GameFlags m_gameFlags;
@@ -1391,6 +1399,10 @@ public:
 		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
+		if (g_gameConfig.GetBool(GameConfigKeys::AutoResetSettings))
+		{
+			m_settingsWheel->ClearSettings();
+		}
 
 		OnSearchTermChanged(m_searchField->GetText());
 		

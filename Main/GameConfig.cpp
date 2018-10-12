@@ -94,4 +94,6 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::LastSelected, 0);
 	Set(GameConfigKeys::LevelFilter, 0);
 	Set(GameConfigKeys::FolderFilter, 0);
+
+	Set(GameConfigKeys::AutoResetSettings, false);
 }
