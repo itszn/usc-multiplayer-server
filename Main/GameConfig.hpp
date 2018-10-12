@@ -79,7 +79,7 @@ DefineEnum(GameConfigKeys,
 	LevelFilter,
 	FolderFilter,
 
-	AutoResetSettings, //Reset game settings after each song (good for convention setups)
+	AutoResetSettings //Reset game settings after each song (good for convention setups)
 	);
 
 // Config for game settings

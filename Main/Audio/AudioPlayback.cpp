@@ -33,6 +33,7 @@ bool AudioPlayback::Init(class BeatmapPlayback& playback, const String& mapRootP
 
 	const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
 	String audioPath = Path::Normalize(m_beatmapRootPath + Path::sep + mapSettings.audioNoFX);
+	audioPath.TrimBack(' ');
 	WString audioPathUnicode = Utility::ConvertToWString(audioPath);
 	if(!Path::FileExists(audioPath))
 	{
@@ -49,6 +50,7 @@ bool AudioPlayback::Init(class BeatmapPlayback& playback, const String& mapRootP
 
 	// Load FX track
 	audioPath = Path::Normalize(m_beatmapRootPath + Path::sep + mapSettings.audioFX);
+	audioPath.TrimBack(' ');
 	audioPathUnicode = Utility::ConvertToWString(audioPath);
 	if(!audioPath.empty())
 	{
