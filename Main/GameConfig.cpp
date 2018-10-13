@@ -96,4 +96,5 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::FolderFilter, 0);
 
 	Set(GameConfigKeys::AutoResetSettings, false);
+	Set(GameConfigKeys::AutoResetToSpeed, 400.0f);
 }
