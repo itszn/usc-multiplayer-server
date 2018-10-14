@@ -271,7 +271,7 @@ public:
         {
             Map<double, MapTime> bpmDurations;
             const Vector<TimingPoint*>& timingPoints = m_beatmap->GetLinearTimingPoints();
-            MapTime lastMT = 0;
+            MapTime lastMT = mapSettings.offset;
             MapTime largestMT = -1;
             double useBPM = -1;
             double lastBPM = -1;

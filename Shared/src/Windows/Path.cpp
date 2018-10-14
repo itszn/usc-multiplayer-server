@@ -127,3 +127,29 @@ Vector<String> Path::GetSubDirs(const String& path)
 
 	return res;
 }
+
+bool Path::ShowInFileBrowser(const String& path)
+{
+	//Opens the directory, if a file path is sent then the file will be opened with the default program for that file type.
+	long res = (long)ShellExecuteA(NULL, "open", path.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+	if (res > 32)
+	{
+		return true;
+	}
+	else
+	{
+		switch (res)
+		{
+		case ERROR_FILE_NOT_FOUND:
+			Logf("Failed to show file \"%s\" in the system default explorer: File not found.", Logger::Error, path);
+			break;
+		case ERROR_PATH_NOT_FOUND:
+			Logf("Failed to show file \"%s\" in the system default explorer: Path not found.", Logger::Error, path);
+			break;
+		default:
+			Logf("Failed to show file \"%s\" in the system default explorer: error %p", Logger::Error, path, res);
+			break;
+		}
+		return false;
+	}
+}

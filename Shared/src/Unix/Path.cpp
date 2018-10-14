@@ -177,3 +177,8 @@ Vector<String> Path::GetSubDirs(const String& path)
     }
     return ret;
 }
+bool Path::ShowInFileBrowser(const String& path)
+{
+    Log("ShowInFileBrowser function not implemented yet", Logger::Error);
+    return false;
+}

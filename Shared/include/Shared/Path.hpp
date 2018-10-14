@@ -39,6 +39,8 @@ public:
 	// Copies a folder and all files in it
 	// the target directory must not exist
 	static bool CopyDir(String srcFolder, String dstFolder);
+	// Go to specified path using the system default file browser
+	static bool ShowInFileBrowser(const String& path);
 
 	// Generatea a temporary file name that can be used for temporary files (undefined location)
 	// This file is always a non-existing file

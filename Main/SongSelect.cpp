@@ -1282,6 +1282,15 @@ public:
 			{
 				m_selectionWheel->SelectRandom();
 			}
+			else if (key == SDLK_F11)
+			{
+				//TODO: add this feature
+				//Path::OpenInEditor(m_selectionWheel->GetSelectedDifficulty()->path);
+			}
+			else if (key == SDLK_F12)
+			{
+				Path::ShowInFileBrowser(m_selectionWheel->GetSelection()->path);
+			}
 			else if (key == SDLK_ESCAPE)
 			{
 				m_suspended = true;

@@ -43,6 +43,7 @@ If something breaks in the song database, delete "maps.db". **Please note this w
 - Use the arrow keys or knobs to select a song and difficulty
 - Use \[Page Down\]/\[Page Up\] to scroll faster
 - Press \[F2\] to select a random song
+- Press \[F12\] to open the directory of the currently selected song in your file explorer
 - Press \[Enter\] or \[Start\] to start a song
 - Press \[Ctrl\]+\[Start\] to start song with autoplay
 - Press \[FX-L\] to open up filter select to filter the displayed songs
