@@ -1284,8 +1284,11 @@ public:
 			}
 			else if (key == SDLK_F11)
 			{
-				//TODO: add this feature
-				//Path::OpenInEditor(m_selectionWheel->GetSelectedDifficulty()->path);
+				String paramFormat = g_gameConfig.GetString(GameConfigKeys::EditorParamsFormat);
+				String path = Path::Normalize(g_gameConfig.GetString(GameConfigKeys::EditorPath));
+				String param = Utility::Sprintf(paramFormat.c_str(), 
+					Utility::Sprintf("\"%s\"", Path::Absolute(m_selectionWheel->GetSelectedDifficulty()->path)));
+				Path::Run(path, param.GetData());
 			}
 			else if (key == SDLK_F12)
 			{

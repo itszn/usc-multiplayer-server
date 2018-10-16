@@ -179,6 +179,12 @@ Vector<String> Path::GetSubDirs(const String& path)
 }
 bool Path::ShowInFileBrowser(const String& path)
 {
-    Log("ShowInFileBrowser function not implemented yet", Logger::Error);
+    Log("Path::ShowInFileBrowser function not implemented yet", Logger::Error);
+    return false;
+}
+
+bool Path::Run(const String& programPath, const String& parameters)
+{
+    Log("Path::Run function not implemented yet", Logger::Error);
     return false;
 }

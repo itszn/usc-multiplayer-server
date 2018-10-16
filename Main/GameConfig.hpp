@@ -80,7 +80,10 @@ DefineEnum(GameConfigKeys,
 	FolderFilter,
 
 	AutoResetSettings, //Reset game settings after each song (good for convention setups)
-	AutoResetToSpeed //Mod-Speed to reset to after each song (when AutoResetSettings is true)
+	AutoResetToSpeed, //Mod-Speed to reset to after each song (when AutoResetSettings is true)
+
+	EditorPath,
+	EditorParamsFormat
 	);
 
 // Config for game settings

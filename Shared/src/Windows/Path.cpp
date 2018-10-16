@@ -153,3 +153,28 @@ bool Path::ShowInFileBrowser(const String& path)
 		return false;
 	}
 }
+
+bool Path::Run(const String& programPath, const String& parameters)
+{
+	STARTUPINFOA info = { sizeof(info) };
+	PROCESS_INFORMATION processInfo;
+	String command = Utility::Sprintf("%s %s", programPath.GetData(), parameters.GetData());
+
+	if (!Path::FileExists(programPath))
+	{
+		Logf("Failed to open editor: invalid path \"%s\"", Logger::Error, programPath);
+		return false;
+	}
+
+	if (CreateProcessA(NULL, command.GetData(), NULL, NULL, false, DETACHED_PROCESS, NULL, NULL, &info, &processInfo))
+	{
+		CloseHandle(processInfo.hProcess);
+		CloseHandle(processInfo.hThread);
+	}
+	else
+	{
+		Logf("Failed to open editor: error %d", Logger::Error, GetLastError());
+		return false;
+	}
+	return true;
+}

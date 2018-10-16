@@ -41,6 +41,8 @@ public:
 	static bool CopyDir(String srcFolder, String dstFolder);
 	// Go to specified path using the system default file browser
 	static bool ShowInFileBrowser(const String& path);
+	// Open external program with specified parameters (used to open charts in editor)
+	static bool Run(const String& programPath, const String& parameters);
 
 	// Generatea a temporary file name that can be used for temporary files (undefined location)
 	// This file is always a non-existing file
