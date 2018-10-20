@@ -1,6 +1,11 @@
 #pragma once
 #include <Graphics/Keys.hpp>
 #include <Graphics/Gamepad.hpp>
+#ifdef _WIN32
+#include <SDL.h>
+#else
+#include <SDL2/SDL.h>
+#endif
 
 namespace Graphics
 {
@@ -100,6 +105,7 @@ namespace Graphics
 		Delegate<MouseButton> OnMousePressed;
 		Delegate<MouseButton> OnMouseReleased;
 		Delegate<int32, int32> OnMouseMotion;
+		Delegate<SDL_Event> OnAnyEvent;
 		// Mouse scroll wheel 
 		//	Positive for scroll down
 		//	Negative for scroll up

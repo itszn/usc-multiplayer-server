@@ -17,9 +17,16 @@ endif(WIN32)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src)
 add_library(nanovg nanovg/src/nanovg.c)
 target_include_directories(nanovg PUBLIC nanovg/src)
+
 if(WIN32)
     target_link_libraries(nanovg freetype)
 else(WIN32)
 	target_link_libraries(nanovg ${FREETYPE_LIBRARIES})
 endif(WIN32)
 add_definitions(-DFONS_USE_FREETYPE)
+
+##nuklear
+#include_directories(NUKLEAR_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nuklear/src)
+#file(GLOB nuk_src "nuklear/src/*.c")
+#add_library(nuklear ${nuk_src})
+#target_include_directories(nuklear PUBLIC nuklear/src)

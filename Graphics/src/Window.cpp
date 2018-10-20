@@ -344,6 +344,7 @@ namespace Graphics
 					m_textComposition.selectionLength = evt.edit.length;
 					outer.OnTextComposition.Call(m_textComposition);
 				}
+				outer.OnAnyEvent.Call(evt);
 			}
 			return !m_closed;
 		}

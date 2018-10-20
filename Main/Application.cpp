@@ -732,6 +732,39 @@ void Application::m_OnWindowResized(const Vector2i& newSize)
 	}
 }
 
+int Application::FastText(String inputText, float x, float y, int size, int align)
+{
+	WString text = Utility::ConvertToWString(inputText);
+	Text te = g_application->LoadFont("segoeui.ttf")->CreateText(text, size);
+	Transform textTransform;
+	textTransform *= Transform::Translation(Vector2(x, y));
+
+	//vertical alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_MIDDLE) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y / 2));
+	}
+
+	//horizontal alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_CENTER) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x / 2, 0));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_RIGHT) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x, 0));
+	}
+
+	MaterialParameterSet params;
+	params.SetParameter("color", Vector4(1.f, 1.f, 1.f, 1.f));
+	g_application->GetRenderQueueBase()->Draw(textTransform, te, g_application->GetFontMaterial(), params);
+	return 0;
+}
+
 static int lGetMousePos(lua_State* L)
 {
 	Vector2i pos = g_gameWindow->GetMousePos();
@@ -768,6 +801,8 @@ static int lDrawGauge(lua_State* L)
 	return 0;
 }
 
+
+
 static int lFastText(lua_State* L /*String utf8string, float x, float y, int size, int nvgtextalign*/)
 {
 	float x, y;
@@ -776,36 +811,8 @@ static int lFastText(lua_State* L /*String utf8string, float x, float y, int siz
 	y = luaL_checknumber(L, 3);
 	int size = luaL_checkinteger(L, 4);
 	int align = luaL_checkinteger(L, 5);
-	WString text = Utility::ConvertToWString(inputText);
-	Text te = g_application->LoadFont("segoeui.ttf")->CreateText(text, size);
-	Transform textTransform;
-	textTransform *= Transform::Translation(Vector2(x, y));
 
-	//vertical alignment
-	if ((align & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
-	{
-		textTransform *= Transform::Translation(Vector2(0, -te->size.y));
-	}
-	else if ((align & (int)NVGalign::NVG_ALIGN_MIDDLE) != 0)
-	{
-		textTransform *= Transform::Translation(Vector2(0, -te->size.y / 2));
-	}
-
-	//horizontal alignment
-	if ((align & (int)NVGalign::NVG_ALIGN_CENTER) != 0)
-	{
-		textTransform *= Transform::Translation(Vector2(-te->size.x / 2, 0));
-	}
-	else if ((align & (int)NVGalign::NVG_ALIGN_RIGHT) != 0)
-	{
-		textTransform *= Transform::Translation(Vector2(-te->size.x, 0));
-	}
-
-
-	MaterialParameterSet params;
-	params.SetParameter("color", Vector4(1.f, 1.f, 1.f, 1.f));
-	g_application->GetRenderQueueBase()->Draw(textTransform, te, g_application->GetFontMaterial(), params);
-	return 0;
+	return g_application->FastText(inputText, x, y, size, align);
 }
 
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)

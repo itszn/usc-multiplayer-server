@@ -58,6 +58,7 @@ public:
 	class lua_State* LoadScript(const String& name);
 	void LoadGauge(bool hard);
 	void DrawGauge(float rate, float x, float y, float w, float h, float deltaTime);
+	int FastText(String text, float x, float y, int size, int align);
 	float GetAppTime() const { return m_lastRenderTime; }
 	float GetRenderFPS() const;
 	Material GetFontMaterial() const;
