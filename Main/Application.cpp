@@ -912,6 +912,12 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GetMousePos", lGetMousePos);
 		pushFuncToTable("GetResolution", lGetResolution);
 		pushFuncToTable("Log", lLog);
+		//constants
+		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
+		pushIntToTable("LOGGER_NORMAL", Logger::Severity::Normal);
+		pushIntToTable("LOGGER_WARNING", Logger::Severity::Warning);
+		pushIntToTable("LOGGER_ERROR", Logger::Severity::Error);
+
 		lua_setglobal(state, "game");
 	}
 }

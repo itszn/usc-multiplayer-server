@@ -503,7 +503,7 @@ private:
 				lua_pushinteger(m_lua, ++diffIndex);
 				lua_newtable(m_lua);
 				auto settings = diff->settings;
-				m_PushStringToTable("jacketPath", settings.jacketPath.c_str());
+				m_PushStringToTable("jacketPath", Path::Normalize(song.second.GetMap()->path + "/" + settings.jacketPath).c_str());
 				m_PushIntToTable("level", settings.level);
 				m_PushIntToTable("difficulty", settings.difficulty);
 				m_PushIntToTable("id", diff->id);

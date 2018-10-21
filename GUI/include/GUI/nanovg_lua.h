@@ -295,7 +295,7 @@ static int lDrawLabel(lua_State* L /*int labelId, float x, float y*/)
 	return 0;
 }
 
-static int lMoveTo(lua_State* L)
+static int lMoveTo(lua_State* L /* float x, float y */)
 {
 	float x = luaL_checknumber(L, 1);
 	float y = luaL_checknumber(L, 2);
@@ -303,7 +303,7 @@ static int lMoveTo(lua_State* L)
 	return 0;
 }
 
-static int lLineTo(lua_State* L)
+static int lLineTo(lua_State* L /* float x, float y */)
 {
 	float x = luaL_checknumber(L, 1);
 	float y = luaL_checknumber(L, 2);
@@ -311,7 +311,7 @@ static int lLineTo(lua_State* L)
 	return 0;
 }
 
-static int lBezierTo(lua_State* L)
+static int lBezierTo(lua_State* L /* float c1x, float c1y, float c2x, float c2y, float x, float y */)
 {
 	float c1x = luaL_checknumber(L, 1);
 	float c1y = luaL_checknumber(L, 2);
@@ -323,7 +323,7 @@ static int lBezierTo(lua_State* L)
 	return 0;
 }
 
-static int lQuadTo(lua_State* L)
+static int lQuadTo(lua_State* L /* float cx, float cy, float x, float y */)
 {
 	float cx = luaL_checknumber(L, 1);
 	float cy = luaL_checknumber(L, 2);
@@ -333,7 +333,7 @@ static int lQuadTo(lua_State* L)
 	return 0;
 }
 
-static int lArcTo(lua_State* L)
+static int lArcTo(lua_State* L /* float x1, float y1, float x2, float y2, float radius */)
 {
 	float x1 = luaL_checknumber(L, 1);
 	float y1 = luaL_checknumber(L, 2);
@@ -350,37 +350,37 @@ static int lClosePath(lua_State* L)
 	return 0;
 }
 
-static int lMiterLimit(lua_State* L)
+static int lStroke(lua_State* L)
+{
+	nvgStroke(g_guiState.vg);
+	return 0;
+}
+
+static int lMiterLimit(lua_State* L /* float limit */)
 {
 	float limit = luaL_checknumber(L, 1);
 	nvgMiterLimit(g_guiState.vg, limit);
 	return 0;
 }
 
-static int lStrokeWidth(lua_State* L)
+static int lStrokeWidth(lua_State* L /* float size */)
 {
 	float size = luaL_checknumber(L, 1);
 	nvgStrokeWidth(g_guiState.vg, size);
 	return 0;
 }
 
-static int lLineCap(lua_State* L)
+static int lLineCap(lua_State* L /* int cap */)
 {
 	int cap = luaL_checkinteger(L, 1);
 	nvgLineCap(g_guiState.vg, cap);
 	return 0;
 }
 
-static int lLineJoin(lua_State* L)
+static int lLineJoin(lua_State* L /* int join */)
 {
 	int join = luaL_checkinteger(L, 1);
 	nvgLineJoin(g_guiState.vg, join);
-	return 0;
-}
-
-static int lStroke(lua_State* L)
-{
-	nvgStroke(g_guiState.vg);
 	return 0;
 }
 

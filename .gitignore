@@ -45,3 +45,6 @@ Makefile
 
 # Not adding photoshop source files for textures
 *.psd
+
+# Document build files
+docs/build

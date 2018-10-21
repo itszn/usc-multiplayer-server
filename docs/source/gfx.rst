@@ -1,0 +1,147 @@
+Drawing
+========
+This chapter describes all the functions available under the `gfx`
+table.
+
+Example usage
+
+.. code-block:: lua
+
+    --Draw score
+    gfx.BeginPath()
+    gfx.LoadSkinFont("NovaMono.ttf")
+    gfx.Translate(-5,5) -- upper right margin
+    gfx.FillColor(255,255,255)
+    gfx.TextAlign(gfx.TEXT_ALIGN_RIGHT + gfx.TEXT_ALIGN_TOP)
+    gfx.FontSize(40)
+    gfx.Text(string.format("%08d", score),desw,0)
+
+    
+Constants
+*************************************
+Most constants are from the nanovg library.
+
++--------------------+------------------------------+
+|    Lua Name        |         Value                |
++====================+==============================+
+|TEXT_ALIGN_BASELINE | NVGalign::NVG_ALIGN_BASELINE |
++--------------------+------------------------------+
+|TEXT_ALIGN_BOTTOM   | NVGalign::NVG_ALIGN_BOTTOM   |
++--------------------+------------------------------+
+|TEXT_ALIGN_CENTER   | NVGalign::NVG_ALIGN_CENTER   |
++--------------------+------------------------------+
+|TEXT_ALIGN_LEFT     | NVGalign::NVG_ALIGN_LEFT     |
++--------------------+------------------------------+
+|TEXT_ALIGN_MIDDLE   | NVGalign::NVG_ALIGN_MIDDLE   |
++--------------------+------------------------------+
+|TEXT_ALIGN_RIGHT    | NVGalign::NVG_ALIGN_RIGHT    |
++--------------------+------------------------------+
+|TEXT_ALIGN_TOP      | NVGalign::NVG_ALIGN_TOP      |
++--------------------+------------------------------+
+
+
+
+BeginPath()
+******************************************************
+
+Rect(float x, float y, float w, float h)
+******************************************************
+
+Fill()
+******************************************************
+
+FillColor(int r, int g, int b)
+******************************************************
+
+CreateImage(const char* filename, int imageflags)
+******************************************************
+
+CreateSkinImage(const char* filename, int imageflags)
+******************************************************
+
+ImagePatternFill(int image, float alpha)
+************************************************************
+
+ImageRect(float x, float y, float w, float h, int image, float alpha, float angle)
+**********************************************************************************
+
+Text(const char* s, float x, float y)
+******************************************************
+
+TextAlign(int align)
+******************************************************
+
+FontFace(const char* s)
+******************************************************
+
+FontSize(float size)
+******************************************************
+
+Translate(float x, float y)
+******************************************************
+
+Scale(float x, float y)
+******************************************************
+
+Rotate(float angle)
+******************************************************
+
+ResetTransform()
+******************************************************
+
+LoadFont(const char* name, const char* filename)
+******************************************************
+
+LoadSkinFont(const char* name, const char* filename)
+******************************************************
+
+FastText(const char* inputText, float x, float y, int size, int align)
+**********************************************************************
+
+CreateLabel(const char* text, int size, bool monospace)
+*******************************************************
+
+DrawLabel(int labelId, float x, float y)
+******************************************************
+
+MoveTo(float x, float y)
+******************************************************
+
+LineTo(float x, float y)
+******************************************************
+
+BezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y)
+**********************************************************************
+
+QuadTo(float cx, float cy, float x, float y)
+******************************************************
+
+ArcTo(float x1, float y1, float x2, float y2, float radius)
+***********************************************************
+
+ClosePath()
+******************************************************
+
+MiterLimit(float limit)
+******************************************************
+
+StrokeWidth(float size)
+******************************************************
+
+LineCap(int cap)
+******************************************************
+
+LineJoin(int join)
+******************************************************
+
+Stroke()
+******************************************************
+
+StrokeColor(int r, int g, int b)
+******************************************************
+
+UpdateLabel(int labelId, const char* text, int size)
+******************************************************
+
+DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
+**************************************************************************
