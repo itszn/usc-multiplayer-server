@@ -881,7 +881,19 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("FastText", lFastText);
 		pushFuncToTable("CreateLabel", lCreateLabel);
 		pushFuncToTable("DrawLabel", lDrawLabel);
-		pushFuncToTable("UpdateLabel", lDrawLabel);
+		pushFuncToTable("MoveTo", lMoveTo);
+		pushFuncToTable("LineTo", lLineTo);
+		pushFuncToTable("BezierTo", lBezierTo);
+		pushFuncToTable("QuadTo", lQuadTo);
+		pushFuncToTable("ArcTo", lArcTo);
+		pushFuncToTable("ClosePath", lClosePath);
+		pushFuncToTable("MiterLimit", lMiterLimit);
+		pushFuncToTable("StrokeWidth", lStrokeWidth);
+		pushFuncToTable("LineCap", lLineCap);
+		pushFuncToTable("LineJoin", lLineJoin);
+		pushFuncToTable("Stroke", lStroke);
+		pushFuncToTable("StrokeColor", lStrokeColor);
+		pushFuncToTable("UpdateLabel", lUpdateLabel);
 		pushFuncToTable("DrawGauge", lDrawGauge);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);

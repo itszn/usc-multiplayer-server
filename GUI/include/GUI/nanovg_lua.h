@@ -72,7 +72,7 @@ static int lText(lua_State* L /*const char* s, float x, float y*/)
 	nvgText(g_guiState.vg, x, y, s, NULL);
 
 	//{ //Fast text
-	//	WString text = Utility::ConvertToWString(s);
+	//	WString text = Utility::Convert	ToWString(s);
 	//	Text te = (*g_guiState.currentFont)->CreateText(text, g_guiState.fontSize);
 	//	Transform textTransform = g_guiState.t;
 	//	textTransform *= Transform::Translation(Vector2(x, y));
@@ -292,5 +292,104 @@ static int lDrawLabel(lua_State* L /*int labelId, float x, float y*/)
 	MaterialParameterSet params;
 	params.SetParameter("color", g_guiState.fillColor);
 	g_guiState.rq->Draw(textTransform, te, *g_guiState.fontMaterial, params);
+	return 0;
+}
+
+static int lMoveTo(lua_State* L)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	nvgMoveTo(g_guiState.vg, x, y);
+	return 0;
+}
+
+static int lLineTo(lua_State* L)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	nvgLineTo(g_guiState.vg, x, y);
+	return 0;
+}
+
+static int lBezierTo(lua_State* L)
+{
+	float c1x = luaL_checknumber(L, 1);
+	float c1y = luaL_checknumber(L, 2);
+	float c2x = luaL_checknumber(L, 3);
+	float c2y = luaL_checknumber(L, 4);
+	float x = luaL_checknumber(L, 5);
+	float y = luaL_checknumber(L, 6);
+	nvgBezierTo(g_guiState.vg, c1x, c1y, c2x, c2y, x, y);
+	return 0;
+}
+
+static int lQuadTo(lua_State* L)
+{
+	float cx = luaL_checknumber(L, 1);
+	float cy = luaL_checknumber(L, 2);
+	float x = luaL_checknumber(L, 3);
+	float y = luaL_checknumber(L, 4);
+	nvgQuadTo(g_guiState.vg, cx, cy, x, y);
+	return 0;
+}
+
+static int lArcTo(lua_State* L)
+{
+	float x1 = luaL_checknumber(L, 1);
+	float y1 = luaL_checknumber(L, 2);
+	float x2 = luaL_checknumber(L, 3);
+	float y2 = luaL_checknumber(L, 4);
+	float radius = luaL_checknumber(L, 5);
+	nvgArcTo(g_guiState.vg, x1, y1, x2, y2, radius);
+	return 0;
+}
+
+static int lClosePath(lua_State* L)
+{
+	nvgClosePath(g_guiState.vg);
+	return 0;
+}
+
+static int lMiterLimit(lua_State* L)
+{
+	float limit = luaL_checknumber(L, 1);
+	nvgMiterLimit(g_guiState.vg, limit);
+	return 0;
+}
+
+static int lStrokeWidth(lua_State* L)
+{
+	float size = luaL_checknumber(L, 1);
+	nvgStrokeWidth(g_guiState.vg, size);
+	return 0;
+}
+
+static int lLineCap(lua_State* L)
+{
+	int cap = luaL_checkinteger(L, 1);
+	nvgLineCap(g_guiState.vg, cap);
+	return 0;
+}
+
+static int lLineJoin(lua_State* L)
+{
+	int join = luaL_checkinteger(L, 1);
+	nvgLineJoin(g_guiState.vg, join);
+	return 0;
+}
+
+static int lStroke(lua_State* L)
+{
+	nvgStroke(g_guiState.vg);
+	return 0;
+}
+
+static int lStrokeColor(lua_State* L /*int r, int g, int b*/)
+{
+	int r, g, b;
+	r = luaL_checkinteger(L, 1);
+	g = luaL_checkinteger(L, 2);
+	b = luaL_checkinteger(L, 3);
+	nvgStrokeColor(g_guiState.vg, nvgRGB(r, g, b));
 	return 0;
 }
