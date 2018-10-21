@@ -284,8 +284,8 @@ bool Application::m_Init()
 			Log("Failed to create OpenGL context", Logger::Error);
 			return false;
 		}
-		g_vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-		nvgCreateFont(g_vg, "fallback", "fonts/fallbackfont.otf");
+		g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
 
 	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
@@ -429,23 +429,27 @@ void Application::m_Tick()
 	{
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		nvgBeginFrame(g_vg, g_resolution.x, g_resolution.y, 1);
+		nvgBeginFrame(g_guiState.vg, g_resolution.x, g_resolution.y, 1);
 		m_renderQueueBase = RenderQueue(g_gl, m_renderStateBase);
+		g_guiState.rq = &m_renderQueueBase;
+		g_guiState.t = Transform();
+		g_guiState.fontMaterial = &m_fontMaterial;
+
 		// Render all items
 		for(auto& tickable : g_tickables)
 		{
 			tickable->Render(m_deltaTime);
 		}
 		m_renderStateBase.projectionTransform = GetGUIProjection();
-		nvgReset(g_vg);
-		nvgBeginPath(g_vg);
-		nvgFontFace(g_vg, "fallback");
-		nvgFontSize(g_vg, 20);
-		nvgTextAlign(g_vg, NVG_ALIGN_RIGHT);
-		nvgFillColor(g_vg, nvgRGB(0, 200, 255));
+		nvgReset(g_guiState.vg);
+		nvgBeginPath(g_guiState.vg);
+		nvgFontFace(g_guiState.vg, "fallback");
+		nvgFontSize(g_guiState.vg, 20);
+		nvgTextAlign(g_guiState.vg, NVG_ALIGN_RIGHT);
+		nvgFillColor(g_guiState.vg, nvgRGB(0, 200, 255));
 		String fpsText = Utility::Sprintf("%.1fFPS", GetRenderFPS());
-		nvgText(g_vg, g_resolution.x - 5, g_resolution.y - 5, fpsText.c_str(), 0);
-		nvgEndFrame(g_vg);
+		nvgText(g_guiState.vg, g_resolution.x - 5, g_resolution.y - 5, fpsText.c_str(), 0);
+		nvgEndFrame(g_guiState.vg);
 		m_renderQueueBase.Process();
 		glCullFace(GL_FRONT);
 		// Swap buffers
@@ -820,7 +824,7 @@ static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags 
 	const char* filename = luaL_checkstring(L, 1);
 	int imageflags = luaL_checkinteger(L, 2);
 	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + filename;
-	int handle = nvgCreateImage(g_vg, path.c_str(), imageflags);
+	int handle = nvgCreateImage(g_guiState.vg, path.c_str(), imageflags);
 	if (handle != 0)
 	{
 		lua_pushnumber(L, handle);
@@ -875,6 +879,9 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("LoadFont", lLoadFont);
 		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
 		pushFuncToTable("FastText", lFastText);
+		pushFuncToTable("CreateLabel", lCreateLabel);
+		pushFuncToTable("DrawLabel", lDrawLabel);
+		pushFuncToTable("UpdateLabel", lDrawLabel);
 		pushFuncToTable("DrawGauge", lDrawGauge);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);

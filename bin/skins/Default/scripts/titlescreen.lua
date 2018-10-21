@@ -4,6 +4,7 @@ local hovered = 0;
 local buttonWidth = 250;
 local buttonHeight = 75;
 local buttonBorder = 2;
+local label = -1;
 
 mouse_clipped = function(x,y,w,h)
     return mposx > x and mposy > y and mposx < x+w and mposy < y+h;
@@ -49,7 +50,11 @@ render = function(deltaTime)
     gfx.BeginPath();
     gfx.FillColor(255,255,255);
     gfx.FontSize(120);
-    gfx.Text("unnamed_sdvx_clone", resx / 2, resy / 2 - 150);
+    if label == -1 then
+        label = gfx.CreateLabel("unnamed_sdvx_clone", 120, 0);
+    end
+    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE);
+    gfx.DrawLabel(label, resx / 2, resy / 2 - 200);
 end;
 
 mouse_pressed = function(button)
