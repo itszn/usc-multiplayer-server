@@ -289,7 +289,9 @@ bool Application::m_Init()
 	}
 
 	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
-	m_fontMaterial->opaque = false;
+	m_fontMaterial->opaque = false;	
+	CheckedLoad(m_fillMaterial = LoadMaterial("guiColor"));
+	m_fillMaterial->opaque = false;
 	m_gauge = new HealthGauge();
 	LoadGauge(false);
 	// call the initial OnWindowResized now that we have intialized OpenGL
@@ -434,6 +436,7 @@ void Application::m_Tick()
 		g_guiState.rq = &m_renderQueueBase;
 		g_guiState.t = Transform();
 		g_guiState.fontMaterial = &m_fontMaterial;
+		g_guiState.fillMaterial = &m_fillMaterial;
 
 		// Render all items
 		for(auto& tickable : g_tickables)
@@ -806,19 +809,6 @@ static int lDrawGauge(lua_State* L)
 }
 
 
-
-static int lFastText(lua_State* L /*String utf8string, float x, float y, int size, int nvgtextalign*/)
-{
-	float x, y;
-	String inputText = luaL_checkstring(L, 1);
-	x = luaL_checknumber(L, 2);
-	y = luaL_checknumber(L, 3);
-	int size = luaL_checkinteger(L, 4);
-	int align = luaL_checkinteger(L, 5);
-
-	return g_application->FastText(inputText, x, y, size, align);
-}
-
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
 {
 	const char* filename = luaL_checkstring(L, 1);
@@ -862,6 +852,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		lua_newtable(state);
 		pushFuncToTable("BeginPath", lBeginPath);
 		pushFuncToTable("Rect", lRect);
+		pushFuncToTable("FastRect", lFastRect);
 		pushFuncToTable("Fill", lFill);
 		pushFuncToTable("FillColor", lFillColor);
 		pushFuncToTable("CreateImage", lCreateImage);

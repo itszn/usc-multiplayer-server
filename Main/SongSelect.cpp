@@ -841,6 +841,7 @@ public:
 			//AddAnimation(Ref<IGUIAnimation>(
 			//	new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
 		}
+		m_SetLuaTable();
 	}
 	void ChangeSetting()
 	{
@@ -855,6 +856,7 @@ public:
 			m_gameFlags = m_gameFlags & (~m_currentSelection);
 			//label->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[m_currentSelection]));
 		}
+		m_SetLuaTable();
 	}
 
 	void AdvanceSelection(int32 offset)
@@ -869,6 +871,49 @@ public:
 	}
 
 private:
+	void m_PushStringToTable(const char* name, const char* data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushIntToTable(const char* name, int data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushinteger(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushStringToArray(int index, const char* data)
+	{
+		lua_pushinteger(m_lua, index);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+
+
+	void m_SetLuaTable()
+	{
+		lua_newtable(m_lua);
+		{
+			for (size_t i = 0; i < m_flagNames.size(); i++)
+			{
+				lua_pushinteger(m_lua, i + 1);
+				lua_newtable(m_lua);
+				{
+					m_PushStringToTable("name", Utility::ConvertToUTF8(m_flagNames[(GameFlags)(1 << i)]).c_str());
+
+					lua_pushstring(m_lua, "value");
+					lua_pushboolean(m_lua, ((int)m_gameFlags & 1 << i) != 0);
+					lua_settable(m_lua, -3);
+				}
+				lua_settable(m_lua, -3);
+			}
+			m_PushIntToTable("currentSelection", (int)log2((int)m_currentSelection) + 1);
+		}
+		lua_setglobal(m_lua, "settings");
+	}
+
+
 	GameFlags m_gameFlags;
 	Map<GameFlags, void*> m_guiElements;
 	Map<GameFlags, WString> m_flagNames;

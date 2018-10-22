@@ -82,6 +82,7 @@ private:
 	Vector<String> m_commandLine;
 	Map<String, Font> m_fonts;
 	Material m_fontMaterial;
+	Material m_fillMaterial;
 	class HealthGauge* m_gauge;
 
 	String m_lastMapPath;

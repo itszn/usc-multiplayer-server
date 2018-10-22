@@ -20,6 +20,7 @@ struct GUIState
 	int textAlign;
 	int fontSize;
 	Material* fontMaterial;
+	Material* fillMaterial;
 };
 
 
@@ -122,14 +123,22 @@ static int lFontSize(lua_State* L /*float size*/)
 	g_guiState.fontSize = size;
 	return 0;
 }
-static int lFillColor(lua_State* L /*int r, int g, int b*/)
+static int lFillColor(lua_State* L /*int r, int g, int b, int a = 255*/)
 {
-	int r, g, b;
+	int r, g, b, a;
 	r = luaL_checkinteger(L, 1);
 	g = luaL_checkinteger(L, 2);
 	b = luaL_checkinteger(L, 3);
-	nvgFillColor(g_guiState.vg, nvgRGB(r, g, b));
-	g_guiState.fillColor = Vector4(r / 255.0, g / 255.0, b / 255.0, 1.0);
+	if (lua_gettop(L) == 4)
+	{
+		a = luaL_checkinteger(L, 4);
+	}
+	else
+	{
+		a = 255;
+	}
+	nvgFillColor(g_guiState.vg, nvgRGBA(r, g, b, a));
+	g_guiState.fillColor = Vector4(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
 	return 0;
 }
 static int lRect(lua_State* L /*float x, float y, float w, float h*/)
@@ -384,12 +393,73 @@ static int lLineJoin(lua_State* L /* int join */)
 	return 0;
 }
 
-static int lStrokeColor(lua_State* L /*int r, int g, int b*/)
+static int lStrokeColor(lua_State* L /*int r, int g, int b, int a = 255*/)
 {
-	int r, g, b;
+	int r, g, b, a;
 	r = luaL_checkinteger(L, 1);
 	g = luaL_checkinteger(L, 2);
 	b = luaL_checkinteger(L, 3);
-	nvgStrokeColor(g_guiState.vg, nvgRGB(r, g, b));
+	if (lua_gettop(L) == 4)
+	{
+		a = luaL_checkinteger(L, 4);
+	}
+	else
+	{
+		a = 255;
+	}
+	nvgStrokeColor(g_guiState.vg, nvgRGBA(r, g, b, a));
+	return 0;
+}
+
+static int lFastRect(lua_State* L /*float x, float y, float w, float h*/)
+{
+	float x, y, w, h;
+	x = luaL_checknumber(L, 1);
+	y = luaL_checknumber(L, 2);
+	w = luaL_checknumber(L, 3);
+	h = luaL_checknumber(L, 4);
+	Mesh quad = Graphics::MeshGenerators::Quad(g_gl, Vector2(x, y), Vector2(w, h));
+	MaterialParameterSet params;
+	params.SetParameter("color", g_guiState.fillColor);
+	g_guiState.rq->Draw(g_guiState.t, quad, *g_guiState.fillMaterial, params);
+	return 0;
+}
+
+static int lFastText(lua_State* L /*String utf8string, float x, float y, int size, int nvgtextalign*/)
+{
+	const char* s;
+	float x, y;
+	s = luaL_checkstring(L, 1);
+	x = luaL_checknumber(L, 2);
+	y = luaL_checknumber(L, 3);
+
+	WString text = Utility::ConvertToWString(s);
+	Text te = (*g_guiState.currentFont)->CreateText(text, g_guiState.fontSize);
+	Transform textTransform = g_guiState.t;
+	textTransform *= Transform::Translation(Vector2(x, y));
+
+	//vertical alignment
+	if ((g_guiState.textAlign & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y));
+	}
+	else if ((g_guiState.textAlign & (int)NVGalign::NVG_ALIGN_MIDDLE) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y / 2));
+	}
+
+	//horizontal alignment
+	if ((g_guiState.textAlign & (int)NVGalign::NVG_ALIGN_CENTER) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x / 2, 0));
+	}
+	else if ((g_guiState.textAlign & (int)NVGalign::NVG_ALIGN_RIGHT) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x, 0));
+	}
+	MaterialParameterSet params;
+	params.SetParameter("color", g_guiState.fillColor);
+	g_guiState.rq->Draw(textTransform, te, *g_guiState.fontMaterial, params);
+
 	return 0;
 }

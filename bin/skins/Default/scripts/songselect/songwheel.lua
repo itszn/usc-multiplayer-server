@@ -26,7 +26,7 @@ render = function(deltaTime)
             if not songCache[song.id]["label"] then
                 songCache[song.id]["label"] = gfx.CreateLabel(song.title, 40, 0)
             end
-            if not songCache[song.id]["jacket"] then
+            if not songCache[song.id]["jacket"] and i == selectedIndex then
                 songCache[song.id]["jacket"] = gfx.CreateImage(song.difficulties[1].jacketPath, 0)
             end
             

@@ -47,10 +47,13 @@ BeginPath()
 Rect(float x, float y, float w, float h)
 ******************************************************
 
+FastRect(float x, float y, float w, float h)
+******************************************************
+
 Fill()
 ******************************************************
 
-FillColor(int r, int g, int b)
+FillColor(int r, int g, int b, int a = 255)
 ******************************************************
 
 CreateImage(const char* filename, int imageflags)
@@ -137,7 +140,7 @@ LineJoin(int join)
 Stroke()
 ******************************************************
 
-StrokeColor(int r, int g, int b)
+StrokeColor(int r, int g, int b, int a = 255)
 ******************************************************
 
 UpdateLabel(int labelId, const char* text, int size)
