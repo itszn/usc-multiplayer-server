@@ -51,6 +51,7 @@ private:
 	MapTime m_medianHitDelta;
 
 	Ref<SongSelectStyle> m_songSelectStyle;
+	Vector<ScoreIndex*> m_highScores;
 
 	BeatmapSettings m_beatmapSettings;
 	Texture m_jacketImage;
@@ -89,10 +90,12 @@ public:
 		m_timedHits[0] = scoring.timedHits[0];
 		m_timedHits[1] = scoring.timedHits[1];
 		m_flags = game->GetFlags();
+		m_highScores = game->GetDifficultyIndex().scores;
 
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 		m_meanHitDelta = scoring.GetMeanHitDelta();
 		m_medianHitDelta = scoring.GetMedianHitDelta();
+
 		// Don't save the score if autoplay was on or if the song was launched using command line
 		// also don't save the score if the song was manually exited
 		if(!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1 && !game->GetManualExit())
@@ -174,6 +177,7 @@ public:
 		m_PushFloatToTable("meanHitDelta", m_meanHitDelta);
 		m_PushIntToTable("earlies", m_timedHits[0]);
 		m_PushIntToTable("lates", m_timedHits[1]);
+		m_PushStringToTable("grade", Scoring::CalculateGrade(m_score).c_str());
 		//Push gauge samples
 		lua_pushstring(m_lua, "gaugeSamples");
 		lua_newtable(m_lua);
@@ -183,6 +187,21 @@ public:
 			lua_rawseti(m_lua, -2, i + 1);
 		}
 		lua_settable(m_lua, -3);
+
+		lua_pushstring(m_lua, "highScores");
+		lua_newtable(m_lua);
+		int scoreIndex = m_highScores.size();
+		for (auto& score : m_highScores)
+		{
+			lua_pushinteger(m_lua, scoreIndex--);
+			lua_newtable(m_lua);
+			m_PushFloatToTable("gauge", score->gauge);
+			m_PushIntToTable("flags", score->gameflags);
+			m_PushIntToTable("score", score->score);
+			lua_settable(m_lua, -3);
+		}
+		lua_settable(m_lua, -3);
+
 
 		///TODO: maybe push complete hit stats
 

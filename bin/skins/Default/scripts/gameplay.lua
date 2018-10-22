@@ -16,16 +16,19 @@ drawSongInfo = function(deltaTime)
     gfx.BeginPath()
     gfx.LoadSkinFont("segoeui.ttf")
     gfx.Translate(5,5) --upper left margin
-    gfx.FillColor(100,100,100);
-    gfx.Rect(0,0,songInfoWidth,100)
-    gfx.Fill()
+    --gfx.FillColor(100,100,100);
+    --gfx.Rect(0,0,songInfoWidth,100)
+    --gfx.Fill()
     gfx.BeginPath()
-    gfx.ImageRect(0,0,jacketWidth,jacketWidth,jacket,1,0)
-    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER)
+    if jacket then
+        gfx.ImageRect(0,0,jacketWidth,jacketWidth,jacket,1,0)
+    end
+    gfx.TextAlign(gfx.TEXT_ALIGN_LEFT)
     gfx.FontSize(30)
-    local textX = jacketWidth + (songInfoWidth - jacketWidth) / 2
+    local textX = jacketWidth + 10
     gfx.Text(gameplay.title, textX, 30);
     gfx.Text(gameplay.artist, textX, 60);
+    gfx.FillColor(255,255,255)
     gfx.BeginPath()
     gfx.FillColor(0,150,255)
     gfx.Rect(jacketWidth,jacketWidth-10,(songInfoWidth - jacketWidth) * gameplay.progress,10)

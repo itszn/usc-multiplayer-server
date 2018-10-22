@@ -463,3 +463,47 @@ static int lFastText(lua_State* L /*String utf8string, float x, float y, int siz
 
 	return 0;
 }
+
+static int lRoundedRect(lua_State* L /* float x, float y, float w, float h, float r */)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	float w = luaL_checknumber(L, 3);
+	float h = luaL_checknumber(L, 4);
+	float r = luaL_checknumber(L, 5);
+	nvgRoundedRect(g_guiState.vg, x, y, w, h, r);
+	return 0;
+}
+
+static int lRoundedRectVarying(lua_State* L /* float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft */)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	float w = luaL_checknumber(L, 3);
+	float h = luaL_checknumber(L, 4);
+	float radTopLeft = luaL_checknumber(L, 5);
+	float radTopRight = luaL_checknumber(L, 6);
+	float radBottomRight = luaL_checknumber(L, 7);
+	float radBottomLeft = luaL_checknumber(L, 8);
+	nvgRoundedRectVarying(g_guiState.vg, x, y, w, h, radTopLeft, radTopRight, radBottomRight, radBottomLeft);
+	return 0;
+}
+
+static int lEllipse(lua_State* L /* float cx, float cy, float rx, float ry */)
+{
+	float cx = luaL_checknumber(L, 1);
+	float cy = luaL_checknumber(L, 2);
+	float rx = luaL_checknumber(L, 3);
+	float ry = luaL_checknumber(L, 4);
+	nvgEllipse(g_guiState.vg, cx, cy, rx, ry);
+	return 0;
+}
+
+static int lCircle(lua_State* L /* float cx, float cy, float r */)
+{
+	float cx = luaL_checknumber(L, 1);
+	float cy = luaL_checknumber(L, 2);
+	float r = luaL_checknumber(L, 3);
+	nvgCircle(g_guiState.vg, cx, cy, r);
+	return 0;
+}

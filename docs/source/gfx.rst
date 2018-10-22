@@ -148,3 +148,15 @@ UpdateLabel(int labelId, const char* text, int size)
 
 DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
 **************************************************************************
+
+RoundedRect(float x, float y, float w, float h, float r)
+**************************************************************************
+
+RoundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
+**************************************************************************************************************************************
+
+Ellipse(float cx, float cy, float rx, float ry)
+**************************************************************************
+
+Circle(float cx, float cy, float r)
+**************************************************************************
