@@ -16,8 +16,9 @@ Contents:
    
    game
    gfx
+   gameplay
+   scorescreen
    songwheel
-
 
 
 Indices and tables
