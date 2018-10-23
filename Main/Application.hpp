@@ -54,7 +54,7 @@ public:
 	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
-	Font LoadFont(const String& name, const bool& external = false);
+	Graphics::Font LoadFont(const String& name, const bool& external = false);
 	class lua_State* LoadScript(const String& name);
 	void LoadGauge(bool hard);
 	void DrawGauge(float rate, float x, float y, float w, float h, float deltaTime);
@@ -80,7 +80,7 @@ private:
 	RenderState m_renderStateBase;
 	RenderQueue m_renderQueueBase;
 	Vector<String> m_commandLine;
-	Map<String, Font> m_fonts;
+	Map<String, Graphics::Font> m_fonts;
 	Material m_fontMaterial;
 	Material m_fillMaterial;
 	class HealthGauge* m_gauge;

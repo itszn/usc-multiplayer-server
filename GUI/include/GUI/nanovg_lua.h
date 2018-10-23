@@ -14,8 +14,8 @@ struct GUIState
 	Transform t;
 	Map<lua_State*, Map<int, Text>> textCache;
 	Map<lua_State*, int> nextTextId;
-	Map<String, Font> fontCahce;
-	Font* currentFont;
+	Map<String, Graphics::Font> fontCahce;
+	Graphics::Font* currentFont;
 	Vector4 fillColor;
 	int textAlign;
 	int fontSize;
@@ -29,7 +29,7 @@ GUIState g_guiState;
 static int LoadFont(const char* name, const char* filename)
 {
 	{
-		Font* cached = g_guiState.fontCahce.Find(name);
+		Graphics::Font* cached = g_guiState.fontCahce.Find(name);
 		if (cached)
 		{
 			g_guiState.currentFont = cached;
@@ -37,7 +37,7 @@ static int LoadFont(const char* name, const char* filename)
 		else
 		{
 			String path = filename;
-			Font newFont = FontRes::Create(g_gl, path);
+			Graphics::Font newFont = FontRes::Create(g_gl, path);
 			g_guiState.fontCahce.Add(name, newFont);
 			g_guiState.currentFont = g_guiState.fontCahce.Find(name);
 		}

@@ -610,9 +610,9 @@ Sample Application::LoadSample(const String& name, const bool& external)
 	return ret;
 }
 
-Font Application::LoadFont(const String & name, const bool & external)
+Graphics::Font Application::LoadFont(const String & name, const bool & external)
 {
-	Font* cached = m_fonts.Find(name);
+	Graphics::Font* cached = m_fonts.Find(name);
 	if (cached)
 		return *cached;
 
@@ -622,7 +622,7 @@ Font Application::LoadFont(const String & name, const bool & external)
 	else
 		path = String("skins/") + m_skin + String("/fonts/") + name;
 
-	Font newFont = FontRes::Create(g_gl, path);
+	Graphics::Font newFont = FontRes::Create(g_gl, path);
 	m_fonts.Add(name, newFont);
 	return newFont;
 }
