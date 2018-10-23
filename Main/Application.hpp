@@ -63,6 +63,8 @@ public:
 	float GetRenderFPS() const;
 	Material GetFontMaterial() const;
 	Transform GetGUIProjection() const;
+	void StoreNamedSample(String name, Sample sample);
+	void PlayNamedSample(String name);
 
 private:
 	bool m_LoadConfig();
@@ -81,6 +83,7 @@ private:
 	RenderQueue m_renderQueueBase;
 	Vector<String> m_commandLine;
 	Map<String, Graphics::Font> m_fonts;
+	Map<String, Sample> m_samples;
 	Material m_fontMaterial;
 	Material m_fillMaterial;
 	class HealthGauge* m_gauge;

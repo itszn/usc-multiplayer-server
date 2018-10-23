@@ -689,6 +689,14 @@ Transform Application::GetGUIProjection() const
 {
 	return ProjectionMatrix::CreateOrthographic(0.0f, (float)g_resolution.x, (float)g_resolution.y, 0.0f, 0.0f, 100.0f);
 }
+void Application::StoreNamedSample(String name, Sample sample)
+{
+	m_samples.Add(name, sample);
+}
+void Application::PlayNamedSample(String name)
+{
+	m_samples[name]->Play();
+}
 void Application::m_OnKeyPressed(int32 key)
 {
 	// Fullscreen toggle
@@ -831,6 +839,20 @@ static int lLoadSkinFont(lua_State* L /*const char* name */)
 	return 0;
 }
 
+static int lLoadSkinSample(lua_State* L /*char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	g_application->StoreNamedSample(name, g_application->LoadSample(name));
+	return 0;
+}
+
+static int lPlaySample(lua_State* L /*char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	g_application->PlayNamedSample(name);
+	return 0;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -907,6 +929,9 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GetMousePos", lGetMousePos);
 		pushFuncToTable("GetResolution", lGetResolution);
 		pushFuncToTable("Log", lLog);
+		pushFuncToTable("LoadSkinSample", lLoadSkinSample);
+		pushFuncToTable("PlaySample", lPlaySample);
+
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
 		pushIntToTable("LOGGER_NORMAL", Logger::Severity::Normal);

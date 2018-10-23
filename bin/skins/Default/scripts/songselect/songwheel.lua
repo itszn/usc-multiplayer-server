@@ -17,6 +17,9 @@ local doffset = 0
 local diffColors = {{0,0,255}, {0,255,0}, {255,0,0}, {255, 0, 255}}
 local timer = 0
 
+game.LoadSkinSample("menu_click")
+game.LoadSkinSample("click-02")
+
 check_or_create_cache = function(song, loadJacket)
     if not songCache[song.id] then songCache[song.id] = {} end
     
@@ -167,11 +170,17 @@ render = function(deltaTime)
 end
 
 set_index = function(newIndex)
+    if newIndex ~= selectedIndex then
+        game.PlaySample("menu_click")
+    end
     ioffset = ioffset + selectedIndex - newIndex
     selectedIndex = newIndex
 end;
 
 set_diff = function(newDiff)
+    if newDiff ~= selectedDiff then
+        game.PlaySample("click-02")
+    end
     doffset = doffset + newDiff - selectedDiff
     selectedDiff = newDiff
 end;

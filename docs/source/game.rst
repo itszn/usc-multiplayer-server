@@ -43,3 +43,15 @@ Logs a message to the game's log file.
 Example::
 
     game.Log("Something went wrong!", game.LOGGER_ERROR)
+    
+
+LoadSkinSample(char* name)
+********************************
+Loads a .wav sample from the audio directory in the current skin folder.
+
+.wav should not be included in *name*.
+
+
+PlaySample(char* name)
+********************************
+Plays a loaded sample.
