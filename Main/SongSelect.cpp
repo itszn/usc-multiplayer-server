@@ -383,6 +383,15 @@ public:
 		m_currentSelection->SetSelectedDifficulty(newDiff);
 		m_currentlySelectedDiff = newDiff;
 
+		lua_getglobal(m_lua, "set_diff");
+		lua_pushinteger(m_lua, newDiff + 1);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+
+
 		Map<int32, SongSelectIndex> maps = m_SourceCollection();
 		SongSelectIndex* map = maps.Find(m_currentlySelectedId);
 		if(map)

@@ -425,7 +425,7 @@ static int lFastRect(lua_State* L /*float x, float y, float w, float h*/)
 	return 0;
 }
 
-static int lFastText(lua_State* L /*String utf8string, float x, float y, int size, int nvgtextalign*/)
+static int lFastText(lua_State* L /* String utf8string, float x, float y */)
 {
 	const char* s;
 	float x, y;
