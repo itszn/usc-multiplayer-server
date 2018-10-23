@@ -98,14 +98,17 @@ LoadFont(const char* name, const char* filename)
 LoadSkinFont(const char* name, const char* filename)
 ******************************************************
 
-FastText(const char* inputText, float x, float y, int size, int align)
+FastText(const char* inputText, float x, float y)
 **********************************************************************
 
 CreateLabel(const char* text, int size, bool monospace)
 *******************************************************
 
-DrawLabel(int labelId, float x, float y)
-******************************************************
+DrawLabel(int labelId, float x, float y, float maxWidth = -1)
+**************************************************************
+Renders an already created label.
+
+Will resize the label to fit within the maxWidth if maxWidth > 0.
 
 MoveTo(float x, float y)
 ******************************************************

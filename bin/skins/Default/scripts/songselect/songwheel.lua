@@ -52,8 +52,8 @@ draw_song = function(song, x, y, selected)
     gfx.Stroke()
     gfx.FillColor(255,255,255)
     gfx.TextAlign(gfx.TEXT_ALIGN_TOP + gfx.TEXT_ALIGN_LEFT)
-    gfx.DrawLabel(songCache[song.id]["title"], x+10, y + 10)
-    gfx.DrawLabel(songCache[song.id]["artist"], x+10, y + 50)
+    gfx.DrawLabel(songCache[song.id]["title"], x+10, y + 10, 600)
+    gfx.DrawLabel(songCache[song.id]["artist"], x+10, y + 50, 600)
 end
 
 draw_diff_icon = function(diff, x, y)

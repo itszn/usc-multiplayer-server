@@ -270,14 +270,26 @@ static int lUpdateLabel(lua_State* L /*int labelId, const char* text, int size*/
 	return 0;
 }
 
-static int lDrawLabel(lua_State* L /*int labelId, float x, float y*/)
+static int lDrawLabel(lua_State* L /*int labelId, float x, float y, float maxWidth = -1*/)
 {
 	int labelId = luaL_checkinteger(L, 1);
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
+	float maxWidth = -1;
+	if (lua_gettop(L) == 4)
+	{
+		maxWidth = luaL_checknumber(L, 4);
+	}
 	Transform textTransform = g_guiState.t;
 	textTransform *= Transform::Translation(Vector2(x, y));
 	Text te = g_guiState.textCache[L][labelId];
+
+	if (maxWidth > 0)
+	{
+		float scale = maxWidth / te->size.x;
+		textTransform *= Transform::Scale(Vector2(Math::Min(scale,1.0f)));
+	}
+
 	//vertical alignment
 	if ((g_guiState.textAlign & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
 	{
