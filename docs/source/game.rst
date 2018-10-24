@@ -55,3 +55,9 @@ Loads a .wav sample from the audio directory in the current skin folder.
 PlaySample(char* name)
 ********************************
 Plays a loaded sample.
+
+GetLaserColor(int laser)
+************************
+0 = left, 1 = right
+
+returns r,g,b

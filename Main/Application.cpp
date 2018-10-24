@@ -795,6 +795,19 @@ static int lGetResolution(lua_State* L)
 	return 2;
 }
 
+static int lGetLaserColor(lua_State* L /*int laser*/)
+{
+	int laser = luaL_checkinteger(L, 1);
+	float laserHues[2] = { 0.f };
+	laserHues[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
+	laserHues[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
+	Colori c = Color::FromHSV(laserHues[laser], 1.0, 1.0).ToRGBA8();
+	lua_pushnumber(L, c.x);
+	lua_pushnumber(L, c.y);
+	lua_pushnumber(L, c.z);
+	return 3;
+}
+
 static int lLog(lua_State* L)
 {
 	String msg = luaL_checkstring(L, 1);
@@ -931,6 +944,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Log", lLog);
 		pushFuncToTable("LoadSkinSample", lLoadSkinSample);
 		pushFuncToTable("PlaySample", lPlaySample);
+		pushFuncToTable("GetLaserColor", lGetLaserColor);
 
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
