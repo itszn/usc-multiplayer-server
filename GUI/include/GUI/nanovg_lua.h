@@ -519,3 +519,17 @@ static int lCircle(lua_State* L /* float cx, float cy, float r */)
 	nvgCircle(g_guiState.vg, cx, cy, r);
 	return 0;
 }
+
+static int lSkewX(lua_State* L /* float angle */)
+{
+	float angle = luaL_checknumber(L, 1);
+	nvgSkewX(g_guiState.vg, angle);
+	return 0;
+}
+
+static int lSkewY(lua_State* L /* float angle */)
+{
+	float angle = luaL_checknumber(L, 1);
+	nvgSkewY(g_guiState.vg, angle);
+	return 0;
+}

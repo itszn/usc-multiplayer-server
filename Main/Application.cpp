@@ -925,6 +925,8 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("RoundedRectVarying", lRoundedRectVarying);
 		pushFuncToTable("Ellipse", lEllipse);
 		pushFuncToTable("Circle", lCircle);
+		pushFuncToTable("SkewX", lSkewX);
+		pushFuncToTable("SkewY", lSkewY);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
 		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);
