@@ -42,7 +42,7 @@ CPackSourceConfig.cmake
 CMakeCache.txt
 CMakeFiles
 Makefile
-
+!docs/Makefile
 # Not adding photoshop source files for textures
 *.psd
 
