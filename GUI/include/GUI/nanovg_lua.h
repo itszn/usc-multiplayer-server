@@ -13,7 +13,9 @@ struct GUIState
 	RenderQueue* rq;
 	Transform t;
 	Map<lua_State*, Map<int, Text>> textCache;
+	Map<lua_State*, Map<int, NVGpaint>> paintCache;
 	Map<lua_State*, int> nextTextId;
+	Map<lua_State*, int> nextPaintId;
 	Map<String, Graphics::Font> fontCahce;
 	Graphics::Font* currentFont;
 	Vector4 fillColor;
@@ -21,6 +23,8 @@ struct GUIState
 	int fontSize;
 	Material* fontMaterial;
 	Material* fillMaterial;
+	NVGcolor otrColor; //outer color
+	NVGcolor inrColor; //inner color
 };
 
 
@@ -531,5 +535,92 @@ static int lSkewY(lua_State* L /* float angle */)
 {
 	float angle = luaL_checknumber(L, 1);
 	nvgSkewY(g_guiState.vg, angle);
+	return 0;
+}
+
+static int lLinearGradient(lua_State* L /* float sx, float sy, float ex, float ey */)
+{
+	float sx = luaL_checknumber(L, 1);
+	float sy = luaL_checknumber(L, 2);
+	float ex = luaL_checknumber(L, 3);
+	float ey = luaL_checknumber(L, 4);
+	NVGpaint paint = nvgLinearGradient(g_guiState.vg, sx, sy, ex, ey, g_guiState.inrColor, g_guiState.otrColor);
+	g_guiState.paintCache[L].Add(g_guiState.nextPaintId[L], paint);
+	lua_pushnumber(L, g_guiState.nextPaintId[L]);
+	g_guiState.nextPaintId[L]++;
+	return 1;
+}
+
+static int lBoxGradient(lua_State* L /* float x, float y, float w, float h, float r, float f */)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	float w = luaL_checknumber(L, 3);
+	float h = luaL_checknumber(L, 4);
+	float r = luaL_checknumber(L, 5);
+	float f = luaL_checknumber(L, 6);
+	NVGpaint paint = nvgBoxGradient(g_guiState.vg, x, y, w, h, r, f, g_guiState.inrColor, g_guiState.otrColor);
+	g_guiState.paintCache[L].Add(g_guiState.nextPaintId[L], paint);
+	lua_pushnumber(L, g_guiState.nextPaintId[L]);
+	g_guiState.nextPaintId[L]++;
+	return 1;
+}
+
+static int lRadialGradient(lua_State* L /* float cx, float cy, float inr, float outr */)
+{
+	float cx = luaL_checknumber(L, 1);
+	float cy = luaL_checknumber(L, 2);
+	float inr = luaL_checknumber(L, 3);
+	float outr = luaL_checknumber(L, 4);
+	NVGpaint paint = nvgRadialGradient(g_guiState.vg, cx, cy, inr, outr, g_guiState.inrColor, g_guiState.otrColor);
+	g_guiState.paintCache[L].Add(g_guiState.nextPaintId[L], paint);
+	lua_pushnumber(L, g_guiState.nextPaintId[L]);
+	g_guiState.nextPaintId[L]++;
+	return 1;
+}
+
+static int lImagePattern(lua_State* L /* float ox, float oy, float ex, float ey, float angle, int image, float alpha */)
+{
+	float ox = luaL_checknumber(L, 1);
+	float oy = luaL_checknumber(L, 2);
+	float ex = luaL_checknumber(L, 3);
+	float ey = luaL_checknumber(L, 4);
+	float angle = luaL_checknumber(L, 5);
+	int image = luaL_checkinteger(L, 6);
+	float alpha = luaL_checknumber(L, 7);
+	NVGpaint paint = nvgImagePattern(g_guiState.vg, ox, oy, ex, ey, angle, image, alpha);
+	g_guiState.paintCache[L].Add(g_guiState.nextPaintId[L], paint);
+	lua_pushnumber(L, g_guiState.nextPaintId[L]);
+	g_guiState.nextPaintId[L]++;
+	return 1;
+}
+
+static int lGradientColors(lua_State* L /*int ri, int gi, int bi, int ai, int ro, int go, int bo, int ao*/)
+{
+	int ri, gi, bi, ai, ro, go, bo, ao;
+	ri = luaL_checkinteger(L, 1);
+	gi = luaL_checkinteger(L, 2);
+	bi = luaL_checkinteger(L, 3);
+	ai = luaL_checkinteger(L, 4);
+	ro = luaL_checkinteger(L, 5);
+	go = luaL_checkinteger(L, 6);
+	bo = luaL_checkinteger(L, 7);
+	ao = luaL_checkinteger(L, 8);
+	g_guiState.inrColor = nvgRGBA(ri, gi, bi, ai);
+	g_guiState.otrColor = nvgRGBA(ro, go, bo, ao);
+	return 0;
+}
+
+static int lFillPaint(lua_State* L /* int paint */)
+{
+	int paint = luaL_checkinteger(L, 1);
+	nvgFillPaint(g_guiState.vg, g_guiState.paintCache[L][paint]);
+	return 0;
+}
+
+static int lStrokePaint(lua_State* L /* int paint */)
+{
+	int paint = luaL_checkinteger(L, 1);
+	nvgStrokePaint(g_guiState.vg, g_guiState.paintCache[L][paint]);
 	return 0;
 }

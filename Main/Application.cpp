@@ -938,6 +938,13 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Circle", lCircle);
 		pushFuncToTable("SkewX", lSkewX);
 		pushFuncToTable("SkewY", lSkewY);
+		pushFuncToTable("LinearGradient", lLinearGradient);
+		pushFuncToTable("BoxGradient", lBoxGradient);
+		pushFuncToTable("RadialGradient", lRadialGradient);
+		pushFuncToTable("ImagePattern", lImagePattern);
+		pushFuncToTable("GradientColors", lGradientColors);
+		pushFuncToTable("FillPaint", lFillPaint);
+		pushFuncToTable("StrokePaint", lStrokePaint);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
 		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);

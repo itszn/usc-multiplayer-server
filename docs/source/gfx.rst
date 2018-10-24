@@ -170,4 +170,23 @@ SkewX(float angle)
 SkewY(float angle)
 **************************************************************************
 
+LinearGradient(float sx, float sy, float ex, float ey)
+**************************************************************************
 
+BoxGradient(float x, float y, float w, float h, float r, float f)
+**************************************************************************
+
+RadialGradient(float cx, float cy, float inr, float outr)
+**************************************************************************
+
+ImagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha)
+**************************************************************************
+
+GradientColors(int ri, int gi, int bi, int ai, int ro, int go, int bo, int ao)
+**************************************************************************
+
+FillPaint(int paint)
+**************************************************************************
+
+StrokePaint(int paint)
+**************************************************************************

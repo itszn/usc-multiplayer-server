@@ -5,6 +5,8 @@ local buttonWidth = 250;
 local buttonHeight = 75;
 local buttonBorder = 2;
 local label = -1;
+gfx.GradientColors(0,128,255,255,0,128,255,0)
+local gradient = gfx.LinearGradient(0,0,0,1)
 
 mouse_clipped = function(x,y,w,h)
     return mposx > x and mposy > y and mposx < x+w and mposy < y+h;
@@ -38,6 +40,12 @@ end;
 render = function(deltaTime)
     resx,resy = game.GetResolution();
     mposx,mposy = game.GetMousePos();
+    gfx.Scale(resx, resy / 3)
+    gfx.Rect(0,0,1,1)
+    gfx.FillPaint(gradient)
+    gfx.Fill()
+    gfx.ResetTransform()
+    gfx.BeginPath()
     buttonY = resy / 2;
     hovered = 0;
     gfx.LoadSkinFont("segoeui.ttf");
@@ -46,7 +54,6 @@ render = function(deltaTime)
     draw_button("Settings", resx / 2, buttonY, 2);
     buttonY = buttonY + 100;
     draw_button("Exit", resx / 2, buttonY, 3);
-    
     gfx.BeginPath();
     gfx.FillColor(255,255,255);
     gfx.FontSize(120);
