@@ -624,3 +624,28 @@ static int lStrokePaint(lua_State* L /* int paint */)
 	nvgStrokePaint(g_guiState.vg, g_guiState.paintCache[L][paint]);
 	return 0;
 }
+
+static int lSave(lua_State* L /*  */)
+{
+	nvgSave(g_guiState.vg);
+	return 0;
+}
+
+static int lRestore(lua_State* L /*  */)
+{
+	nvgRestore(g_guiState.vg);
+	return 0;
+}
+
+static int lReset(lua_State* L /*  */)
+{
+	nvgReset(g_guiState.vg);
+	return 0;
+}
+
+static int lPathWinding(lua_State* L /* int dir */)
+{
+	int dir = luaL_checkinteger(L, 1);
+	nvgPathWinding(g_guiState.vg, dir);
+	return 0;
+}

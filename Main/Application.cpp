@@ -945,6 +945,10 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GradientColors", lGradientColors);
 		pushFuncToTable("FillPaint", lFillPaint);
 		pushFuncToTable("StrokePaint", lStrokePaint);
+		pushFuncToTable("Save", lSave);
+		pushFuncToTable("Restore", lRestore);
+		pushFuncToTable("Reset", lReset);
+		pushFuncToTable("PathWinding", lPathWinding);
 		//constants
 		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
 		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);
