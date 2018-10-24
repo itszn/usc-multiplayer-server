@@ -56,6 +56,7 @@ public:
 	Sample LoadSample(const String& name, const bool& external = false);
 	Graphics::Font LoadFont(const String& name, const bool& external = false);
 	class lua_State* LoadScript(const String& name);
+	void ReloadScript(const String& name, lua_State* L);
 	void LoadGauge(bool hard);
 	void DrawGauge(float rate, float x, float y, float w, float h, float deltaTime);
 	int FastText(String text, float x, float y, int size, int align);

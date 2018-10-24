@@ -642,6 +642,17 @@ lua_State* Application::LoadScript(const String & name)
 	return s;
 }
 
+void Application::ReloadScript(const String& name, lua_State* L)
+{
+	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	if (luaL_dofile(L, path.c_str()))
+	{
+		Logf("Lua error: %s", Logger::Error, lua_tostring(L, -1));
+		lua_close(L);
+		assert(false);
+	}
+}
+
 void Application::LoadGauge(bool hard)
 {
 	String gaugePath = "gauges/normal/";

@@ -133,6 +133,10 @@ public:
 		lua_setglobal(m_lua, "songwheel");
 		return true;
 	}
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/songwheel", m_lua);
+	}
 	virtual void Render(float deltaTime)
 	{
 		lua_getglobal(m_lua, "render");
@@ -601,6 +605,10 @@ public:
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/filterwheel"));
 		return true;
 	}
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/filterwheel", m_lua);
+	}
 	virtual void Render(float deltaTime)
 	{
 		lua_getglobal(m_lua, "render");
@@ -807,6 +815,10 @@ public:
 		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
 		return true;
+	}
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/settingswheel", m_lua);
 	}
 	virtual void Render(float deltaTime)
 	{
@@ -1370,6 +1382,14 @@ public:
 			else if (key == SDLK_F2)
 			{
 				m_selectionWheel->SelectRandom();
+			}
+			else if (key == SDLK_F9)
+			{
+				m_selectionWheel->ReloadScript();
+				m_settingsWheel->ReloadScript();
+				m_filterSelection->ReloadScript();
+				g_application->ReloadScript("songselect/background", m_lua);
+				
 			}
 			else if (key == SDLK_ESCAPE)
 			{
