@@ -531,6 +531,9 @@ private:
 					m_PushFloatToTable("gauge", score->gauge);
 					m_PushIntToTable("flags", score->gameflags);
 					m_PushIntToTable("score", score->score);
+					m_PushIntToTable("perfects", score->crit);
+					m_PushIntToTable("goods", score->almost);
+					m_PushIntToTable("misses", score->miss);
 					lua_settable(m_lua, -3);
 				}
 				lua_settable(m_lua, -3);

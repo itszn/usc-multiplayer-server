@@ -50,3 +50,6 @@ A score contains the following fields:
     float gauge //range 0.0 -> 1.0
     int flags //contains information about gaugeType/random/mirror
     int score
+    int perfects
+    int goods
+    int misses

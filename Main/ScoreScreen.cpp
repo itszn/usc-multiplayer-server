@@ -190,14 +190,17 @@ public:
 
 		lua_pushstring(m_lua, "highScores");
 		lua_newtable(m_lua);
-		int scoreIndex = m_highScores.size();
+		int scoreIndex = 1;
 		for (auto& score : m_highScores)
 		{
-			lua_pushinteger(m_lua, scoreIndex--);
+			lua_pushinteger(m_lua, scoreIndex++);
 			lua_newtable(m_lua);
 			m_PushFloatToTable("gauge", score->gauge);
 			m_PushIntToTable("flags", score->gameflags);
 			m_PushIntToTable("score", score->score);
+			m_PushIntToTable("perfects", score->crit);
+			m_PushIntToTable("goods", score->almost);
+			m_PushIntToTable("misses", score->miss);
 			lua_settable(m_lua, -3);
 		}
 		lua_settable(m_lua, -3);
