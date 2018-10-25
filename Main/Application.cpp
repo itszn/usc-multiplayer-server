@@ -877,6 +877,14 @@ static int lPlaySample(lua_State* L /*char* name */)
 	return 0;
 }
 
+static int lForceRender(lua_State* L)
+{
+	nvgEndFrame(g_guiState.vg);
+	g_application->GetRenderQueueBase()->Process();
+	nvgBeginFrame(g_guiState.vg, g_resolution.x, g_resolution.y, 1);
+	return 0;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -949,14 +957,34 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Restore", lRestore);
 		pushFuncToTable("Reset", lReset);
 		pushFuncToTable("PathWinding", lPathWinding);
+		pushFuncToTable("ForceRender", lForceRender);
 		//constants
-		pushIntToTable("TEXT_ALIGN_BASELINE", NVGalign::NVG_ALIGN_BASELINE);
-		pushIntToTable("TEXT_ALIGN_BOTTOM", NVGalign::NVG_ALIGN_BOTTOM);
-		pushIntToTable("TEXT_ALIGN_CENTER", NVGalign::NVG_ALIGN_CENTER);
-		pushIntToTable("TEXT_ALIGN_LEFT", NVGalign::NVG_ALIGN_LEFT);
-		pushIntToTable("TEXT_ALIGN_MIDDLE", NVGalign::NVG_ALIGN_MIDDLE);
-		pushIntToTable("TEXT_ALIGN_RIGHT", NVGalign::NVG_ALIGN_RIGHT);
-		pushIntToTable("TEXT_ALIGN_TOP", NVGalign::NVG_ALIGN_TOP);
+		//Text align
+		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
+		pushIntToTable("TEXT_ALIGN_BOTTOM",		NVGalign::NVG_ALIGN_BOTTOM);
+		pushIntToTable("TEXT_ALIGN_CENTER",		NVGalign::NVG_ALIGN_CENTER);
+		pushIntToTable("TEXT_ALIGN_LEFT",		NVGalign::NVG_ALIGN_LEFT);
+		pushIntToTable("TEXT_ALIGN_MIDDLE",		NVGalign::NVG_ALIGN_MIDDLE);
+		pushIntToTable("TEXT_ALIGN_RIGHT",		NVGalign::NVG_ALIGN_RIGHT);
+		pushIntToTable("TEXT_ALIGN_TOP",		NVGalign::NVG_ALIGN_TOP);
+		//Line caps and joins
+		pushIntToTable("LINE_BEVEL",	NVGlineCap::NVG_BEVEL);
+		pushIntToTable("LINE_BUTT",		NVGlineCap::NVG_BUTT);
+		pushIntToTable("LINE_MITER",	NVGlineCap::NVG_MITER);
+		pushIntToTable("LINE_ROUND",	NVGlineCap::NVG_ROUND);
+		pushIntToTable("LINE_SQUARE",	NVGlineCap::NVG_SQUARE);
+		//Image flags
+		pushIntToTable("IMAGE_GENERATE_MIPMAPS",	NVGimageFlags::NVG_IMAGE_GENERATE_MIPMAPS);
+		pushIntToTable("IMAGE_REPEATX",				NVGimageFlags::NVG_IMAGE_REPEATX);
+		pushIntToTable("IMAGE_REPEATY",				NVGimageFlags::NVG_IMAGE_REPEATY);
+		pushIntToTable("IMAGE_FLIPY",				NVGimageFlags::NVG_IMAGE_FLIPY);
+		pushIntToTable("IMAGE_PREMULTIPLIED",		NVGimageFlags::NVG_IMAGE_PREMULTIPLIED);
+		pushIntToTable("IMAGE_NEAREST",				NVGimageFlags::NVG_IMAGE_NEAREST);
+
+
+
+
+
 		lua_setglobal(state, "gfx");
 	}
 

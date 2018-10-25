@@ -21,24 +21,45 @@ Constants
 *************************************
 Most constants are from the nanovg library.
 
-+--------------------+------------------------------+
-|    Lua Name        |         Value                |
-+====================+==============================+
-|TEXT_ALIGN_BASELINE | NVGalign::NVG_ALIGN_BASELINE |
-+--------------------+------------------------------+
-|TEXT_ALIGN_BOTTOM   | NVGalign::NVG_ALIGN_BOTTOM   |
-+--------------------+------------------------------+
-|TEXT_ALIGN_CENTER   | NVGalign::NVG_ALIGN_CENTER   |
-+--------------------+------------------------------+
-|TEXT_ALIGN_LEFT     | NVGalign::NVG_ALIGN_LEFT     |
-+--------------------+------------------------------+
-|TEXT_ALIGN_MIDDLE   | NVGalign::NVG_ALIGN_MIDDLE   |
-+--------------------+------------------------------+
-|TEXT_ALIGN_RIGHT    | NVGalign::NVG_ALIGN_RIGHT    |
-+--------------------+------------------------------+
-|TEXT_ALIGN_TOP      | NVGalign::NVG_ALIGN_TOP      |
-+--------------------+------------------------------+
-
++------------------------+-------------------------------------------+
+|    Lua Name            |         Value                             |
++========================+===========================================+
+| TEXT_ALIGN_BASELINE    | NVGalign::NVG_ALIGN_BASELINE              |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_BOTTOM      | NVGalign::NVG_ALIGN_BOTTOM                |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_CENTER      | NVGalign::NVG_ALIGN_CENTER                |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_LEFT        | NVGalign::NVG_ALIGN_LEFT                  |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_MIDDLE      | NVGalign::NVG_ALIGN_MIDDLE                |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_RIGHT       | NVGalign::NVG_ALIGN_RIGHT                 |
++------------------------+-------------------------------------------+
+| TEXT_ALIGN_TOP         | NVGalign::NVG_ALIGN_TOP                   |
++------------------------+-------------------------------------------+
+| LINE_BEVEL             | NVGlineCap::NVG_BEVEL                     |
++------------------------+-------------------------------------------+
+| LINE_BUTT              | NVGlineCap::NVG_BUTT                      |
++------------------------+-------------------------------------------+
+| LINE_MITER             | NVGlineCap::NVG_MITER                     |
++------------------------+-------------------------------------------+
+| LINE_ROUND             | NVGlineCap::NVG_ROUND                     |
++------------------------+-------------------------------------------+
+| LINE_SQUARE            | NVGlineCap::NVG_SQUARE                    |
++------------------------+-------------------------------------------+
+| IMAGE_GENERATE_MIPMAPS | NVGimageFlags::NVG_IMAGE_GENERATE_MIPMAPS |
++------------------------+-------------------------------------------+
+| IMAGE_REPEATX          | NVGimageFlags::NVG_IMAGE_REPEATX          |
++------------------------+-------------------------------------------+
+| IMAGE_REPEATY          | NVGimageFlags::NVG_IMAGE_REPEATY          |
++------------------------+-------------------------------------------+
+| IMAGE_FLIPY            | NVGimageFlags::NVG_IMAGE_FLIPY            |
++------------------------+-------------------------------------------+
+| IMAGE_PREMULTIPLIED    | NVGimageFlags::NVG_IMAGE_PREMULTIPLIED    |
++------------------------+-------------------------------------------+
+| IMAGE_NEAREST          | NVGimageFlags::NVG_IMAGE_NEAREST          |
++------------------------+-------------------------------------------+
 
 
 BeginPath()
@@ -202,4 +223,14 @@ Reset()
 
 PathWinding(int dir)
 *********************
+
+ForceRender()
+**************
+Forces the current render queue to be processed which makes it possible to put any
+Fast\* and Label drawing calls made before a ForceRender call under regular drawing
+functions called after a ForceRender call.
+
+This function might have a more than insignificant performance impact.
+under regular 
+
 

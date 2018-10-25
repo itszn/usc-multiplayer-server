@@ -166,7 +166,8 @@ render = function(deltaTime)
     end
     ioffset = ioffset * 0.8
     doffset = doffset * 0.8
-    gfx.ResetTransform();
+    gfx.ResetTransform()
+    gfx.ForceRender()
 end
 
 set_index = function(newIndex)

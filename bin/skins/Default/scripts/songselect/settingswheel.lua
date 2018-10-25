@@ -6,7 +6,7 @@ render = function(deltaTime, shown)
     gfx.FontSize(40);
     if shown then
         gfx.FillColor(0,0,0,200)
-        gfx.FastRect(0,0,resx,resy)
+        gfx.Rect(0,0,resx,resy)
         gfx.Fill()
         gfx.BeginPath()
         for i,setting in ipairs(settings) do
