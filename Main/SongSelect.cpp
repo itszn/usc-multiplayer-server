@@ -223,8 +223,8 @@ public:
 			// TODO(local): Go through everything in this file and try to clean
 			//  up all calls to things like this, to keep it from updating like 7 times >.>
 			//AdvanceSelection(0);
+			m_SetLuaMaps();
 		}
-		m_SetLuaMaps();
 	}
 	void SelectRandom()
 	{
@@ -428,6 +428,7 @@ public:
 			m_mapFilter.Add(index.id, index);
 		}
 		m_filterSet = true;
+		m_SetLuaMaps();
 		AdvanceSelection(0);
 	}
 	void SetFilter(SongFilter* filter[2])
@@ -452,6 +453,7 @@ public:
 		{
 			m_filterSet = false;
 			AdvanceSelection(0);
+			m_SetLuaMaps();
 		}
 	}
 
@@ -1381,6 +1383,7 @@ public:
 			else if (key == SDLK_F5)
 			{
 				m_mapDatabase.StartSearching();
+				OnSearchTermChanged(L"");
 			}
 			else if (key == SDLK_F2)
 			{
@@ -1529,8 +1532,8 @@ public:
 		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
+		OnSearchTermChanged(L"");
 
-		//OnSearchTermChanged(m_searchField->GetText());
 		//
 		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		//slot->anchor = Anchors::Full;
