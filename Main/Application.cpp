@@ -437,6 +437,8 @@ void Application::m_Tick()
 		g_guiState.t = Transform();
 		g_guiState.fontMaterial = &m_fontMaterial;
 		g_guiState.fillMaterial = &m_fillMaterial;
+		g_guiState.resolution = g_resolution;
+		g_guiState.scissor = Rect(0,0,-1,-1);
 
 		// Render all items
 		for(auto& tickable : g_tickables)

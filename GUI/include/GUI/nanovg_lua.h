@@ -25,6 +25,8 @@ struct GUIState
 	Material* fillMaterial;
 	NVGcolor otrColor; //outer color
 	NVGcolor inrColor; //inner color
+	Rect scissor;
+	Vector2i resolution;
 };
 
 
@@ -316,7 +318,7 @@ static int lDrawLabel(lua_State* L /*int labelId, float x, float y, float maxWid
 
 	MaterialParameterSet params;
 	params.SetParameter("color", g_guiState.fillColor);
-	g_guiState.rq->Draw(textTransform, te, *g_guiState.fontMaterial, params);
+	g_guiState.rq->DrawScissored(g_guiState.scissor ,textTransform, te, *g_guiState.fontMaterial, params);
 	return 0;
 }
 
@@ -437,7 +439,7 @@ static int lFastRect(lua_State* L /*float x, float y, float w, float h*/)
 	Mesh quad = Graphics::MeshGenerators::Quad(g_gl, Vector2(x, y), Vector2(w, h));
 	MaterialParameterSet params;
 	params.SetParameter("color", g_guiState.fillColor);
-	g_guiState.rq->Draw(g_guiState.t, quad, *g_guiState.fillMaterial, params);
+	g_guiState.rq->DrawScissored(g_guiState.scissor, g_guiState.t, quad, *g_guiState.fillMaterial, params);
 	return 0;
 }
 
@@ -475,7 +477,7 @@ static int lFastText(lua_State* L /* String utf8string, float x, float y */)
 	}
 	MaterialParameterSet params;
 	params.SetParameter("color", g_guiState.fillColor);
-	g_guiState.rq->Draw(textTransform, te, *g_guiState.fontMaterial, params);
+	g_guiState.rq->DrawScissored(g_guiState.scissor, textTransform, te, *g_guiState.fontMaterial, params);
 
 	return 0;
 }
@@ -656,6 +658,15 @@ static int lScissor(lua_State* L /* float x, float y, float w, float h */)
 	float y = luaL_checknumber(L, 2);
 	float w = luaL_checknumber(L, 3);
 	float h = luaL_checknumber(L, 4);
+	{
+		Vector3 scale = g_guiState.t.GetScale();
+		Vector3 pos = g_guiState.t.GetPosition();
+		Vector2 topLeft = pos.xy() + Vector2(x, y);
+		Vector2 size = Vector2(w, h) * scale.xy();
+
+
+		g_guiState.scissor = Rect(topLeft, size);
+	}
 	nvgScissor(g_guiState.vg, x, y, w, h);
 	return 0;
 }
@@ -673,6 +684,7 @@ static int lIntersectScissor(lua_State* L /* float x, float y, float w, float h 
 static int lResetScissor(lua_State* L /*  */)
 {
 	nvgResetScissor(g_guiState.vg);
+	g_guiState.scissor = Rect(0, 0, -1, -1);
 	return 0;
 }
 
