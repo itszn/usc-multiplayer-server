@@ -649,3 +649,30 @@ static int lPathWinding(lua_State* L /* int dir */)
 	nvgPathWinding(g_guiState.vg, dir);
 	return 0;
 }
+
+static int lScissor(lua_State* L /* float x, float y, float w, float h */)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	float w = luaL_checknumber(L, 3);
+	float h = luaL_checknumber(L, 4);
+	nvgScissor(g_guiState.vg, x, y, w, h);
+	return 0;
+}
+
+static int lIntersectScissor(lua_State* L /* float x, float y, float w, float h */)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	float w = luaL_checknumber(L, 3);
+	float h = luaL_checknumber(L, 4);
+	nvgIntersectScissor(g_guiState.vg, x, y, w, h);
+	return 0;
+}
+
+static int lResetScissor(lua_State* L /*  */)
+{
+	nvgResetScissor(g_guiState.vg);
+	return 0;
+}
+

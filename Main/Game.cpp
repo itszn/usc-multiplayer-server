@@ -483,23 +483,6 @@ public:
 	}
 	virtual bool Init() override
 	{
-		// Add to root canvas to be rendered (this makes the HUD visible)
-		//Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		//if (g_aspectRatio < 640.f / 480.f)
-		//{
-		//	Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-
-		//	Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-
-		//	Vector2 bottomRight = topLeft + canvasRes;
-		//	rootSlot->allowOverflow = true;
-		//	topLeft /= g_resolution;
-		//	bottomRight /= g_resolution;
-
-		//	rootSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
-		//}
-		//else
-		//	rootSlot->anchor = Anchors::Full;
 		return true;
 	}
 

@@ -119,7 +119,7 @@ draw_selected = function(song, x, y)
     gfx.FillColor(30,30,30)
     gfx.Fill()
     if not songCache[song.id][selectedDiff] or songCache[song.id][selectedDiff] ==  jacketFallback then
-        songCache[song.id][selectedDiff] = gfx.LoadJacket(diff.jacketPath, jacketFallback, 200,200)
+        songCache[song.id][selectedDiff] = gfx.LoadImageJob(diff.jacketPath, jacketFallback, 200,200)
     end
     
     if songCache[song.id][selectedDiff] then

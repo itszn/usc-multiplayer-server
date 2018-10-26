@@ -246,5 +246,15 @@ Example:
 .. code-block:: lua
 
     if not songCache[song.id][selectedDiff] or songCache[song.id][selectedDiff] == jacketFallback then
-        songCache[song.id][selectedDiff] = gfx.LoadJacket(diff.jacketPath, jacketFallback, 200,200)
+        songCache[song.id][selectedDiff] = gfx.LoadImageJob(diff.jacketPath, jacketFallback, 200,200)
     end
+    
+    
+Scissor(float x, float y, float w, float h)
+****************************************************************
+
+IntersectScissor(float x, float y, float w, float h)
+****************************************************************
+
+ResetScissor()
+****************************************************************

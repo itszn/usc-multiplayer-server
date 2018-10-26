@@ -1002,7 +1002,10 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Reset", lReset);
 		pushFuncToTable("PathWinding", lPathWinding);
 		pushFuncToTable("ForceRender", lForceRender);
-		pushFuncToTable("LoadJacket", lLoadImageJob);
+		pushFuncToTable("LoadImageJob", lLoadImageJob);
+		pushFuncToTable("Scissor", lScissor);
+		pushFuncToTable("IntersectScissor", lIntersectScissor);
+		pushFuncToTable("ResetScissor", lResetScissor);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
