@@ -233,4 +233,18 @@ functions called after a ForceRender call.
 This function might have a more than insignificant performance impact.
 under regular 
 
+LoadImageJob(char* path, int placeholder, int w = 0, int h = 0)
+****************************************************************
+Loads an image outside the main thread to not lock up the rendering. If `w` and `h`
+are greater than 0 then the image will be resized if it is larger than `(w,h)`, if
+w or h are 0 the image will be loaded at its original size.
 
+Returns `placeholder` until the image has been loaded.
+
+Example:
+
+.. code-block:: lua
+
+    if not songCache[song.id][selectedDiff] or songCache[song.id][selectedDiff] == jacketFallback then
+        songCache[song.id][selectedDiff] = gfx.LoadJacket(diff.jacketPath, jacketFallback, 200,200)
+    end
