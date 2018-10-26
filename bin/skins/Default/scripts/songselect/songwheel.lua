@@ -16,6 +16,7 @@ local ioffset = 0
 local doffset = 0
 local diffColors = {{0,0,255}, {0,255,0}, {255,0,0}, {255, 0, 255}}
 local timer = 0
+local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
 
 game.LoadSkinSample("menu_click")
 game.LoadSkinSample("click-02")
@@ -57,6 +58,7 @@ draw_song = function(song, x, y, selected)
     gfx.TextAlign(gfx.TEXT_ALIGN_TOP + gfx.TEXT_ALIGN_LEFT)
     gfx.DrawLabel(songCache[song.id]["title"], x+10, y + 10, 600)
     gfx.DrawLabel(songCache[song.id]["artist"], x+10, y + 50, 600)
+    gfx.ForceRender()
 end
 
 draw_diff_icon = function(diff, x, y)
@@ -104,7 +106,7 @@ draw_diffs = function(song, x, y)
 end
 
 draw_selected = function(song, x, y)
-    check_or_create_cache(song, true)
+    check_or_create_cache(song)
     local xpos = 20 - ((-ioffset) ^ 2) * 10
     local ypos = resy/2 - (ioffset) * 90
     draw_song(song, xpos, ypos, true)
@@ -116,8 +118,8 @@ draw_selected = function(song, x, y)
     gfx.Rect(0,0,500,700)
     gfx.FillColor(30,30,30)
     gfx.Fill()
-    if not songCache[song.id][selectedDiff] then
-        songCache[song.id][selectedDiff] = gfx.CreateImage(diff.jacketPath, 0)
+    if not songCache[song.id][selectedDiff] or songCache[song.id][selectedDiff] ==  jacketFallback then
+        songCache[song.id][selectedDiff] = gfx.LoadJacket(diff.jacketPath, jacketFallback, 200,200)
     end
     
     if songCache[song.id][selectedDiff] then
@@ -145,18 +147,18 @@ render = function(deltaTime)
     gfx.FillColor(255,255,255);
     if songwheel.songs[1] ~= nil then
         --before selected
-        for i = math.max(selectedIndex - 8, 1), math.max(selectedIndex - 1,1) do
+        for i = math.max(selectedIndex - 14, 1), math.max(selectedIndex - 1,1) do
             local song = songwheel.songs[i];
-            local xpos = 20 - ((selectedIndex - i + ioffset) ^ 2) * 10
-            local ypos = resy/2 - (selectedIndex - i + ioffset) * 90
+            local xpos = 20 - ((selectedIndex - i + ioffset) ^ 2) * 1
+            local ypos = resy/2 - (selectedIndex - i + ioffset) * 40
             draw_song(song, xpos, ypos)
         end
         
         --after selected
-        for i = math.min(selectedIndex + 8, #songwheel.songs), selectedIndex + 1,-1 do
+        for i = math.min(selectedIndex + 14, #songwheel.songs), selectedIndex + 1,-1 do
             local song = songwheel.songs[i]
-            local xpos = 20 - ((i - selectedIndex - ioffset) ^ 2) * 10
-            local ypos = resy/2 - (selectedIndex - i + ioffset) * 90
+            local xpos = 20 - ((i - selectedIndex - ioffset) ^ 2) * 1
+            local ypos = resy/2 - (selectedIndex - i + ioffset) * 40
             local alpha = 255 - (selectedIndex - i + ioffset) * 31
             draw_song(song, xpos, ypos)
         end

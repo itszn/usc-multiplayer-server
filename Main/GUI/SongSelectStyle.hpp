@@ -1,24 +1,7 @@
 #pragma once
 #include "Shared/Jobs.hpp"
 
-struct CachedJacketImage
-{
-	float lastUsage;
-	Texture texture;
-	bool loaded = false;
-	Job loadingJob;
-};
 
-class JacketLoadingJob : public JobBase
-{
-public:
-	virtual bool Run();
-	virtual void Finalize();
-
-	Image loadedImage;
-	String imagePath;
-	CachedJacketImage* target;
-};
 
 class SongSelectStyle : public Unique
 {
@@ -50,5 +33,5 @@ public:
 
 private:
 	Timer m_timer;
-	Map<String, CachedJacketImage*> m_jacketImages;
+	Map<String, class CachedJacketImage*> m_jacketImages;
 };

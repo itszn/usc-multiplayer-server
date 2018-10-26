@@ -627,6 +627,36 @@ Graphics::Font Application::LoadFont(const String & name, const bool & external)
 	return newFont;
 }
 
+int Application::LoadImageJob(const String & path, Vector2i size, int placeholder)
+{
+	int ret = placeholder;
+	auto it = m_jacketImages.find(path);
+	if (it == m_jacketImages.end() || !it->second)
+	{
+		CachedJacketImage* newImage = new CachedJacketImage();
+		JacketLoadingJob* job = new JacketLoadingJob();
+		job->imagePath = path;
+		job->target = newImage;
+		job->w = size.x;
+		job->h = size.y;
+		newImage->loadingJob = Ref<JobBase>(job);
+		newImage->lastUsage = m_jobTimer.SecondsAsFloat();
+		g_jobSheduler->Queue(newImage->loadingJob);
+
+		m_jacketImages.Add(path, newImage);
+	}
+	else
+	{
+		it->second->lastUsage = m_jobTimer.SecondsAsFloat();
+		// If loaded set texture
+		if (it->second->loaded)
+		{
+			ret = it->second->texture;
+		}
+	}
+	return ret;
+}
+
 lua_State* Application::LoadScript(const String & name)
 {
 	lua_State* s = luaL_newstate();
@@ -885,6 +915,20 @@ static int lForceRender(lua_State* L)
 	return 0;
 }
 
+static int lLoadImageJob(lua_State* L /* char* path, int placeholder, int w = 0, int h = 0 */)
+{
+	const char* path = luaL_checkstring(L, 1);
+	int fallback = luaL_checkinteger(L, 2);
+	int w = 0, h = 0;
+	if (lua_gettop(L) == 4)
+	{
+		w = luaL_checkinteger(L, 3);
+		h = luaL_checkinteger(L, 4);
+	}
+	lua_pushinteger(L, g_application->LoadImageJob(path, { w,h }, fallback));
+	return 1;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -958,6 +1002,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Reset", lReset);
 		pushFuncToTable("PathWinding", lPathWinding);
 		pushFuncToTable("ForceRender", lForceRender);
+		pushFuncToTable("LoadJacket", lLoadImageJob);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
@@ -1005,5 +1050,26 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushIntToTable("LOGGER_ERROR", Logger::Severity::Error);
 
 		lua_setglobal(state, "game");
+	}
+}
+
+bool JacketLoadingJob::Run()
+{
+	// Create loading task
+	loadedImage = ImageRes::Create(imagePath);
+	if (loadedImage.IsValid()) {
+		if (loadedImage->GetSize().x > w || loadedImage->GetSize().y > h) {
+			loadedImage->ReSize({ w,h });
+		}
+	}
+	return loadedImage.IsValid();
+}
+void JacketLoadingJob::Finalize()
+{
+	if (IsSuccessfull())
+	{
+		///TODO: Maybe do the nvgCreateImage in Run() instead
+		target->texture = nvgCreateImageRGBA(g_guiState.vg, loadedImage->GetSize().x, loadedImage->GetSize().y, 0, (unsigned char*)loadedImage->GetBits());
+		target->loaded = true;
 	}
 }

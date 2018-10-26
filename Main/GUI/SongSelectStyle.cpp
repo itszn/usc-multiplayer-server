@@ -39,41 +39,41 @@ SongSelectStyle::SongSelectStyle(Application* application)
 }
 SongSelectStyle::~SongSelectStyle()
 {
-	for(auto t : m_jacketImages)
-	{
-		if (t.second){
-			t.second->loadingJob->Terminate();
-			delete t.second;
-		}
-	}
+	//for(auto t : m_jacketImages)
+	//{
+	//	if (t.second){
+	//		t.second->loadingJob->Terminate();
+	//		delete t.second;
+	//	}
+	//}
 }
 
 Texture SongSelectStyle::GetJacketThumnail(const String& path)
 {
 	Texture ret = loadingJacketImage;
 
-	auto it = m_jacketImages.find(path);
-	if(it == m_jacketImages.end() || !it->second)
-	{
-		CachedJacketImage* newImage = new CachedJacketImage();
-		JacketLoadingJob* job = new JacketLoadingJob();
-		job->imagePath = path;
-		job->target = newImage;
-		newImage->loadingJob = Ref<JobBase>(job);
-		newImage->lastUsage = m_timer.SecondsAsFloat();
-		g_jobSheduler->Queue(newImage->loadingJob);
+	//auto it = m_jacketImages.find(path);
+	//if(it == m_jacketImages.end() || !it->second)
+	//{
+	//	CachedJacketImage* newImage = new CachedJacketImage();
+	//	JacketLoadingJob* job = new JacketLoadingJob();
+	//	job->imagePath = path;
+	//	job->target = newImage;
+	//	newImage->loadingJob = Ref<JobBase>(job);
+	//	newImage->lastUsage = m_timer.SecondsAsFloat();
+	//	g_jobSheduler->Queue(newImage->loadingJob);
 
-		m_jacketImages.Add(path, newImage);
-	}
-	else
-	{
-		it->second->lastUsage = m_timer.SecondsAsFloat();
-		// If loaded set texture
-		if(it->second->texture)
-		{
-			ret = it->second->texture;
-		}
-	}
+	//	m_jacketImages.Add(path, newImage);
+	//}
+	//else
+	//{
+	//	it->second->lastUsage = m_timer.SecondsAsFloat();
+	//	// If loaded set texture
+	//	if(it->second->texture)
+	//	{
+	//		ret = it->second->texture;
+	//	}
+	//}
 
 	// cleanup
 	/*
@@ -90,23 +90,4 @@ Texture SongSelectStyle::GetJacketThumnail(const String& path)
 	//*/
 
 	return ret;
-}
-bool JacketLoadingJob::Run()
-{
-	// Create loading task
-	loadedImage = ImageRes::Create(imagePath);
-	if (loadedImage.IsValid()){
-		if (loadedImage->GetSize().x > 150 || loadedImage->GetSize().y > 150){
-			loadedImage->ReSize({150,150});
-		}
-	}
-	return loadedImage.IsValid();
-}
-void JacketLoadingJob::Finalize()
-{
-	if(IsSuccessfull())
-	{
-		target->texture = TextureRes::Create(g_gl, loadedImage);
-		target->texture->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
-	}
 }

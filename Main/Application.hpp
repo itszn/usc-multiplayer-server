@@ -1,5 +1,6 @@
 #pragma once
 #include <Audio/Sample.hpp>
+#include <Shared/Jobs.hpp>
 extern class OpenGL* g_gl;
 extern class GUIState g_guiState;
 extern class Graphics::Window* g_gameWindow;
@@ -19,6 +20,14 @@ class Application
 public:
 	Application();
 	~Application();
+
+	struct CachedJacketImage
+	{
+		float lastUsage;
+		int texture;
+		bool loaded = false;
+		Job loadingJob;
+	};
 
 	// Runs the application
 	int32 Run();
@@ -55,6 +64,7 @@ public:
 	Material LoadMaterial(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
 	Graphics::Font LoadFont(const String& name, const bool& external = false);
+	int LoadImageJob(const String& path, Vector2i size, int placeholder);
 	class lua_State* LoadScript(const String& name);
 	void ReloadScript(const String& name, lua_State* L);
 	void LoadGauge(bool hard);
@@ -88,7 +98,7 @@ private:
 	Material m_fontMaterial;
 	Material m_fillMaterial;
 	class HealthGauge* m_gauge;
-
+	Map<String, CachedJacketImage*> m_jacketImages;
 	String m_lastMapPath;
 	class Beatmap* m_currentMap = nullptr;
 
@@ -96,4 +106,17 @@ private:
 	float m_deltaTime;
 	bool m_allowMapConversion;
 	String m_skin;
+	Timer m_jobTimer;
+};
+
+class JacketLoadingJob : public JobBase
+{
+public:
+	virtual bool Run();
+	virtual void Finalize();
+
+	Image loadedImage;
+	String imagePath;
+	int w = 0, h = 0;
+	Application::CachedJacketImage* target;
 };
