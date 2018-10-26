@@ -8,8 +8,6 @@
 #include "Game.hpp"
 #include "AsyncAssetLoader.hpp"
 #include "HealthGauge.hpp"
-#include "SongSelectStyle.hpp"
-#include "PerformanceGraph.hpp"
 #ifdef _WIN32
 #include "SDL_keycode.h"
 #else
@@ -50,7 +48,6 @@ private:
 	float m_meanHitDelta;
 	MapTime m_medianHitDelta;
 
-	Ref<SongSelectStyle> m_songSelectStyle;
 	Vector<ScoreIndex*> m_highScores;
 
 	BeatmapSettings m_beatmapSettings;
@@ -102,7 +99,6 @@ public:
 			m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue, (uint32)m_flags);
 
 		// Used for jacket images
-		m_songSelectStyle = SongSelectStyle::Get(g_application);
 
 		m_startPressed = false;
 		
