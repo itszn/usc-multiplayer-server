@@ -1008,6 +1008,9 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Scissor", lScissor);
 		pushFuncToTable("IntersectScissor", lIntersectScissor);
 		pushFuncToTable("ResetScissor", lResetScissor);
+		pushFuncToTable("TextBounds", lTextBounds);
+		pushFuncToTable("LabelSize", lLabelSize);
+		pushFuncToTable("FastTextSize", lFastTextSize);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);

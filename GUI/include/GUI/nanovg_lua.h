@@ -688,3 +688,38 @@ static int lResetScissor(lua_State* L /*  */)
 	return 0;
 }
 
+static int lTextBounds(lua_State* L /*float x, float y, char* s*/)
+{
+	float x = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+	const char* s = luaL_checkstring(L, 3);
+	float bounds[4] = { 0,0,0,0 };
+
+	nvgTextBounds(g_guiState.vg, x, y, s, 0, bounds);
+	for (size_t i = 0; i < 4; i++)
+	{
+		lua_pushnumber(L, bounds[i]);
+	}
+	return 4;
+}
+
+static int lLabelSize(lua_State* L /*int label*/)
+{
+	int label = luaL_checkinteger(L, 1);
+	Text l = g_guiState.textCache[L][label];
+	lua_pushnumber(L, l->size.x);
+	lua_pushnumber(L, l->size.y);
+	return 2;
+}
+
+static int lFastTextSize(lua_State* L /* char* text */)
+{
+	const char* s;
+	s = luaL_checkstring(L, 1);
+
+	WString text = Utility::ConvertToWString(s);
+	Text l = (*g_guiState.currentFont)->CreateText(text, g_guiState.fontSize);
+	lua_pushnumber(L, l->size.x);
+	lua_pushnumber(L, l->size.y);
+	return 2;
+}

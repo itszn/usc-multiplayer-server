@@ -258,3 +258,15 @@ IntersectScissor(float x, float y, float w, float h)
 
 ResetScissor()
 ****************************************************************
+
+TextBounds(float x, float y, char* s)
+*****************************************
+Returns `xmin,ymin, xmax,ymax` for a `gfx.Text` text.
+
+LabelSize(int label)
+*********************
+Returns `w,h` for a label created with `gfx.CreateLabel`
+
+FastTextSize(char* text)
+*************************
+Returns `w,h` for a `gfx.FastText` text.
