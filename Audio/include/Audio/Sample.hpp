@@ -16,7 +16,8 @@ public:
 	virtual uint32 GetNumChannels() const = 0;
 
 	// Plays this sample from the start
-	virtual void Play() = 0;
+	virtual void Play(bool looping = false) = 0;
+	virtual void Stop() = 0;
 };
 
 typedef Ref<SampleRes> Sample;

@@ -52,9 +52,15 @@ Loads a .wav sample from the audio directory in the current skin folder.
 .wav should not be included in *name*.
 
 
-PlaySample(char* name)
-********************************
-Plays a loaded sample.
+PlaySample(char* name, bool loop = false)
+*******************************************
+Plays a loaded sample. Will loop the sample if loop == true.
+
+
+StopSample(char* name)
+*******************************************
+Stop playing a sample instantly.
+
 
 GetLaserColor(int laser)
 ************************

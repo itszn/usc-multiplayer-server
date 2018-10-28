@@ -736,9 +736,13 @@ void Application::StoreNamedSample(String name, Sample sample)
 {
 	m_samples.Add(name, sample);
 }
-void Application::PlayNamedSample(String name)
+void Application::PlayNamedSample(String name, bool loop)
 {
-	m_samples[name]->Play();
+	m_samples[name]->Play(loop);
+}
+void Application::StopNamedSample(String name)
+{
+	m_samples[name]->Stop();
 }
 void Application::m_OnKeyPressed(int32 key)
 {
@@ -902,10 +906,23 @@ static int lLoadSkinSample(lua_State* L /*char* name */)
 	return 0;
 }
 
-static int lPlaySample(lua_State* L /*char* name */)
+static int lPlaySample(lua_State* L /*char* name, bool loop */)
 {
 	const char* name = luaL_checkstring(L, 1);
-	g_application->PlayNamedSample(name);
+	bool loop = false;
+	if(lua_gettop(L) == 2)
+	{
+		loop = lua_toboolean(L,2) == 1;
+	}
+
+	g_application->PlayNamedSample(name, loop);
+	return 0;
+}
+
+static int lStopSample(lua_State* L /* char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	g_application->StopNamedSample(name);
 	return 0;
 }
 
@@ -1050,6 +1067,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("Log", lLog);
 		pushFuncToTable("LoadSkinSample", lLoadSkinSample);
 		pushFuncToTable("PlaySample", lPlaySample);
+		pushFuncToTable("StopSample", lStopSample);
 		pushFuncToTable("GetLaserColor", lGetLaserColor);
 
 		//constants

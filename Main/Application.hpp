@@ -75,7 +75,8 @@ public:
 	Material GetFontMaterial() const;
 	Transform GetGUIProjection() const;
 	void StoreNamedSample(String name, Sample sample);
-	void PlayNamedSample(String name);
+	void PlayNamedSample(String name, bool loop);
+	void StopNamedSample(String name);
 
 private:
 	bool m_LoadConfig();
