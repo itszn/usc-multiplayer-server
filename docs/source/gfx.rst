@@ -270,3 +270,7 @@ Returns `w,h` for a label created with `gfx.CreateLabel`
 FastTextSize(char* text)
 *************************
 Returns `w,h` for a `gfx.FastText` text.
+
+ImageSize(int image)
+********************
+Returns `w,h` for the given image.

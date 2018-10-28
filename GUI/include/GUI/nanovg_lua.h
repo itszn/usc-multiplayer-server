@@ -723,3 +723,12 @@ static int lFastTextSize(lua_State* L /* char* text */)
 	lua_pushnumber(L, l->size.y);
 	return 2;
 }
+static int lImageSize(lua_State* L /*int image*/)
+{
+		int image = luaL_checkinteger(L, 1);
+		int w,h;
+		nvgImageSize(g_guiState.vg, image, &w, &h);
+		lua_pushnumber(L,w);
+		lua_pushnumber(L,h);
+		return 2;
+}

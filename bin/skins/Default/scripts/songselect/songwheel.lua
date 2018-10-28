@@ -17,6 +17,7 @@ local doffset = 0
 local diffColors = {{0,0,255}, {0,255,0}, {255,0,0}, {255, 0, 255}}
 local timer = 0
 local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
+game.Log(string.format("loading.png size: %d,%d", gfx.ImageSize(jacketFallback)), 0)
 
 game.LoadSkinSample("menu_click")
 game.LoadSkinSample("click-02")

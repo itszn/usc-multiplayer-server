@@ -1011,6 +1011,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("TextBounds", lTextBounds);
 		pushFuncToTable("LabelSize", lLabelSize);
 		pushFuncToTable("FastTextSize", lFastTextSize);
+		pushFuncToTable("ImageSize", lImageSize);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
