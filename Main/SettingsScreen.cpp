@@ -452,6 +452,9 @@ public:
 			nk_labelf(m_nctx, nk_text_alignment::NK_TEXT_LEFT, "ModSpeed (%f):", m_modSpeed);
 			nk_slider_float(m_nctx, 50, &m_modSpeed, 1500, 0.5);
 
+			nk_labelf(m_nctx, nk_text_alignment::NK_TEXT_LEFT, "Master Volume (%.1f%%):", m_masterVolume * 100);
+			nk_slider_float(m_nctx, 0, &m_masterVolume, 1, 0.005);
+
 			if (m_skins.size() > 0)
 			{
 				nk_label(m_nctx, "Selected Skin:", nk_text_alignment::NK_TEXT_LEFT);
