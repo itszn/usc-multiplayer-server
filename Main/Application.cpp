@@ -664,8 +664,9 @@ lua_State* Application::LoadScript(const String & name)
 	lua_State* s = luaL_newstate();
 	luaL_openlibs(s);
 	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	String commonPath = "skins/" + m_skin + "/scripts/" + "common.lua";
 	m_SetNvgLuaBindings(s);
-	if (luaL_dofile(s, path.c_str()))
+	if (luaL_dofile(s, commonPath.c_str()) || luaL_dofile(s, path.c_str()))
 	{
 		Logf("Lua error: %s", Logger::Error, lua_tostring(s, -1));
 		lua_close(s);
