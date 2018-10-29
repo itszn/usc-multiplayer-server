@@ -1,6 +1,6 @@
 Result Screen
 =============
-The following fields are available under the `result` table:
+The following fields are available under the ``result`` table:
 
 .. code-block:: c#
 

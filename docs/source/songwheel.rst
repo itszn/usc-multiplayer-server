@@ -1,7 +1,7 @@
 
 Song Wheel
 ============
-Contains a list of songs accessed by `songwheel.songs`
+Contains a list of songs accessed by ``songwheel.songs``
 
 Example for loading the jacket of the first diff for every song:
 

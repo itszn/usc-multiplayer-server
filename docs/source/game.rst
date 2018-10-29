@@ -1,6 +1,6 @@
 Game
 ====
-Functions available under the `game` table, these are available in every script.
+Functions available under the ``game`` table, these are available in every script.
 
 Constants
 *********

@@ -19,6 +19,8 @@ Contents:
    gameplay
    scorescreen
    songwheel
+   filterwheel
+   settingswheel
 
 
 Indices and tables

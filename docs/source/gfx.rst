@@ -1,6 +1,6 @@
 Drawing
 ========
-This chapter describes all the functions available under the `gfx`
+This chapter describes all the functions available under the ``gfx``
 table. Most functions work exactly like their nanovg counterpart.
 
 Example usage
@@ -97,10 +97,12 @@ nanovg.h:372_
 
 CreateSkinImage(const char* filename, int imageflags)
 ******************************************************
+Same as CreateImage but prepends ``"skins/[skinfolder]/textures/"`` to the filename.
 
 
 ImageRect(float x, float y, float w, float h, int image, float alpha, float angle)
 **********************************************************************************
+Draws an image in the specified rect stretching the image to fit.
 
 
 Text(const char* s, float x, float y)
@@ -243,9 +245,12 @@ nanovg.h:245_
 
 UpdateLabel(int labelId, const char* text, int size)
 ******************************************************
+Updates an already existing label.
 
 DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
 **************************************************************************
+Draws the currently loaded gauge, the game loads the gauge on its own.
+
 
 RoundedRect(float x, float y, float w, float h, float r)
 **************************************************************************
@@ -358,11 +363,11 @@ under regular
 
 LoadImageJob(char* path, int placeholder, int w = 0, int h = 0)
 ****************************************************************
-Loads an image outside the main thread to not lock up the rendering. If `w` and `h`
-are greater than 0 then the image will be resized if it is larger than `(w,h)`, if
+Loads an image outside the main thread to not lock up the rendering. If ``w`` and ``h``
+are greater than 0 then the image will be resized if it is larger than ``(w,h)``, if
 w or h are 0 the image will be loaded at its original size.
 
-Returns `placeholder` until the image has been loaded.
+Returns ``placeholder`` until the image has been loaded.
 
 Example:
 
@@ -387,19 +392,22 @@ nanovg.h:439_
 
 ResetScissor()
 ****************************************************************
+nanovg.h:442_
+
+.. _nanovg.h:442: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L442
 
 TextBounds(float x, float y, char* s)
 *****************************************
-Returns `xmin,ymin, xmax,ymax` for a `gfx.Text` text.
+Returns ``xmin,ymin, xmax,ymax`` for a ``gfx.Text`` text.
 
 LabelSize(int label)
 *********************
-Returns `w,h` for a label created with `gfx.CreateLabel`
+Returns ``w,h`` for a label created with ``gfx.CreateLabel``
 
 FastTextSize(char* text)
 *************************
-Returns `w,h` for a `gfx.FastText` text.
+Returns ``w,h`` for a ``gfx.FastText`` text.
 
 ImageSize(int image)
 ********************
-Returns `w,h` for the given image.
+Returns ``w,h`` for the given image.

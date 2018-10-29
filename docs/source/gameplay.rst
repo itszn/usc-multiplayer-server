@@ -1,6 +1,6 @@
 Gameplay
 ========
-The following fields are available under the `gameplay` table:
+The following fields are available under the ``gameplay`` table:
 
 .. code-block:: c#
 
