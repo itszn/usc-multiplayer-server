@@ -16,7 +16,9 @@
 #include "SDL2/SDL_keycode.h"
 #endif
 extern "C" {
-#include "lua.h"
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
 }
 #include <iterator>
 /*
@@ -267,6 +269,18 @@ public:
 		{
 			SelectMap(it->first);
 		}
+	}
+	void AdvancePage(int32 direction)
+	{
+		lua_getglobal(m_lua, "get_page_size");
+		if (lua_pcall(m_lua, 0, 1, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+		int ret = luaL_checkinteger(m_lua, 1);
+		lua_settop(m_lua, 0);
+		AdvanceSelection(ret * direction);
 	}
 	void SelectDifficulty(int32 newDiff)
 	{
@@ -1118,11 +1132,11 @@ public:
 			}
 			else if (key == SDLK_PAGEDOWN)
 			{
-				m_selectionWheel->AdvanceSelection(5);
+				m_selectionWheel->AdvancePage(1);
 			}
 			else if (key == SDLK_PAGEUP)
 			{
-				m_selectionWheel->AdvanceSelection(-5);
+				m_selectionWheel->AdvancePage(-1);
 			}
 			else if (key == SDLK_LEFT)
 			{

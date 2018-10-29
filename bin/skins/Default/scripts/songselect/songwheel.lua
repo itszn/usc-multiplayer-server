@@ -22,6 +22,10 @@ game.Log(string.format("loading.png size: %d,%d", gfx.ImageSize(jacketFallback))
 game.LoadSkinSample("menu_click")
 game.LoadSkinSample("click-02")
 
+get_page_size = function()
+    return 5
+end
+
 check_or_create_cache = function(song, loadJacket)
     if not songCache[song.id] then songCache[song.id] = {} end
     

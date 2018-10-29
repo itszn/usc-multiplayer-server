@@ -53,3 +53,8 @@ A score contains the following fields:
     int perfects
     int goods
     int misses
+
+get_page_size
+*************
+Function called by the game to get how much to scroll when page up or page down are pressed.
+Needs to be defined for the game to work properly.
