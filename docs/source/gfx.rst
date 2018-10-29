@@ -155,15 +155,22 @@ nanovg.h:293_
 
 LoadFont(const char* name, const char* filename)
 ******************************************************
+Loads a font and sets it as the current font. Only sets
+the current font if the font is already loaded.
 
 LoadSkinFont(const char* name, const char* filename)
 ******************************************************
+Same as LoadFont but prepends ``"skins/[skinfolder]/fonts/"`` to the filename.
 
 FastText(const char* inputText, float x, float y)
 **********************************************************************
+A text rendering function that is slightly faster than the regular ``gfx.Text()``
+but this text will always be drawn on top of any nanovg drawing.
 
 CreateLabel(const char* text, int size, bool monospace)
 *******************************************************
+Creates a cached text that can later be drawn with ``DrawLabel``. This is the most
+resource efficient text drawing method.
 
 DrawLabel(int labelId, float x, float y, float maxWidth = -1)
 **************************************************************
