@@ -706,6 +706,10 @@ void Application::LoadGauge(bool hard)
 	m_gauge->frontTexture = LoadTexture(gaugePath + "gauge_front.png");
 	m_gauge->backTexture = LoadTexture(gaugePath + "gauge_back.png");
 	m_gauge->maskTexture = LoadTexture(gaugePath + "gauge_mask.png");
+	m_gauge->fillTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->frontTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->backTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->maskTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
 	m_gauge->fillMaterial = LoadMaterial("gauge");
 	m_gauge->fillMaterial->opaque = false;
 	m_gauge->baseMaterial = LoadMaterial("guiTex");
