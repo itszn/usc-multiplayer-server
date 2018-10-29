@@ -1,7 +1,7 @@
 Drawing
 ========
 This chapter describes all the functions available under the `gfx`
-table.
+table. Most functions work exactly like their nanovg counterpart.
 
 Example usage
 
@@ -64,54 +64,92 @@ Most constants are from the nanovg library.
 
 BeginPath()
 ******************************************************
+nanovg.h:461_
+
+.. _nanovg.h:461: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L461
 
 Rect(float x, float y, float w, float h)
 ******************************************************
+nanovg.h:491_
+
+.. _nanovg.h:491: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L491
 
 FastRect(float x, float y, float w, float h)
 ******************************************************
 
 Fill()
 ******************************************************
+nanovg.h:506_
+
+.. _nanovg.h:506: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L506
 
 FillColor(int r, int g, int b, int a = 255)
 ******************************************************
+nanovg.h:251_
+
+.. _nanovg.h:251: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L251
 
 CreateImage(const char* filename, int imageflags)
 ******************************************************
+nanovg.h:372_
+
+.. _nanovg.h:372: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L372
 
 CreateSkinImage(const char* filename, int imageflags)
 ******************************************************
 
-ImagePatternFill(int image, float alpha)
-************************************************************
 
 ImageRect(float x, float y, float w, float h, int image, float alpha, float angle)
 **********************************************************************************
 
+
 Text(const char* s, float x, float y)
 ******************************************************
+nanovg.h:584_
+
+.. _nanovg.h:584: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L584
 
 TextAlign(int align)
 ******************************************************
+nanovg.h:575_
+
+.. _nanovg.h:575: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L575
 
 FontFace(const char* s)
 ******************************************************
+nanovg.h:581_
+
+.. _nanovg.h:581: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L581
 
 FontSize(float size)
 ******************************************************
+nanovg.h:563_
+
+.. _nanovg.h:563: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L563
 
 Translate(float x, float y)
 ******************************************************
+nanovg.h:303_
+
+.. _nanovg.h:303: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L303
 
 Scale(float x, float y)
 ******************************************************
+nanovg.h:315_
+
+.. _nanovg.h:315: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L315
 
 Rotate(float angle)
 ******************************************************
+nanovg.h:306_
+
+.. _nanovg.h:306: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L306
 
 ResetTransform()
 ******************************************************
+nanovg.h:293_
+
+.. _nanovg.h:293: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L293
 
 LoadFont(const char* name, const char* filename)
 ******************************************************
@@ -133,39 +171,75 @@ Will resize the label to fit within the maxWidth if maxWidth > 0.
 
 MoveTo(float x, float y)
 ******************************************************
+nanovg.h:465_
+
+.. _nanovg.h:465: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L465
 
 LineTo(float x, float y)
 ******************************************************
+nanovg.h:468_
+
+.. _nanovg.h:468: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L468
 
 BezierTo(float c1x, float c1y, float c2x, float c2y, float x, float y)
 **********************************************************************
+nanovg.h:471_
+
+.. _nanovg.h:471: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L471
 
 QuadTo(float cx, float cy, float x, float y)
 ******************************************************
+nanovg.h:474_
+
+.. _nanovg.h:474: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L474
 
 ArcTo(float x1, float y1, float x2, float y2, float radius)
 ***********************************************************
+nanovg.h:477_
+
+.. _nanovg.h:477: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L477
 
 ClosePath()
 ******************************************************
+nanovg.h:480_
+
+.. _nanovg.h:480: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L480
 
 MiterLimit(float limit)
 ******************************************************
+nanovg.h:258_
+
+.. _nanovg.h:258: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L258
 
 StrokeWidth(float size)
 ******************************************************
+nanovg.h:261_
+
+.. _nanovg.h:261: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L261
 
 LineCap(int cap)
 ******************************************************
+nanovg.h:265_
+
+.. _nanovg.h:265: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L265
 
 LineJoin(int join)
 ******************************************************
+nanovg.h:269_
+
+.. _nanovg.h:269: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L269
 
 Stroke()
 ******************************************************
+nanovg.h:509_
+
+.. _nanovg.h:509: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L509
 
 StrokeColor(int r, int g, int b, int a = 255)
 ******************************************************
+nanovg.h:245_
+
+.. _nanovg.h:245: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L245
 
 UpdateLabel(int labelId, const char* text, int size)
 ******************************************************
@@ -175,54 +249,103 @@ DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
 
 RoundedRect(float x, float y, float w, float h, float r)
 **************************************************************************
+nanovg.h:494_
+
+.. _nanovg.h:494: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L494
 
 RoundedRectVarying(float x, float y, float w, float h, float radTopLeft, float radTopRight, float radBottomRight, float radBottomLeft)
 **************************************************************************************************************************************
+nanovg.h:497_
+
+.. _nanovg.h:497: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L497
 
 Ellipse(float cx, float cy, float rx, float ry)
 **************************************************************************
+nanovg.h:500_
+
+.. _nanovg.h:500: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L500
 
 Circle(float cx, float cy, float r)
 **************************************************************************
+nanovg.h:503_
+
+.. _nanovg.h:503: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L503
 
 SkewX(float angle)
 **************************************************************************
+nanovg.h:309_
+
+.. _nanovg.h:309: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L309
 
 SkewY(float angle)
 **************************************************************************
+nanovg.h:312_
+
+.. _nanovg.h:312: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L312
 
 LinearGradient(float sx, float sy, float ex, float ey)
 **************************************************************************
+nanovg.h:400_
+
+.. _nanovg.h:400: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L400
 
 BoxGradient(float x, float y, float w, float h, float r, float f)
 **************************************************************************
+nanovg.h:408_
+
+.. _nanovg.h:408: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L408
 
 RadialGradient(float cx, float cy, float inr, float outr)
 **************************************************************************
+nanovg.h:414_
+
+.. _nanovg.h:414: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L414
 
 ImagePattern(float ox, float oy, float ex, float ey, float angle, int image, float alpha)
 ******************************************************************************************
+nanovg.h:420_
+
+.. _nanovg.h:420: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L420
 
 GradientColors(int ri, int gi, int bi, int ai, int ro, int go, int bo, int ao)
 *******************************************************************************
+Sets icol (inner color) and ocol (outer color) for the gradient functions.
 
 FillPaint(int paint)
 **************************************************************************
+nanovg.h:254_
+
+.. _nanovg.h:254: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L254
 
 StrokePaint(int paint)
 **************************************************************************
+nanovg.h:248_
+
+.. _nanovg.h:248: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L248
 
 Save()
 *******
+nanovg.h:224_
+
+.. _nanovg.h:224: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L224
 
 Restore()
 **********
+nanovg.h:227_
+
+.. _nanovg.h:227: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L227
 
 Reset()
 ********
+nanovg.h:230_
+
+.. _nanovg.h:230: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L230
 
 PathWinding(int dir)
 *********************
+nanovg.h:483_
+
+.. _nanovg.h:483: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L483
 
 ForceRender()
 **************
@@ -252,9 +375,15 @@ Example:
     
 Scissor(float x, float y, float w, float h)
 ****************************************************************
+nanovg.h:431_
+
+.. _nanovg.h:431: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L431
 
 IntersectScissor(float x, float y, float w, float h)
 ****************************************************************
+nanovg.h:439_
+
+.. _nanovg.h:439: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L439
 
 ResetScissor()
 ****************************************************************
