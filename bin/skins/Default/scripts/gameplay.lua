@@ -8,6 +8,9 @@ local desh = desw * (resy / resx) --design height
 local songInfoWidth = 400
 local jacketWidth = 100
 local comboScale = 1.0
+local late = false
+local earlateTimer = 0;
+local earlateColors = { {255,255,0}, {0,255,255} }
 
 drawSongInfo = function(deltaTime)
     if jacket == nil then
@@ -75,11 +78,29 @@ drawCombo = function(deltaTime)
     gfx.Text(tostring(combo), posx, posy)
 end
 
+drawEarlate = function(deltaTime)
+    earlateTimer = math.max(earlateTimer - deltaTime,0)
+    if earlateTimer == 0 then return nil end
+    local alpha = math.floor(earlateTimer * 20) % 2
+    alpha = alpha * 200 + 55
+    gfx.BeginPath()
+    gfx.FontSize(35)
+    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER, gfx.TEXT_ALIGN_MIDDLE)
+    if late then
+        gfx.FillColor(0,255,255, alpha)
+        gfx.Text("LATE", desw / 2, desh * 0.7)
+    else
+        gfx.FillColor(255,0,255, alpha)
+        gfx.Text("EARLY", desw / 2, desh * 0.7)
+    end
+end
+
 render = function(deltaTime)
     gfx.Scale(scale,scale)
     drawSongInfo(deltaTime)
     drawScore(deltaTime)
     drawGauge(deltaTime)
+    drawEarlate(deltaTime)
     drawCombo(deltaTime)
 end
 
@@ -93,7 +114,8 @@ update_combo = function(newCombo)
 end
 
 near_hit = function(wasLate) --for updating early/late display
-
+    late = wasLate
+    earlateTimer = 0.75
 end
 
 laser_alert = function(isRight) --for starting laser alert animations

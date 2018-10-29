@@ -1153,8 +1153,8 @@ public:
 
 			if (rating == ScoreHitRating::Good)
 			{
-				m_track->timedHitEffect->late = late;
-				m_track->timedHitEffect->Reset(0.75f);
+				//m_track->timedHitEffect->late = late;
+				//m_track->timedHitEffect->Reset(0.75f);
 				lua_getglobal(m_lua, "near_hit");
 				lua_pushboolean(m_lua, late);
 				if (lua_pcall(m_lua, 1, 0, 0) != 0)
@@ -1338,6 +1338,10 @@ public:
 		{
 			//g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
 			//m_settingsBar->SetShow(!m_settingsBar->IsShown());
+		}
+		else if(key == SDLK_F9)
+		{
+			g_application->ReloadScript("gameplay", m_lua);
 		}
 	}
 	void m_OnButtonPressed(Input::Button buttonCode)
