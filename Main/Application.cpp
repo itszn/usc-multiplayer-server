@@ -881,6 +881,12 @@ static int lDrawGauge(lua_State* L)
 	return 0;
 }
 
+static int lGetButton(lua_State* L /* int button */)
+{
+	int button = luaL_checkinteger(L, 1);
+	lua_pushboolean(L, g_input.GetButton((Input::Button)button));
+	return 1;
+}
 
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
 {
@@ -1074,12 +1080,20 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("PlaySample", lPlaySample);
 		pushFuncToTable("StopSample", lStopSample);
 		pushFuncToTable("GetLaserColor", lGetLaserColor);
+		pushFuncToTable("GetButton", lGetButton);
 
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
 		pushIntToTable("LOGGER_NORMAL", Logger::Severity::Normal);
 		pushIntToTable("LOGGER_WARNING", Logger::Severity::Warning);
 		pushIntToTable("LOGGER_ERROR", Logger::Severity::Error);
+		pushIntToTable("BUTTON_BTA", (int)Input::Button::BT_0);
+		pushIntToTable("BUTTON_BTB", (int)Input::Button::BT_1);
+		pushIntToTable("BUTTON_BTC", (int)Input::Button::BT_2);
+		pushIntToTable("BUTTON_BTD", (int)Input::Button::BT_3);
+		pushIntToTable("BUTTON_FXL", (int)Input::Button::FX_0);
+		pushIntToTable("BUTTON_FXR", (int)Input::Button::FX_1);
+		pushIntToTable("BUTTON_STA", (int)Input::Button::BT_S);
 
 		lua_setglobal(state, "game");
 	}

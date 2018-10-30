@@ -16,6 +16,20 @@ Constants
 +--------------------+------------------------------+
 |LOGGER_ERROR        | Logger::Severity::Error      |
 +--------------------+------------------------------+
+|BUTTON_BTA          | Input::Button::BT_0          |
++--------------------+------------------------------+
+|BUTTON_BTB          | Input::Button::BT_1          |
++--------------------+------------------------------+
+|BUTTON_BTC          | Input::Button::BT_2          |
++--------------------+------------------------------+
+|BUTTON_BTD          | Input::Button::BT_3          |
++--------------------+------------------------------+
+|BUTTON_FXL          | Input::Button::FX_0          |
++--------------------+------------------------------+
+|BUTTON_FXR          | Input::Button::FX_1          |
++--------------------+------------------------------+
+|BUTTON_STA          | Input::Button::BT_S          |
++--------------------+------------------------------+
 
 
 GetMousePos()
@@ -67,3 +81,7 @@ GetLaserColor(int laser)
 0 = left, 1 = right
 
 returns r,g,b
+
+GetButton(int button)
+*********************
+Returns the state of the specified button. Returns true if the button is pressed.
