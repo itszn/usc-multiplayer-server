@@ -24,6 +24,8 @@ A song contains the following fields:
     int id //unique static identifier
     string path //folder the song is stored in
     difficulty[] difficulties //array of all difficulties for this song
+    string searchText //current string used by the song search
+    bool searchInputActive //true when the user is currently inputting search text
     
 Difficulty
 **********

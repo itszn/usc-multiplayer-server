@@ -21,6 +21,95 @@ extern "C" {
 	#include "lauxlib.h"
 }
 #include <iterator>
+
+class TextInput
+{
+public:
+	WString input;
+	WString composition;
+	uint32 backspaceCount;
+	bool active = false;
+	Delegate<const WString&> OnTextChanged;
+
+	~TextInput()
+	{
+		g_gameWindow->OnTextInput.RemoveAll(this);
+		g_gameWindow->OnTextComposition.RemoveAll(this);
+		g_gameWindow->OnKeyRepeat.RemoveAll(this);
+		g_gameWindow->OnKeyPressed.RemoveAll(this);
+	}
+
+	void OnTextInput(const WString& wstr)
+	{
+		input += wstr;
+		OnTextChanged.Call(input);
+	}
+	void OnTextComposition(const Graphics::TextComposition& comp)
+	{
+		composition = comp.composition;
+	}
+	void OnKeyRepeat(int32 key)
+	{
+		if (key == SDLK_BACKSPACE)
+		{
+			if (input.empty())
+				backspaceCount++; // Send backspace
+			else
+			{
+				auto it = input.end(); // Modify input string instead
+				--it;
+				input.erase(it);
+				OnTextChanged.Call(input);
+			}
+		}
+	}
+	void OnKeyPressed(int32 key)
+	{
+		if (key == SDLK_v)
+		{
+			if (g_gameWindow->GetModifierKeys() == ModifierKeys::Ctrl)
+			{
+				if (g_gameWindow->GetTextComposition().composition.empty())
+				{
+					// Paste clipboard text into input buffer
+					input += g_gameWindow->GetClipboard();
+				}
+			}
+		}
+	}
+	void SetActive(bool state)
+	{
+		active = state;
+		if(state)
+		{
+			SDL_StartTextInput();
+			g_gameWindow->OnTextInput.Add(this, &TextInput::OnTextInput);
+			g_gameWindow->OnTextComposition.Add(this, &TextInput::OnTextComposition);
+			g_gameWindow->OnKeyRepeat.Add(this, &TextInput::OnKeyRepeat);
+			g_gameWindow->OnKeyPressed.Add(this, &TextInput::OnKeyPressed);
+		}
+		else
+		{
+			SDL_StopTextInput();
+			g_gameWindow->OnTextInput.RemoveAll(this);
+			g_gameWindow->OnTextComposition.RemoveAll(this);
+			g_gameWindow->OnKeyRepeat.RemoveAll(this);
+			g_gameWindow->OnKeyPressed.RemoveAll(this);
+		}
+	}
+	void Reset()
+	{
+		backspaceCount = 0;
+		input.clear();
+	}
+	void Tick()
+	{
+
+	}
+};
+
+
+
 /*
 	Song preview player with fade-in/out
 */
@@ -359,6 +448,20 @@ public:
 		if(map)
 			return map->GetDifficulties()[m_currentlySelectedDiff];
 		return nullptr;
+	}
+	void SetSearchFieldLua(Ref<TextInput> search)
+	{
+		lua_getglobal(m_lua, "songwheel");
+		//progress
+		lua_pushstring(m_lua, "searchText");
+		lua_pushstring(m_lua, Utility::ConvertToUTF8(search->input).c_str());
+		lua_settable(m_lua, -3);
+		//hispeed
+		lua_pushstring(m_lua, "searchInputActive");
+		lua_pushboolean(m_lua, search->active);
+		lua_settable(m_lua, -3);
+		//set global
+		lua_getglobal(m_lua, "songwheel");
 	}
 
 private:
@@ -835,6 +938,9 @@ private:
 	Ref<FilterSelection> m_filterSelection;
 	// Game settings wheel
 	Ref<GameSettingsWheel> m_settingsWheel;
+	// Search text logic object
+	Ref<TextInput> m_searchInput;
+
 
 	// Score list canvas
 	Ref<Canvas> m_scoreCanvas;
@@ -890,6 +996,10 @@ public:
 
 		m_filterSelection->SetFiltersByIndex(g_gameConfig.GetInt(GameConfigKeys::LevelFilter), g_gameConfig.GetInt(GameConfigKeys::FolderFilter));
 		m_selectionWheel->SelectByMapId(g_gameConfig.GetInt(GameConfigKeys::LastSelected));
+
+		m_searchInput = Ref<TextInput>(new TextInput());
+		m_searchInput->OnTextChanged.Add(this, &SongSelect_Impl::OnSearchTermChanged);
+
 
 		/// TODO: Check if debugmute is enabled
 		g_audio->SetGlobalVolume(g_gameConfig.GetFloat(GameConfigKeys::MasterVolume));
@@ -961,6 +1071,9 @@ public:
     void m_OnButtonPressed(Input::Button buttonCode)
     {
 		if (m_suspended)
+			return;
+
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
 			return;
 
 		m_timeSinceButtonPressed[buttonCode] = 0;
@@ -1050,6 +1163,9 @@ public:
 		if (m_suspended)
 			return;
 
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
+			return;
+		
 		m_timeSinceButtonReleased[buttonCode] = 0;
 
 		switch (buttonCode)
@@ -1149,7 +1265,7 @@ public:
 			else if (key == SDLK_F5)
 			{
 				m_mapDatabase.StartSearching();
-				OnSearchTermChanged(L"");
+				OnSearchTermChanged(m_searchInput->input);
 			}
 			else if (key == SDLK_F2)
 			{
@@ -1170,6 +1286,7 @@ public:
 			}
 			else if (key == SDLK_TAB)
 			{
+				m_searchInput->SetActive(!m_searchInput->active);
 			}
 		}
 	}
@@ -1190,7 +1307,8 @@ public:
 		{
 			TickNavigation(deltaTime);
 			m_previewPlayer.Update(deltaTime);
-
+			m_searchInput->Tick();
+			m_selectionWheel->SetSearchFieldLua(m_searchInput);
 			// Ugly hack to get previews working with the delaty
 			/// TODO: Move the ticking of the fade timer or whatever outside of onsongselected
 			OnMapSelected(m_currentPreviewAudio);
@@ -1290,7 +1408,7 @@ public:
 		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
-		OnSearchTermChanged(L"");
+		OnSearchTermChanged(m_searchInput->input);
 
 	}
 };
