@@ -367,7 +367,7 @@ public:
 			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
 			assert(false);
 		}
-		int ret = luaL_checkinteger(m_lua, 1);
+		int ret = luaL_checkinteger(m_lua, 0);
 		lua_settop(m_lua, 0);
 		AdvanceSelection(ret * direction);
 	}
