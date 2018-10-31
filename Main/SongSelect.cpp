@@ -1288,6 +1288,10 @@ public:
 			{
 				m_searchInput->SetActive(!m_searchInput->active);
 			}
+			else if (key == SDLK_RETURN && m_searchInput->active)
+			{
+				m_searchInput->SetActive(false);
+			}
 		}
 	}
 	virtual void OnKeyReleased(int32 key)
