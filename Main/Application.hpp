@@ -77,6 +77,7 @@ public:
 	void StoreNamedSample(String name, Sample sample);
 	void PlayNamedSample(String name, bool loop);
 	void StopNamedSample(String name);
+	void ReloadSkin();
 
 private:
 	bool m_LoadConfig();

@@ -686,6 +686,18 @@ void Application::ReloadScript(const String& name, lua_State* L)
 	}
 }
 
+void Application::ReloadSkin()
+{
+	m_skin = g_gameConfig.GetString(GameConfigKeys::Skin);
+	g_guiState.fontCahce.clear();
+	g_guiState.textCache.clear();
+	g_guiState.nextTextId.clear();
+	g_guiState.nextPaintId.clear();
+	g_guiState.paintCache.clear();
+	nvgDeleteGL3(g_guiState.vg);
+	g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+	nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
+}
 void Application::LoadGauge(bool hard)
 {
 	String gaugePath = "gauges/normal/";
