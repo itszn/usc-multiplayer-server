@@ -243,6 +243,8 @@ public:
 	~SelectionWheel()
 	{
 		g_gameConfig.Set(GameConfigKeys::LastSelected, m_currentlySelectedMapId);
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 	void OnMapsAdded(Vector<MapIndex*> maps)
 	{
@@ -624,6 +626,8 @@ public:
 		g_gameConfig.Set(GameConfigKeys::LevelFilter, m_currentLevelSelection);
 		m_levelFilters.clear();
 		m_folderFilters.clear();
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 
 	bool Active = false;
@@ -800,6 +804,11 @@ class GameSettingsWheel{
 public:
 	GameSettingsWheel()
 	{}
+	~GameSettingsWheel()
+	{
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
+	}
 	bool Init()
 	{
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/settingswheel"));
@@ -1014,6 +1023,8 @@ public:
 		g_input.OnButtonReleased.RemoveAll(this);
 		m_selectionWheel.Destroy();
 		m_filterSelection.Destroy();
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 
 	// When a map is selected in the song wheel

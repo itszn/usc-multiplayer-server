@@ -120,7 +120,8 @@ public:
 	}
 	~ScoreScreen_Impl()
 	{
-		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 
 	AsyncAssetLoader loader;

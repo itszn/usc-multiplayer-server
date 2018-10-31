@@ -194,7 +194,8 @@ public:
 			delete m_background;
 		if (m_foreground)
 			delete m_foreground;
-
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 		// Save hispeed
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 

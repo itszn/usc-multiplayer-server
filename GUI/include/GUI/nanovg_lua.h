@@ -17,6 +17,7 @@ struct GUIState
 	Map<lua_State*, int> nextTextId;
 	Map<lua_State*, int> nextPaintId;
 	Map<String, Graphics::Font> fontCahce;
+	Map<lua_State*, Set<int>> vgImages;
 	Graphics::Font* currentFont;
 	Vector4 fillColor;
 	int textAlign;
@@ -175,6 +176,7 @@ static int lCreateImage(lua_State* L /*const char* filename, int imageflags */)
 	int handle = nvgCreateImage(g_guiState.vg, filename, imageflags);
 	if (handle != 0)
 	{
+		g_guiState.vgImages[L].Add(handle);
 		lua_pushnumber(L, handle);
 		return 1;
 	}
@@ -731,4 +733,17 @@ static int lImageSize(lua_State* L /*int image*/)
 		lua_pushnumber(L,w);
 		lua_pushnumber(L,h);
 		return 2;
+}
+static int DisposeGUI(lua_State* state)
+{
+	g_guiState.textCache[state].clear();
+	g_guiState.textCache.erase(state);
+	g_guiState.paintCache[state].clear();
+	g_guiState.paintCache.erase(state);
+	
+	for(auto&& i : g_guiState.vgImages[state])
+	{
+		nvgDeleteImage(g_guiState.vg, i);
+	}
+	return 0;
 }

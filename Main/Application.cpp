@@ -694,9 +694,15 @@ void Application::ReloadSkin()
 	g_guiState.nextTextId.clear();
 	g_guiState.nextPaintId.clear();
 	g_guiState.paintCache.clear();
+	m_jacketImages.clear();
 	nvgDeleteGL3(g_guiState.vg);
 	g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 	nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
+}
+void Application::DisposeLua(lua_State* state)
+{
+	DisposeGUI(state);
+	lua_close(state);
 }
 void Application::LoadGauge(bool hard)
 {
@@ -908,6 +914,7 @@ static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags 
 	int handle = nvgCreateImage(g_guiState.vg, path.c_str(), imageflags);
 	if (handle != 0)
 	{
+		g_guiState.vgImages[L].Add(handle);
 		lua_pushnumber(L, handle);
 		return 1;
 	}

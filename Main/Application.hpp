@@ -78,6 +78,7 @@ public:
 	void PlayNamedSample(String name, bool loop);
 	void StopNamedSample(String name);
 	void ReloadSkin();
+	void DisposeLua(class lua_State* state);
 
 private:
 	bool m_LoadConfig();
