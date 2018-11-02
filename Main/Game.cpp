@@ -560,13 +560,11 @@ public:
 		m_camera.SetRollIntensity(m_rollIntensity);
 
 		// Set track zoom
-		if(false) // Overridden settings?
-		{
-			m_camera.pLaneZoom = m_playback.GetZoom(0);
-			m_camera.pLanePitch = m_playback.GetZoom(1);
-			m_camera.pLaneOffset = m_playback.GetZoom(2);
-			m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
-		}
+
+		m_camera.pLaneZoom = m_playback.GetZoom(0);
+		m_camera.pLanePitch = m_playback.GetZoom(1);
+		m_camera.pLaneOffset = m_playback.GetZoom(2);
+		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
 		m_camera.track = m_track;
 		m_camera.Tick(deltaTime,m_playback);
 		m_track->Tick(m_playback, deltaTime);
