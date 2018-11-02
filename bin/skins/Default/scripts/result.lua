@@ -2,6 +2,7 @@ local jacket = nil
 local resx,resy = game.GetResolution()
 local scale = math.min(resx / 800, resy /800)
 local gradeImg;
+local gradear = 1 --grade aspect ratio
 local desw = 800
 local desh = 800
 local moveX = 0
@@ -10,6 +11,28 @@ if resx / resy > 1 then
     moveX = resx / (2*scale) - 400
 else
     moveY = resy / (2*scale) - 400
+end
+local diffNames = {"NOV", "ADV", "EXH", "INF"}
+local backgroundImage = gfx.CreateSkinImage("bg.png", 1);
+
+
+draw_stat = function(x,y,w,h, name, value, format,r,g,b)
+    gfx.Save()
+    gfx.Translate(x,y)
+    gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_TOP)
+    gfx.FontSize(h)
+    gfx.Text(name .. ":",0, 0)
+    gfx.TextAlign(gfx.TEXT_ALIGN_RIGHT + gfx.TEXT_ALIGN_TOP)
+    gfx.Text(string.format(format, value),w, 0)
+    gfx.BeginPath()
+    gfx.MoveTo(0,h)
+    gfx.LineTo(w,h)
+    if r then gfx.StrokeColor(r,g,b) 
+    else gfx.StrokeColor(200,200,200) end
+    gfx.StrokeWidth(1)
+    gfx.Stroke()
+    gfx.Restore()
+    return y + h + 5
 end
 
 draw_line = function(x1,y1,x2,y2,w,r,g,b)
@@ -63,6 +86,7 @@ draw_graph = function(x,y,w,h)
 end
 
 render = function(deltaTime, showStats)
+    gfx.ImageRect(0, 0, resx, resy, backgroundImage, 0.5, 0);
     gfx.Scale(scale,scale)
     gfx.Translate(moveX,moveY)
     if jacket == nil then
@@ -70,6 +94,8 @@ render = function(deltaTime, showStats)
     end
     if not gradeImg then
         gradeImg = gfx.CreateSkinImage(string.format("score/%s.png", result.grade),0)
+        local gradew,gradeh = gfx.ImageSize(gradeImg)
+        gradear = gradew/gradeh
     end
     gfx.BeginPath()
     gfx.Rect(0,0,500,800)
@@ -88,9 +114,16 @@ render = function(deltaTime, showStats)
     if jacket then
         gfx.ImageRect(100,90,300,300,jacket,1,0)
     end
+    gfx.BeginPath()
+    gfx.Rect(100,90,60,20)
+    gfx.FillColor(0,0,0,200)
+    gfx.Fill()
+    gfx.BeginPath()
+    gfx.FillColor(255,255,255)
+    draw_stat(100,90,55,20,diffNames[result.difficulty + 1], result.level, "%02d")
     draw_graph(100,300,300,90)
     gfx.BeginPath()
-    gfx.ImageRect(340,330,60,60,gradeImg,1,0)
+    gfx.ImageRect(400 - 60 * gradear,330,60 * gradear,60,gradeImg,1,0)
     gfx.BeginPath()
     gfx.FontSize(20)
     gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_MIDDLE)
@@ -126,11 +159,15 @@ render = function(deltaTime, showStats)
     draw_line(10,545,480,545, 1.5, 255,0,200)
     draw_line(10,585,480,585, 1.5, 255,0,0)
     
-    gfx.LoadSkinFont("segoeui.ttf")
+    local staty = 620
+    staty = draw_stat(10,staty,470,30,"MAX COMBO", result.maxCombo, "%d")
+    staty = staty + 10
+    staty = draw_stat(10,staty,470,25,"EARLY", result.earlies, "%d",255,0,255)
+    staty = draw_stat(10,staty,470,25,"LATE", result.lates, "%d",0,255,255)
+    staty = staty + 10
+    staty = draw_stat(10,staty,470,25,"MEDIAN DELTA", result.medianHitDelta, "%dms")
+    staty = draw_stat(10,staty,470,25,"MEAN DELTA", result.meanHitDelta, "%.1fms")
 
-    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER)
-    gfx.FontSize(80)
-    gfx.Text("Extra Stats",250,700)
 
     draw_highscores()
     
