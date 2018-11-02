@@ -455,6 +455,10 @@ public:
 			nk_labelf(m_nctx, nk_text_alignment::NK_TEXT_LEFT, "Master Volume (%.1f%%):", m_masterVolume * 100);
 			nk_slider_float(m_nctx, 0, &m_masterVolume, 1, 0.005);
 
+			nk_layout_row_dynamic(m_nctx, 30, 1);
+			nk_label(m_nctx, "Anti aliasing (requires restart):", nk_text_alignment::NK_TEXT_LEFT);
+			nk_combobox(m_nctx, m_aaModes, 5, &m_antialiasing, buttonheight, comboBoxSize);
+
 			if (m_skins.size() > 0)
 			{
 				nk_label(m_nctx, "Selected Skin:", nk_text_alignment::NK_TEXT_LEFT);
@@ -467,10 +471,6 @@ public:
 			if (nk_button_color(m_nctx, rcol))	m_laserColors[0] = fmodf(m_laserColors[1] + 180, 360);
 			nk_slider_float(m_nctx, 0, m_laserColors, 360, 0.1);
 			nk_slider_float(m_nctx, 0, m_laserColors+1, 360, 0.1);
-
-			nk_layout_row_dynamic(m_nctx, 30, 1);
-			nk_label(m_nctx, "Anti aliasing (requires restart):", nk_text_alignment::NK_TEXT_LEFT);
-			nk_combobox(m_nctx, m_aaModes, 5, &m_antialiasing, buttonheight, comboBoxSize);
 
 			nk_layout_row_dynamic(m_nctx, 30, 1);
 			if (nk_button_label(m_nctx, "Exit")) Exit();
