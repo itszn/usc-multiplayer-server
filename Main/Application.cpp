@@ -284,7 +284,7 @@ bool Application::m_Init()
 			Log("Failed to create OpenGL context", Logger::Error);
 			return false;
 		}
-		g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+		g_guiState.vg = nvgCreateGL3(0);
 		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
 
@@ -696,7 +696,7 @@ void Application::ReloadSkin()
 	g_guiState.paintCache.clear();
 	m_jacketImages.clear();
 	nvgDeleteGL3(g_guiState.vg);
-	g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+	g_guiState.vg = nvgCreateGL3(0);
 	nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 }
 void Application::DisposeLua(lua_State* state)
