@@ -18,7 +18,7 @@ local soffset = 0
 local diffColors = {{0,0,255}, {0,255,0}, {255,0,0}, {255, 0, 255}}
 local timer = 0
 local effector = 0
-local searchText = 0
+local searchText = gfx.CreateLabel("",5,0)
 local searchIndex = 1
 local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
 gfx.LoadSkinFont("UDDigiKyokashoNP-B.ttf");
@@ -30,7 +30,7 @@ local legendTable = {
   {["labelSingleLine"] =  gfx.CreateLabel("PLAY",16, 0),              ["labelMultiLine"] =  gfx.CreateLabel("PLAY",16, 0),               ["image"] = gfx.CreateSkinImage("legend/start.png", 0)}
 }
 local grades = {
-  {["max"] = 6999999, ["image"] = gfx.CreateSkinImage("score/AAA+.png", 0)},
+  {["max"] = 6999999, ["image"] = gfx.CreateSkinImage("score/D.png", 0)},
   {["max"] = 7999999, ["image"] = gfx.CreateSkinImage("score/C.png", 0)},
   {["max"] = 8699999, ["image"] = gfx.CreateSkinImage("score/B.png", 0)},
   {["max"] = 8999999, ["image"] = gfx.CreateSkinImage("score/A.png", 0)},
@@ -59,7 +59,7 @@ local aspectFloat = 1.850
 local aspectRatio = "widescreen"
 local landscapeWidescreenRatio = 1.850
 local landscapeStandardRatio = 1.500
-local portraitWidescreenRatio = 0.5625
+local portraitWidescreenRatio = 0.5
 
 -- Responsive sizes
 local fifthX = 0
@@ -142,11 +142,13 @@ draw_scores = function(difficulty, x, y, w, h)
   gfx.Stroke()
 	if difficulty.scores[1] ~= nil then
 		local highScore = difficulty.scores[1]
-    scoreLabel = gfx.CreateLabel(string.format("%.9d",highScore.score), 40, 0)
+    scoreLabel = gfx.CreateLabel(string.format("%08d",highScore.score), 40, 0)
     for i,v in ipairs(grades) do
-      if v.max < highScore.score then
+      if v.max > highScore.score then
         gfx.BeginPath()
-        gfx.ImageRect(x+xOffset,y+h/2 +5, h/2-10,h/2-10, v.image, 1, 0)
+        iw,ih = gfx.ImageSize(v.image)
+        iar = iw / ih;
+        gfx.ImageRect(x+xOffset,y+h/2 +5, iar * (h/2-10),h/2-10, v.image, 1, 0)
         break
       end
     end
@@ -178,8 +180,8 @@ draw_song = function(song, x, y, w, h, selected)
     gfx.Stroke()
     gfx.FillColor(255,255,255)
     gfx.TextAlign(gfx.TEXT_ALIGN_TOP + gfx.TEXT_ALIGN_LEFT)
-    gfx.DrawLabel(songCache[song.id]["title"], x+10, y + 10, w-10)
-    gfx.DrawLabel(songCache[song.id]["artist"], x+10, y + 50, w-10)
+    gfx.DrawLabel(songCache[song.id]["title"], x+10, y + 5, w-10)
+    gfx.DrawLabel(songCache[song.id]["artist"], x+20, y + 50, w-10)
     gfx.ForceRender()
 
 end
@@ -188,11 +190,11 @@ draw_diff_icon = function(diff, x, y, w, h, selected)
     local shrinkX = w/4
     local shrinkY = h/4
     if selected then
-      gfx.FontSize(40)
+      gfx.FontSize(h/2)
       shrinkX = w/6
       shrinkY = h/6
     else
-      gfx.FontSize(30)
+      gfx.FontSize(math.floor(h / 3))
     end
     gfx.BeginPath()
     gfx.RoundedRectVarying(x+shrinkX,y+shrinkY,w-shrinkX*2,h-shrinkY*2,0,0,0,0)
@@ -219,38 +221,38 @@ draw_cursor = function(x,y,rotation,width)
 end
 
 draw_diffs = function(diffs, x, y, w, h)
-    local diffWidth = w/3
-    local diffHeight = h-6
+    local diffWidth = w/2.5
+    local diffHeight = w/2.5
     local diffCount = #diffs
     gfx.Scissor(x,y,w,h)
-    for i = math.max(selectedDiff - math.floor(diffCount/2), 1), math.max(selectedDiff - 1,1) do
+    for i = math.max(selectedDiff - 2, 1), math.max(selectedDiff - 1,1) do
       local diff = diffs[i]
-      local xpos = x + diffWidth - (selectedDiff - i + doffset) * diffWidth
+      local xpos = x + ((w/2 - diffWidth/2) + (selectedDiff - i + doffset)*(-0.8*diffWidth))
       if  i ~= selectedDiff then
         draw_diff_icon(diff, xpos, y, diffWidth, diffHeight, false)
       end
     end
 
     --after selected
-  for i = math.min(selectedDiff + math.floor(diffCount/2), diffCount), selectedDiff + 1,-1 do
+  for i = math.min(selectedDiff + 2, diffCount), selectedDiff + 1,-1 do
       local diff = diffs[i]
-      local xpos = x + diffWidth - (selectedDiff - i + doffset) * diffWidth
+      local xpos = x + ((w/2 - diffWidth/2) + (selectedDiff - i + doffset)*(-0.8*diffWidth))
       if  i ~= selectedDiff then
         draw_diff_icon(diff, xpos, y, diffWidth, diffHeight, false)
       end
     end
     local diff = diffs[selectedDiff]
-    local xpos = x + ((w/2 - diffWidth/2) + (doffset)*(-1*diffWidth))
+    local xpos = x + ((w/2 - diffWidth/2) + (doffset)*(-0.8*diffWidth))
   draw_diff_icon(diff, xpos, y, diffWidth, diffHeight, true)
   gfx.BeginPath()
   gfx.FillColor(0,128,255)
-  gfx.Rect(x,y+20,2,diffHeight-h/6)
+  gfx.Rect(x,y+10,2,diffHeight-h/6)
   gfx.Fill()
   gfx.BeginPath()
-  gfx.Rect(x+w-2,y+20,2,diffHeight-h/6)
+  gfx.Rect(x+w-2,y+10,2,diffHeight-h/6)
   gfx.Fill()
   gfx.ResetScissor()
-  draw_cursor(x + w/2, y +diffHeight/2, timer * math.pi, 50)
+  draw_cursor(x + w/2, y +diffHeight/2, timer * math.pi, diffHeight / 1.5)
 end
 
 draw_selected = function(song, x, y, w, h)
@@ -359,7 +361,7 @@ draw_songwheel = function(x,y,w,h)
   for i = math.max(selectedIndex - wheelSize/2, 1), math.max(selectedIndex - 1,0) do
       local song = songwheel.songs[i]
       local xpos = x + offsetX + ((selectedIndex - i + ioffset) ^ 2) * 3
-      local offsetY = (selectedIndex - i + ioffset) * ( height - (wheelSize/2*((selectedIndex-i)*aspectFloat)))
+      local offsetY = (selectedIndex - i + ioffset) * ( height - (wheelSize/2*((selectedIndex-i + ioffset)*aspectFloat)))
       local ypos = y+((h/2 - height/2) - offsetY)
       draw_song(song, xpos, ypos, width, height)
   end
@@ -368,8 +370,8 @@ draw_songwheel = function(x,y,w,h)
   for i = math.min(selectedIndex + wheelSize/2, #songwheel.songs), selectedIndex + 1,-1 do
       local song = songwheel.songs[i]
       local xpos = x + offsetX + ((i - selectedIndex - ioffset) ^ 2) * 2
-      local offsetY = (selectedIndex - i + ioffset) * ( height - (wheelSize/2*((i-selectedIndex)*aspectFloat)))
-      local ypos = y+((h/2 - height/2) - (selectedIndex - i + ioffset) - offsetY)
+      local offsetY = (selectedIndex - i + ioffset) * ( height - (wheelSize/2*((i-selectedIndex - ioffset)*aspectFloat)))
+      local ypos = y+((h/2 - height/2) - (selectedIndex - i) - offsetY)
       local alpha = 255 - (selectedIndex - i + ioffset) * 31
       draw_song(song, xpos, ypos, width, height)
   end
@@ -417,15 +419,15 @@ draw_search = function(x,y,w,h)
   end
   searchIndex = songwheel.searchInputActive and 0 or 1
 
-  if songwheel.searchInputActive == true then
-    gfx.BeginPath()
-    gfx.FillColor(0,0,0,200)
-    gfx.Rect(0,0,resx,resy)
-    gfx.Fill()
-    gfx.ForceRender()
-  end
+  gfx.BeginPath()
+  local bgfade = 1 - (searchIndex + soffset)
+  --if not songwheel.searchInputActive then bgfade = soffset end
+  gfx.FillColor(0,0,0,math.floor(200 * bgfade))
+  gfx.Rect(0,0,resx,resy)
+  gfx.Fill()
+  gfx.ForceRender()
   local xpos = x + (searchIndex + soffset)*w
-  searchText = gfx.CreateLabel(string.format("Search: %s",songwheel.searchText), 30, 0)
+  gfx.UpdateLabel(searchText ,string.format("Search: %s",songwheel.searchText), 30, 0)
   gfx.BeginPath()
   gfx.RoundedRect(xpos,y,w,h,h/2)
   gfx.FillColor(30,30,30)
@@ -470,9 +472,9 @@ render = function(deltaTime)
 
     --draw text search
     if aspectRatio == "PortraitWidescreen" then
-      draw_search(fifthX*2,0,fifthX*3,fifthY/5)
+      draw_search(fifthX*2,5,fifthX*3,fifthY/5)
     else
-      draw_search(fifthX*2,0,fifthX*3,fifthY/3)
+      draw_search(fifthX*2,5,fifthX*3,fifthY/3)
     end
 
     ioffset = ioffset * 0.9
