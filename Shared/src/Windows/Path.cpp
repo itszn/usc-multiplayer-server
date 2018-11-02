@@ -127,3 +127,54 @@ Vector<String> Path::GetSubDirs(const String& path)
 
 	return res;
 }
+
+bool Path::ShowInFileBrowser(const String& path)
+{
+	//Opens the directory, if a file path is sent then the file will be opened with the default program for that file type.
+	long res = (long)ShellExecuteA(NULL, "open", path.c_str(), NULL, NULL, SW_SHOWDEFAULT);
+	if (res > 32)
+	{
+		return true;
+	}
+	else
+	{
+		switch (res)
+		{
+		case ERROR_FILE_NOT_FOUND:
+			Logf("Failed to show file \"%s\" in the system default explorer: File not found.", Logger::Error, path);
+			break;
+		case ERROR_PATH_NOT_FOUND:
+			Logf("Failed to show file \"%s\" in the system default explorer: Path not found.", Logger::Error, path);
+			break;
+		default:
+			Logf("Failed to show file \"%s\" in the system default explorer: error %p", Logger::Error, path, res);
+			break;
+		}
+		return false;
+	}
+}
+
+bool Path::Run(const String& programPath, const String& parameters)
+{
+	STARTUPINFOA info = { sizeof(info) };
+	PROCESS_INFORMATION processInfo;
+	String command = Utility::Sprintf("%s %s", programPath.GetData(), parameters.GetData());
+
+	if (!Path::FileExists(programPath))
+	{
+		Logf("Failed to open editor: invalid path \"%s\"", Logger::Error, programPath);
+		return false;
+	}
+
+	if (CreateProcessA(NULL, command.GetData(), NULL, NULL, false, DETACHED_PROCESS, NULL, NULL, &info, &processInfo))
+	{
+		CloseHandle(processInfo.hProcess);
+		CloseHandle(processInfo.hThread);
+	}
+	else
+	{
+		Logf("Failed to open editor: error %d", Logger::Error, GetLastError());
+		return false;
+	}
+	return true;
+}

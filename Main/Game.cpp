@@ -273,7 +273,7 @@ public:
         {
             Map<double, MapTime> bpmDurations;
             const Vector<TimingPoint*>& timingPoints = m_beatmap->GetLinearTimingPoints();
-            MapTime lastMT = 0;
+            MapTime lastMT = mapSettings.offset;
             MapTime largestMT = -1;
             double useBPM = -1;
             double lastBPM = -1;
@@ -547,7 +547,10 @@ public:
 	virtual void Render(float deltaTime) override
 	{
 		// 8 beats (2 measures) in view at 1x hi-speed
-		m_track->SetViewRange(8.0f / (m_hispeed)); 
+		if (m_usecMod)
+			m_track->SetViewRange(1.0 / m_playback.cModSpeed);
+		else
+			m_track->SetViewRange(8.0f / (m_hispeed)); 
 
 
 		// Get render state from the camera
@@ -559,12 +562,11 @@ public:
 		// Set track zoom
 		if(false) // Overridden settings?
 		{
-			m_camera.pZoom = m_playback.GetZoom(0);
-			m_camera.pPitch = m_playback.GetZoom(1);
-			m_track->roll = m_camera.GetRoll();
+			m_camera.pLaneZoom = m_playback.GetZoom(0);
+			m_camera.pLanePitch = m_playback.GetZoom(1);
+			m_camera.pLaneOffset = m_playback.GetZoom(2);
+			m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
 		}
-		m_track->zoomBottom = m_camera.pZoom;
-		m_track->zoomTop = m_camera.pPitch;
 		m_camera.track = m_track;
 		m_camera.Tick(deltaTime,m_playback);
 		m_track->Tick(m_playback, deltaTime);
@@ -578,6 +580,10 @@ public:
 
 		// Get objects in range
 		MapTime msViewRange = m_playback.ViewDistanceToDuration(m_track->GetViewRange());
+		if (m_usecMod)
+		{
+			msViewRange = 480000.0 / m_playback.cModSpeed;
+		}
 		m_currentObjectSet = m_playback.GetObjectsInRange(msViewRange);
 		// Sort objects to draw
 		m_currentObjectSet.Sort([](const TObjectState<void>* a, const TObjectState<void>* b)
@@ -671,8 +677,8 @@ public:
 					Color hitColor = (i < 4) ? Color::White : Color::FromHSV(20, 0.7f, 1.0f);
 					float hitWidth = (i < 4) ? m_track->buttonWidth : m_track->fxbuttonWidth;
 					m_holdEmitters[i] = CreateHoldEmitter(hitColor, hitWidth);
-					m_holdEmitters[i]->position.x = m_track->GetButtonPlacement(i);
 				}
+				m_holdEmitters[i]->position = m_track->TransformPoint(Vector3(m_track->GetButtonPlacement(i), 0.f, 0.f));
 			}
 			else
 			{
@@ -762,13 +768,13 @@ public:
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
 		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
 		m_playback.Reset();
-
-		/// TODO: c-mod is broken, might need something in the viewrange calculation stuff
         // If c-mod is used
-        if (m_usecMod)
-        {
-            m_playback.OnTimingPointChanged.Add(this, &Game_Impl::OnTimingPointChanged);
-        }
+		if (m_usecMod)
+		{
+			m_playback.OnTimingPointChanged.Add(this, &Game_Impl::OnTimingPointChanged);
+		}
+		m_playback.cMod = m_usecMod;
+		m_playback.cModSpeed = m_hispeed * m_playback.GetCurrentTimingPoint().GetBPM();
 		// Register input bindings
 		m_scoring.OnButtonMiss.Add(this, &Game_Impl::OnButtonMiss);
 		m_scoring.OnLaserSlamHit.Add(this, &Game_Impl::OnLaserSlamHit);
@@ -869,6 +875,8 @@ public:
 				if ((m_usecMod || m_usemMod) && change != 0.0f)
 				{
 					g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
+					m_modSpeed = m_hispeed * (float)m_currentTiming->GetBPM();
+					m_playback.cModSpeed = m_modSpeed;
 				}
 			}
 		}
@@ -1063,8 +1071,8 @@ public:
 		textPos.y += RenderText(Utility::Sprintf("Roll: %f(x%f) %s",
 			m_camera.GetRoll(), m_rollIntensity, m_camera.rollKeep ? "[Keep]" : ""), textPos).y;
 
-		textPos.y += RenderText(Utility::Sprintf("Track Zoom Top: %f", m_camera.pPitch), textPos).y;
-		textPos.y += RenderText(Utility::Sprintf("Track Zoom Bottom: %f", m_camera.pZoom), textPos).y;
+		textPos.y += RenderText(Utility::Sprintf("Track Zoom Top: %f", m_camera.pLanePitch), textPos).y;
+		textPos.y += RenderText(Utility::Sprintf("Track Zoom Bottom: %f", m_camera.pLaneZoom), textPos).y;
 
 		Vector2 buttonStateTextPos = Vector2(g_resolution.x - 200.0f, 100.0f);
 		RenderText(g_input.GetControllerStateString(), buttonStateTextPos);
@@ -1123,7 +1131,9 @@ public:
 
 		if (object->spin.type != 0)
 		{
-			m_camera.SetSpin(object->GetDirection(), object->spin.duration, object->spin.type, m_playback);
+			if (object->spin.type == SpinStruct::SpinType::Bounce)
+				m_camera.SetXOffsetBounce(object->GetDirection(), object->spin.duration, object->spin.amplitude, object->spin.frequency, object->spin.duration, m_playback);
+			else m_camera.SetSpin(object->GetDirection(), object->spin.duration, object->spin.type, m_playback);
 		}
 
 

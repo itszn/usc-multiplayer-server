@@ -413,6 +413,10 @@ float BeatmapPlayback::DurationToViewDistanceAtTimeNoStops(MapTime time, MapTime
 
 float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime duration)
 {
+	if (cMod)
+	{
+		return (float)duration / 480000.0f;
+	}
 	MapTime endTime = time + duration;
 	int8 direction = Math::Sign(duration);
 	if (duration < 0)
@@ -468,6 +472,9 @@ float BeatmapPlayback::DurationToViewDistanceAtTime(MapTime time, MapTime durati
 
 float BeatmapPlayback::TimeToViewDistance(MapTime time)
 {
+	if (cMod)
+		return (float)(time - m_playbackTime) / (480000.f);
+
 	return DurationToViewDistanceAtTime(m_playbackTime, time - m_playbackTime);
 }
 
@@ -483,7 +490,7 @@ float BeatmapPlayback::GetBeatTime() const
 
 float BeatmapPlayback::GetZoom(uint8 index)
 {
-	assert(index >= 0 && index <= 1);
+	assert(index >= 0 && index <= 3);
 	MapTime startTime = m_zoomStartPoints[index] ? m_zoomStartPoints[index]->time : 0;
 	float start = m_zoomStartPoints[index] ? m_zoomStartPoints[index]->zoom : 0.0f;
 	if (!m_zoomEndPoints[index]) // Last point?

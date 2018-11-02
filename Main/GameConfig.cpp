@@ -94,4 +94,10 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::LastSelected, 0);
 	Set(GameConfigKeys::LevelFilter, 0);
 	Set(GameConfigKeys::FolderFilter, 0);
+
+	Set(GameConfigKeys::AutoResetSettings, false);
+	Set(GameConfigKeys::AutoResetToSpeed, 400.0f);
+
+	Set(GameConfigKeys::EditorPath, "PathToEditor");
+	Set(GameConfigKeys::EditorParamsFormat, "%s");
 }

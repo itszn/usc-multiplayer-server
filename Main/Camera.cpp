@@ -11,6 +11,30 @@ Camera::~Camera()
 {
 
 }
+
+static float DampedSin(float t, float amplitude, float frequency, float decay)
+{
+	return amplitude * (float)pow(Math::e, -decay * t) * sin(frequency * 2 * t * Math::pi);
+}
+
+static float Swing(float time) { return DampedSin(time, 120.0f / 360, 1, 3.5f); }
+
+static void Spin(float time, float &roll, float &bgAngle, float dir)
+{
+	const float TSPIN = 0.75f / 2.0f;
+	const float TRECOV = 0.75f / 2.0f;
+
+	bgAngle = Math::Clamp(time * 4.0f, 0.0f, 2.0f) * dir;
+	if (time <= TSPIN)
+		roll = -dir * (TSPIN - time) / TSPIN;
+	else
+	{
+		if (time < TSPIN + TRECOV)
+			roll = Swing((time - TSPIN) / TRECOV) * 0.25f * dir;
+		else roll = 0.0f;
+	}
+}
+
 void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 {
 	auto LerpTo = [&](float &value, float target, float speed = 10)
@@ -30,33 +54,37 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	m_spinProgress = (float)(playback.GetLastTime() - m_spinStart) / m_spinDuration;
 	// Calculate camera spin
+	// TODO(local): spins need a progress of 1
 	if (m_spinProgress < 2.0f)
 	{
 		if (m_spinType == SpinStruct::SpinType::Full)
 		{
-			if (m_spinProgress <= 1.0f)
-				m_spinRoll = -m_spinDirection * (1.0 - m_spinProgress);
-			else
-			{
-				float amplitude = (15.0f / 360.0f) / (m_spinProgress + 1);
-				m_spinRoll = sin(m_spinProgress * Math::pi * 2.0f) * amplitude * m_spinDirection;
-			}
+			Spin(m_spinProgress / 2.0f, m_spinRoll, m_bgSpin, m_spinDirection);
 		}
 		else if (m_spinType == SpinStruct::SpinType::Quarter)
 		{
-			float amplitude = (80.0f / 360.0f) / ((m_spinProgress)+1);
-			m_spinRoll = sin(m_spinProgress * Math::pi) * amplitude * m_spinDirection;
+			const float BG_SPIN_SPEED = 4.0f / 3.0f;
+			m_bgSpin = Math::Clamp(m_spinProgress * BG_SPIN_SPEED / 2, 0.0f, 1.0f) * m_spinDirection;
+			m_spinRoll = Swing(m_spinProgress / 2) * m_spinDirection;
+		}
+		else if (m_spinType == SpinStruct::SpinType::Bounce)
+		{
+			m_bgSpin = 0.0f;
+			m_spinBounceOffset = DampedSin(m_spinProgress / 2, m_spinBounceAmplitude,
+				m_spinBounceFrequency / 2, m_spinBounceDecay) * m_spinDirection;
 		}
 
 		m_spinProgress = Math::Clamp(m_spinProgress, 0.0f, 2.0f);
 	}
 	else
 	{
+		m_bgSpin = 0.0f;
 		m_spinRoll = 0.0f;
 		m_spinProgress = 0.0f;
 	}
 
-	m_roll = pBaseRoll + m_spinRoll + m_laserRoll;
+	m_totalRoll = pLaneBaseRoll + m_spinRoll + m_laserRoll;
+	m_totalOffset = pLaneOffset / 2.0f + m_spinBounceOffset;
 
 	if (!rollKeep)
 	{
@@ -108,31 +136,20 @@ static float Lerp(float a, float b, float alpha)
 	return a + (b - a) * alpha;
 }
 
+const float ROLL_AMT = 8;
+const float ZOOM_POW = 1.65f;
+
 RenderState Camera::CreateRenderState(bool clipped)
 {
-	const float ROLL_AMT = 8;
-	const float PITCH_AMT = 10;
-	const float ZOOM_POW = 1.65f;
-	const float LENGTH_BASE = 12;
-	const float ROT = 0;
-
-	auto GetOriginTransform = [&](float pitch, float roll)
+	auto GetOriginTransform = [&](float pitch, float offs, float roll)
 	{
-		auto origin = Transform::Rotation({ 0, 0, 0 });
-		auto anchor = Transform::Rotation({ 1.5f, 0, 0 })
-			* Transform::Translation({ 0, -0.825f, 0 });
-		auto contnr = Transform::Scale({ 1, 1, 1 })
-			* Transform::Rotation({ -90, 0, 0, })
-			* Transform::Translation({ 0, 0, -1.1f });
-
-		origin = Transform::Rotation({ 0, 0, roll });
-		anchor = Transform::Translation({ 0, -1.0f, 0 })
+		auto origin = Transform::Rotation({ 0, 0, roll });
+		auto anchor = Transform::Translation({ offs, -0.9f, 0 })
 			* Transform::Rotation({ 1.5f, 0, 0 });
-		contnr = Transform::Translation({ 0, 0, -0.9f })
+		auto contnr = Transform::Translation({ 0, 0, -0.9f })
 			* Transform::Rotation({ -90 + pitch, 0, 0, });
 
 		return origin * anchor * contnr;
-		return contnr * anchor * origin;
 	};
 
 	int portrait = g_aspectRatio > 1 ? 0 : 1;
@@ -142,16 +159,18 @@ RenderState Camera::CreateRenderState(bool clipped)
 
 	RenderState rs = g_application->GetRenderStateBase();
 
-	auto worldNormal = GetOriginTransform(pPitch * PITCH_AMT, m_roll * 360.0f);
-	auto worldNoRoll = GetOriginTransform(pPitch * PITCH_AMT, 0);
+	float lanePitch = pLanePitch * pitchUnit;
+
+	auto worldNormal = GetOriginTransform(lanePitch, m_totalOffset, m_totalRoll * 360.0f);
+	auto worldNoRoll = GetOriginTransform(lanePitch, 0, 0);
 
 	auto zoomDir = worldNormal.GetPosition();
 	float highwayDist = zoomDir.Length();
 	zoomDir = zoomDir.Normalized();
 
 	float zoomAmt;
-	if (pZoom <= 0) zoomAmt = pow(ZOOM_POW, -pZoom) - 1;
-	else zoomAmt = highwayDist * (pow(ZOOM_POW, -pow(pZoom, 1.35f)) - 1);
+	if (pLaneZoom <= 0) zoomAmt = pow(ZOOM_POW, -pLaneZoom) - 1;
+	else zoomAmt = highwayDist * (pow(ZOOM_POW, -pow(pLaneZoom, 1.35f)) - 1);
 
 	//m_calcZoomBottom = zoomAmt / highwayDist + 1;
 
@@ -163,8 +182,8 @@ RenderState Camera::CreateRenderState(bool clipped)
 	float fov = fovs[portrait];
 	float cameraRot = fov / 2 - fov * pitchOffsets[portrait];
 
-	m_pitch = rotToCrit - cameraRot + basePitch[portrait];
-	auto cameraTransform = Transform::Rotation(Vector3(m_pitch, 0, 0) + m_shakeOffset);
+	m_actualCameraPitch = rotToCrit - cameraRot + basePitch[portrait];
+	auto cameraTransform = Transform::Rotation(Vector3(m_actualCameraPitch, 0, 0) + m_shakeOffset);
 
 	// Calculate clipping distances
 	Vector3 toTrackEnd = (track->trackOrigin).TransformPoint(Vector3(0.0f, track->trackLength, 0));
@@ -193,7 +212,7 @@ void Camera::SetTargetRoll(float target)
 				m_targetRoll = actualTarget;
 			if (m_targetRoll < 0 && actualTarget < m_targetRoll)
 				m_targetRoll = actualTarget;
-			else if (actualTarget > m_targetRoll)
+			else if (m_targetRoll > 0 && actualTarget > m_targetRoll)
 				m_targetRoll = actualTarget;
 		}
 		m_targetRollSet = true;
@@ -210,6 +229,21 @@ void Camera::SetSpin(float direction, uint32 duration, uint8 type, class Beatmap
 	m_spinType = type;
 }
 
+void Camera::SetXOffsetBounce(float direction, uint32 duration, uint32 amplitude, uint32 frequency, float decay, class BeatmapPlayback &playback)
+{
+	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
+
+	m_spinDirection = direction;
+	// since * 2 and stuff
+	m_spinDuration = 0.5f * (duration / 192.0f) * (currentTimingPoint.beatDuration) * 4;
+	m_spinStart = playback.GetLastTime();
+	m_spinType = SpinStruct::SpinType::Bounce;
+
+	m_spinBounceAmplitude = amplitude / 250.0f;
+	m_spinBounceFrequency = frequency;
+	m_spinBounceDecay = decay == 0 ? 0 : (decay == 1 ? 1.5f : 3.0f);
+}
+
 void Camera::SetLasersActive(bool lasersActive)
 {
 	m_lasersActive = lasersActive;
@@ -217,12 +251,17 @@ void Camera::SetLasersActive(bool lasersActive)
 
 float Camera::GetRoll() const
 {
-	return m_roll;
+	return m_totalRoll;
+}
+
+float Camera::GetLaserRoll() const
+{
+	return m_laserRoll;
 }
 
 float Camera::GetHorizonHeight()
 {
-	return (0.5 + (-m_pitch / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
+	return (0.5 + (-(m_actualCameraPitch + pLanePitch * pitchUnit) / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
 Vector2i Camera::GetScreenCenter()

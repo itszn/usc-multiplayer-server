@@ -20,7 +20,7 @@ Track::Track()
 	if (g_aspectRatio < 1.0f)
 		trackLength = 12.0f;
 	else
-		trackLength = 8.0f;
+		trackLength = 10.0f;
 }
 Track::~Track()
 {
@@ -325,7 +325,7 @@ void Track::DrawLaserBase(RenderQueue& rq, class BeatmapPlayback& playback, cons
 		if ((laser->flags & LaserObjectState::flag_Extended) != 0 || m_trackHide > 0.f)
 		{
 			// Calculate height based on time on current track
-			float viewRange = trackViewRange.y - trackViewRange.x;
+			float viewRange = GetViewRange();
 			float position = playback.TimeToViewDistance(obj->time);
 			float posmult = trackLength / (m_viewRange * laserSpeedOffset);
 
@@ -371,7 +371,7 @@ void Track::DrawBase(class RenderQueue& rq)
 void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, ObjectState* obj, bool active)
 {
 	// Calculate height based on time on current track
-	float viewRange = trackViewRange.y - trackViewRange.x;
+	float viewRange = GetViewRange();
 	float position = playback.TimeToViewDistance(obj->time) / viewRange;
 	float glow = 0.0f;
 

@@ -27,6 +27,8 @@ public:
 	MapTime hittableObjectLeave = 500;
 	MapTime alertLaserThreshold = 1500;
 	MapTime audioOffset = 0;
+	bool cMod = false;
+	float cModSpeed = 400;
 
 
 	// Gets all linear objects that fall within the given time range:
@@ -129,8 +131,8 @@ private:
 	ZoomControlPoint** m_currentZoomPoint = nullptr;
 
 	// Used to calculate track zoom
-	ZoomControlPoint* m_zoomStartPoints[2] = { nullptr };
-	ZoomControlPoint* m_zoomEndPoints[2] = { nullptr };
+	ZoomControlPoint* m_zoomStartPoints[4] = { nullptr };
+	ZoomControlPoint* m_zoomEndPoints[4] = { nullptr };
 
 	// Contains all the objects that are in the current valid timing area
 	Set<ObjectState*> m_hittableObjects;

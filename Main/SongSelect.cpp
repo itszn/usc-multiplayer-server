@@ -877,6 +877,14 @@ public:
 	{
 		return m_gameFlags;
 	}
+	void ClearSettings()
+	{
+		m_gameFlags = (GameFlags)0;
+		for (size_t i = 0; i < m_guiElements.size(); i++)
+		{
+			m_guiElements[(GameFlags)(1 << i)]->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[(GameFlags)(1 << i)]));
+		}
+	}
 
 private:
 	void m_PushStringToTable(const char* name, const char* data)
@@ -1288,7 +1296,18 @@ public:
 				m_settingsWheel->ReloadScript();
 				m_filterSelection->ReloadScript();
 				g_application->ReloadScript("songselect/background", m_lua);
-				
+      }	
+			else if (key == SDLK_F11)
+			{
+				String paramFormat = g_gameConfig.GetString(GameConfigKeys::EditorParamsFormat);
+				String path = Path::Normalize(g_gameConfig.GetString(GameConfigKeys::EditorPath));
+				String param = Utility::Sprintf(paramFormat.c_str(), 
+					Utility::Sprintf("\"%s\"", Path::Absolute(m_selectionWheel->GetSelectedDifficulty()->path)));
+				Path::Run(path, param.GetData());
+			}
+			else if (key == SDLK_F12)
+			{
+				Path::ShowInFileBrowser(m_selectionWheel->GetSelection()->path);
 			}
 			else if (key == SDLK_ESCAPE)
 			{
@@ -1424,6 +1443,14 @@ public:
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
 		OnSearchTermChanged(m_searchInput->input);
+		if (g_gameConfig.GetBool(GameConfigKeys::AutoResetSettings))
+		{
+			m_settingsWheel->ClearSettings();
+			g_gameConfig.Set(GameConfigKeys::UseCMod, false);
+			g_gameConfig.Set(GameConfigKeys::UseMMod, true);
+			g_gameConfig.Set(GameConfigKeys::ModSpeed, g_gameConfig.GetFloat(GameConfigKeys::AutoResetToSpeed));
+			m_filterSelection->SetFiltersByIndex(0, 0);
+		}
 
 	}
 };
