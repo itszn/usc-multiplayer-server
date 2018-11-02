@@ -2,8 +2,6 @@
 #include "TransitionScreen.hpp"
 #include "Application.hpp"
 #include "Shared/Jobs.hpp"
-#include <GUI/GUI.hpp>
-#include <GUI/Spinner.hpp>
 #include "AsyncLoadable.hpp"
 
 class TransitionScreen_Impl : public TransitionScreen
@@ -33,7 +31,7 @@ public:
 		if(!m_loadingJob->IsFinished())
 			m_loadingJob->Terminate();
 
-		g_rootCanvas->Remove(m_loadingOverlay.As<GUIElementBase>());
+		//g_rootCanvas->Remove(m_loadingOverlay.As<GUIElementBase>());
 	}
 	virtual void Tick(float deltaTime)
 	{
@@ -57,27 +55,27 @@ public:
 		if(!m_tickableToLoad)
 			return false;
 
-		m_loadingOverlay = Ref<Canvas>(new Canvas());
+		//m_loadingOverlay = Ref<Canvas>(new Canvas());
 
-		// Fill screen with black
-		Panel* black = new Panel();
-		Canvas::Slot* blackSlot = m_loadingOverlay->Add(black->MakeShared());
-		blackSlot->anchor = Anchors::Full;
-		blackSlot->SetZOrder(0);
-		black->color = Color::Black;
+		//// Fill screen with black
+		//Panel* black = new Panel();
+		//Canvas::Slot* blackSlot = m_loadingOverlay->Add(black->MakeShared());
+		//blackSlot->anchor = Anchors::Full;
+		//blackSlot->SetZOrder(0);
+		//black->color = Color::Black;
 
-		Spinner* spinner = new Spinner(g_commonGUIStyle);
-		Canvas::Slot* spinnerSlot = m_loadingOverlay->Add(spinner->MakeShared());
-		spinnerSlot->anchor = Anchor(1.0f, 1.0f); // Right bottom corner
-		spinnerSlot->padding = Margin(-50, -50, 50, 50);
-		spinnerSlot->autoSizeX = true;
-		spinnerSlot->autoSizeY = true;
-		spinnerSlot->alignment = Vector2(1.0f, 1.0f);
-		spinnerSlot->SetZOrder(1);
-		
-		Canvas::Slot* slot = g_rootCanvas->Add(m_loadingOverlay.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
-		slot->SetZOrder(1000); // Loading screen on top of all things
+		//Spinner* spinner = new Spinner(g_commonGUIStyle);
+		//Canvas::Slot* spinnerSlot = m_loadingOverlay->Add(spinner->MakeShared());
+		//spinnerSlot->anchor = Anchor(1.0f, 1.0f); // Right bottom corner
+		//spinnerSlot->padding = Margin(-50, -50, 50, 50);
+		//spinnerSlot->autoSizeX = true;
+		//spinnerSlot->autoSizeY = true;
+		//spinnerSlot->alignment = Vector2(1.0f, 1.0f);
+		//spinnerSlot->SetZOrder(1);
+		//
+		//Canvas::Slot* slot = g_rootCanvas->Add(m_loadingOverlay.As<GUIElementBase>());
+		//slot->anchor = Anchors::Full;
+		//slot->SetZOrder(1000); // Loading screen on top of all things
 
 		m_loadingJob = JobBase::CreateLambda([&]()
 		{

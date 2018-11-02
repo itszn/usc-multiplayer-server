@@ -588,7 +588,7 @@ private:
 	{
 		diffIndex->scores.Sort([](ScoreIndex* a, ScoreIndex* b)
 		{
-			return a->score < b->score;
+			return a->score > b->score;
 		});
 	}
 

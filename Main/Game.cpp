@@ -24,10 +24,13 @@
 #include "SDL2/SDL_keycode.h"
 #endif
 
-#include "GUI/GUI.hpp"
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+}
+
 #include "GUI/HealthGauge.hpp"
-#include "GUI/SettingsBar.hpp"
-#include "GUI/PlayingSongInfo.hpp"
 
 // Try load map helper
 Ref<Beatmap> TryLoadMap(const String& path)
@@ -80,14 +83,9 @@ private:
     float m_modSpeed = 400;
 
 	// Game Canvas
-	Ref<Canvas> m_canvas;
 	Ref<HealthGauge> m_scoringGauge;
-	Ref<PlayingSongInfo> m_psi;
-	Ref<SettingsBar> m_settingsBar;
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Label> m_scoreText;
-
-	Graphics::Font m_fontDivlit;
+	//Ref<SettingsBar> m_settingsBar;
+	//Ref<Label> m_scoreText;
 
 	// Texture of the map jacket image, if available
 	Image m_jacketImage;
@@ -118,6 +116,9 @@ private:
 	// Current background visualization
 	Background* m_background = nullptr;
 	Background* m_foreground = nullptr;
+
+	// Lua state
+	lua_State* m_lua;
 
 	// Currently active timing point
 	const TimingPoint* m_currentTiming;
@@ -193,11 +194,12 @@ public:
 			delete m_background;
 		if (m_foreground)
 			delete m_foreground;
-
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 		// Save hispeed
 		g_gameConfig.Set(GameConfigKeys::HiSpeed, m_hispeed);
 
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>()); 
+		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>()); 
 
 		// In case the cursor was still hidden
 		g_gameWindow->SetCursorVisible(true); 
@@ -351,16 +353,10 @@ public:
 	}
 	virtual bool AsyncFinalize() override
 	{
-		if(m_jacketImage)
-		{
-			m_jacketTexture = TextureRes::Create(g_gl, m_jacketImage);
-			m_psi->SetJacket(m_jacketTexture);
-		}
+		g_application->LoadGauge((m_flags & GameFlags::Hard) != GameFlags::None);
 
 		if(!loader.Finalize())
 			return false;
-
-		m_scoringGauge->fillMaterial->opaque = false;
 
 		// Load particle material
 		m_particleSystem = ParticleSystemRes::Create(g_gl);
@@ -372,6 +368,36 @@ public:
 		/// TODO: Load this async
 		CheckedLoad(m_background = CreateBackground(this));
 		CheckedLoad(m_foreground = CreateBackground(this, true));
+
+		//Lua
+		CheckedLoad(m_lua = g_application->LoadScript("gameplay"));
+
+		auto pushStringToTable = [&](const char* name, String data)
+		{
+			lua_pushstring(m_lua, name);
+			lua_pushstring(m_lua, data.c_str());
+			lua_settable(m_lua, -3);
+		};
+		auto pushIntToTable = [&](const char* name, int data)
+		{
+			lua_pushstring(m_lua, name);
+			lua_pushinteger(m_lua, data);
+			lua_settable(m_lua, -3);
+		};
+
+		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
+		// Try to load beatmap jacket image
+		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
+		//Set gameplay table
+		{
+			lua_newtable(m_lua);
+			pushStringToTable("jacketPath", jacketPath);
+			pushStringToTable("title", mapSettings.title);
+			pushStringToTable("artist", mapSettings.artist);
+			pushIntToTable("difficulty", mapSettings.difficulty);
+			pushIntToTable("level", mapSettings.level);
+			lua_setglobal(m_lua, "gameplay");
+		}
 
 		// Do this here so we don't get input events while still loading
 		m_scoring.SetFlags(m_flags);
@@ -458,23 +484,6 @@ public:
 	}
 	virtual bool Init() override
 	{
-		// Add to root canvas to be rendered (this makes the HUD visible)
-		Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		if (g_aspectRatio < 640.f / 480.f)
-		{
-			Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-
-			Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-
-			Vector2 bottomRight = topLeft + canvasRes;
-			rootSlot->allowOverflow = true;
-			topLeft /= g_resolution;
-			bottomRight /= g_resolution;
-
-			rootSlot->anchor = Anchor(topLeft.x, Math::Min(topLeft.y, 0.20f), bottomRight.x, bottomRight.y);
-		}
-		else
-			rootSlot->anchor = Anchors::Full;
 		return true;
 	}
 
@@ -551,7 +560,7 @@ public:
 		m_camera.SetRollIntensity(m_rollIntensity);
 
 		// Set track zoom
-		if(!m_settingsBar->IsShown()) // Overridden settings?
+		if(false) // Overridden settings?
 		{
 			m_camera.pLaneZoom = m_playback.GetZoom(0);
 			m_camera.pLanePitch = m_playback.GetZoom(1);
@@ -628,7 +637,7 @@ public:
 		}
 		m_track->DrawOverlays(scoringRq);
 		float comboZoom = Math::Max(0.0f, (1.0f - (m_comboAnimation.SecondsAsFloat() / 0.2f)) * 0.5f);
-		m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
+		//m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
 
 		// Render queues
 		renderQueue.Process();
@@ -688,6 +697,15 @@ public:
 		// Render foreground
 		m_foreground->Render(deltaTime);
 
+		// Render Lua HUD
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+
 		// Render debug hud if enabled
 		if(m_renderDebugHUD)
 		{
@@ -699,156 +717,6 @@ public:
 	bool InitHUD()
 	{
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
-		CheckedLoad(m_fontDivlit = FontRes::Create(g_gl, "skins/" + skin + "/fonts/divlit_custom.ttf"));
-		m_guiStyle = g_commonGUIStyle;
-
-		// Game GUI canvas
-		m_canvas = Utility::MakeRef(new Canvas());
-
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-		Vector2 bottomRight = topLeft + canvasRes;
-		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
-		canvasRes.y = bottomRight.y - topLeft.y;
-
-		float scale = canvasRes.x / 640.f;
-
-
-		if (g_aspectRatio < 1.0)
-		{
-			//Top Fill
-			{
-				Panel* topPanel = new Panel();
-				loader.AddTexture(topPanel->texture, "fill_top.png");
-				topPanel->color = Color::White;
-				topPanel->imageFillMode = FillMode::Fit;
-				topPanel->imageAlignment = Vector2(0.5, 0.0);
-				Canvas::Slot* topSlot = m_canvas->Add(topPanel->MakeShared());
-
-				float topPanelTop = topLeft.y / canvasRes.y;
-
-				topSlot->anchor = Anchor(0.0, -topPanelTop, 1.0, 1.0);
-				topSlot->alignment = Vector2(0.5, 1.0);
-				topSlot->allowOverflow = true;
-			}
-
-			//Bottom Fill
-			{
-				Panel* bottomPanel = new Panel();
-				loader.AddTexture(bottomPanel->texture, "fill_bottom.png");
-				bottomPanel->color = Color::White;
-				bottomPanel->imageFillMode = FillMode::Fit;
-				bottomPanel->imageAlignment = Vector2(0.5, 1.0);
-				Canvas::Slot* bottomSlot = m_canvas->Add(bottomPanel->MakeShared());
-
-				float canvasBottom = topLeft.y + canvasRes.y;
-				float pixelsTobottom = g_resolution.y - canvasBottom;
-				float bottomPanelbottom = pixelsTobottom / canvasRes.y;
-
-				bottomSlot->anchor = Anchor(0.0, 0.0, 1.0, 1.0 + bottomPanelbottom);
-				bottomSlot->alignment = Vector2(0.5, 1.0);
-				bottomSlot->allowOverflow = true;
-			}
-		}
-
-		{
-			m_scoringGauge = Utility::MakeRef(new HealthGauge());
-			String gaugePath = "gauges/normal/";
-			if ((m_flags & GameFlags::Hard) != GameFlags::None)
-			{
-				gaugePath = "gauges/hard/";
-				m_scoringGauge->colorBorder = 0.3f;
-				m_scoringGauge->lowerColor = Colori(200,50,0);
-				m_scoringGauge->upperColor = Colori(255,100,0);
-			}
-
-			// Gauge
-			loader.AddTexture(m_scoringGauge->fillTexture, gaugePath + "gauge_fill.png");
-			loader.AddTexture(m_scoringGauge->frontTexture, gaugePath + "gauge_front.png");
-			loader.AddTexture(m_scoringGauge->backTexture, gaugePath + "gauge_back.png");
-			loader.AddTexture(m_scoringGauge->maskTexture, gaugePath + "gauge_mask.png");
-			loader.AddMaterial(m_scoringGauge->fillMaterial, "gauge");
-
-			Canvas::Slot* slot = m_canvas->Add(m_scoringGauge.As<GUIElementBase>());
-			slot->anchor = Anchor(0.0, 0.25, 1.0, 0.8);
-			slot->alignment = Vector2(1.0f, 0.5f);
-			slot->autoSizeX = true;
-			slot->autoSizeY = true;
-		}
-
-		// Setting bar
-		{
-			uint8 portrait = g_aspectRatio > 1.0f ? 0 : 1;
-
-			SettingsBar* sb = new SettingsBar(m_guiStyle);
-			m_settingsBar = Ref<SettingsBar>(sb);
-			sb->AddSetting(&m_camera.pLaneZoom, -1.0f, 1.0f, "Bottom Zoom");
-			sb->AddSetting(&m_camera.pLanePitch, -1.0f, 1.0f, "Top Zoom");
-			sb->AddSetting(&m_camera.pLaneBaseRoll, -1.0f, 1.0f, "Track roll");
-			sb->AddSetting(m_camera.pitchOffsets + portrait, 0.0f, 1.0f, "Crit Line Height");
-			sb->AddSetting(m_camera.fovs + portrait, 0.0f, 180.0f, "FOV");
-			sb->AddSetting(m_camera.baseRadius + portrait, 0.0f, 2.0f, "Base distance to track");
-			sb->AddSetting(m_camera.basePitch + portrait, 0.0f, -180.0f, "Base pitch");
-			sb->AddSetting(&(m_track->trackLength), 4.0f, 20.0f, "Track Length");
-			sb->AddSetting(&m_hispeed, 0.25f, 16.0f, "HiSpeed multiplier");
-			sb->AddSetting(&m_scoring.laserDistanceLeniency, 1.0f / 32.0f, 1.0f, "Laser Distance Leniency");
-			sb->AddSetting(&m_shakeAmount, 0.3, 10.0f, "Screen Shake Amount");
-			sb->AddSetting(&m_shakeDuration, 0.0, 1.0f, "Screen Shake Duration");
-			sb->AddSetting(&m_camera.cameraShakeX, -3.0f, 3.0f, "Screen Shake X");
-			sb->AddSetting(&m_camera.cameraShakeY, -3.0f, 3.0f, "Screen Shake Y");
-			sb->AddSetting(&m_camera.cameraShakeZ, -3.0f, 3.0f, "Screen Shake Z");
-			sb->AddSetting(m_audioPlayback.GetPlaybackSpeedPtr(), 0.01f, 2.0f, "Playback Speed");
-			m_settingsBar->SetShow(false);
-
-			Canvas::Slot* settingsSlot = m_canvas->Add(sb->MakeShared());
-			settingsSlot->anchor = Anchor(0.75f, 0.0f, 1.0f, 1.0f);
-			settingsSlot->autoSizeX = false;
-			settingsSlot->autoSizeY = false;
-			settingsSlot->SetZOrder(2);
-		}
-
-		// Score
-		{
-			Panel* scorePanel = new Panel();
-			loader.AddTexture(scorePanel->texture, "scoring_base.png");
-			scorePanel->color = Color::White;
-			scorePanel->imageFillMode = FillMode::Fit;
-
-			Canvas::Slot* scoreSlot = m_canvas->Add(scorePanel->MakeShared());
-			scoreSlot->anchor = Anchor(0.75, 0.0, 1.0, 1.0);
-			scoreSlot->alignment = Vector2(1.0f, 0.0f);
-			scoreSlot->autoSizeX = true;
-			scoreSlot->autoSizeY = true;
-
-			m_scoreText = Ref<Label>(new Label());
-			m_scoreText->SetFontSize(32 * scale);
-			m_scoreText->SetText(Utility::WSprintf(L"%08d", 0));
-			m_scoreText->SetFont(m_fontDivlit);
-			m_scoreText->SetTextOptions(FontRes::Monospace);
-			// Padding for this specific font
-			Margin textPadding = Margin(0, 10, 0, 0);
-
-			Panel::Slot* slot = scorePanel->SetContent(m_scoreText.As<GUIElementBase>());
-			slot->padding = (Margin(20, 0, 10, 30) + textPadding) * scale;
-
-			slot->alignment = Vector2(0.5f, 0.5f);
-		}
-
-
-		// Song info
-		{
-			PlayingSongInfo* psi = new PlayingSongInfo(*this);
-			m_psi = Ref<PlayingSongInfo>(psi);
-			loader.AddMaterial(m_psi->progressMaterial, "progressBar");
-			Canvas::Slot* psiSlot = m_canvas->Add(psi->MakeShared());
-			psiSlot->autoSizeY = true;
-			psiSlot->autoSizeX = true;
-			psiSlot->anchor = Anchors::TopLeft;
-			psiSlot->alignment = Vector2(0.0f, 0.0f);
-			psiSlot->padding = Margin(10, 10, 0, 0);
-
-		}
-
 		return true;
 	}
 
@@ -986,8 +854,6 @@ public:
 		}
 
 		// Update scoring gauge
-		m_scoringGauge->rate = m_scoring.currentGauge;
-
 
 		int32 gaugeSampleSlot = playbackPositionMs;
 		gaugeSampleSlot /= m_gaugeSampleRate;
@@ -996,13 +862,6 @@ public:
 
 		// Get the current timing point
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
-
-
-		// Update song info display
-		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
-		m_psi->SetProgress((float)playbackPositionMs / (*lastObj)->time);
-		m_psi->SetHiSpeed(m_hispeed);
-		m_psi->SetBPM((float)m_currentTiming->GetBPM());
 
 
 		// Update hispeed
@@ -1022,7 +881,33 @@ public:
 			}
 		}
 
+		// Update song info display
+		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
 
+		//set lua
+		lua_getglobal(m_lua, "gameplay");
+		//progress
+		lua_pushstring(m_lua, "progress");
+		lua_pushnumber(m_lua, Math::Clamp((float)playbackPositionMs / (*lastObj)->time,0.f,1.f));
+		lua_settable(m_lua, -3);
+		//hispeed
+		lua_pushstring(m_lua, "hispeed");
+		lua_pushnumber(m_lua, m_hispeed);
+		lua_settable(m_lua, -3);
+		//bpm
+		lua_pushstring(m_lua, "bpm");
+		lua_pushnumber(m_lua, m_currentTiming->GetBPM());
+		lua_settable(m_lua, -3);
+		//gauge
+		lua_pushstring(m_lua, "gauge");
+		lua_pushnumber(m_lua, m_scoring.currentGauge);
+		lua_settable(m_lua, -3);
+		//combo state
+		lua_pushstring(m_lua, "comboState");
+		lua_pushnumber(m_lua, m_scoring.comboState);
+		lua_settable(m_lua, -3);
+
+		lua_setglobal(m_lua, "gameplay");
 
 		m_lastMapTime = playbackPositionMs;
 		
@@ -1151,20 +1036,22 @@ public:
 	virtual void RenderDebugHUD(float deltaTime)
 	{
 		// Render debug overlay elements
-		RenderQueue& debugRq = g_guiRenderer->Begin();
+		//RenderQueue& debugRq = g_guiRenderer->Begin();
 		auto RenderText = [&](const String& text, const Vector2& pos, const Color& color = Color::White)
 		{
-			return g_guiRenderer->RenderText(text, pos, color);
+			g_application->FastText(text, pos.x, pos.y, 12, 0);
+			return Vector2(0, 12);
 		};
 
-		Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
-		Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
-		Vector2 bottomRight = topLeft + canvasRes;
-		topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
+		//Vector2 canvasRes = GUISlotBase::ApplyFill(FillMode::Fit, Vector2(640, 480), Rect(0, 0, g_resolution.x, g_resolution.y)).size;
+		//Vector2 topLeft = Vector2(g_resolution / 2 - canvasRes / 2);
+		//Vector2 bottomRight = topLeft + canvasRes;
+		//topLeft.y = Math::Min(topLeft.y, g_resolution.y * 0.2f);
 
 		const BeatmapSettings& bms = m_beatmap->GetMapSettings();
 		const TimingPoint& tp = m_playback.GetCurrentTimingPoint();
-		Vector2 textPos = topLeft + Vector2i(5, 0);
+		//Vector2 textPos = topLeft + Vector2i(5, 0);
+		Vector2 textPos = Vector2i(5, 0);
 		textPos.y += RenderText(bms.title, textPos).y;
 		textPos.y += RenderText(bms.artist, textPos).y;
 		textPos.y += RenderText(Utility::Sprintf("%.2f FPS", g_application->GetRenderFPS()), textPos).y;
@@ -1229,7 +1116,7 @@ public:
 			textPos.y += RenderText(text, textPos, c).y;
 		}
 
-		g_guiRenderer->End();
+		//g_guiRenderer->End();
 	}
 
 	void OnLaserSlamHit(LaserObjectState* object)
@@ -1277,8 +1164,15 @@ public:
 
 			if (rating == ScoreHitRating::Good)
 			{
-				m_track->timedHitEffect->late = late;
-				m_track->timedHitEffect->Reset(0.75f);
+				//m_track->timedHitEffect->late = late;
+				//m_track->timedHitEffect->Reset(0.75f);
+				lua_getglobal(m_lua, "near_hit");
+				lua_pushboolean(m_lua, late);
+				if (lua_pcall(m_lua, 1, 0, 0) != 0)
+				{
+					Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+					assert(false);
+				}
 			}
 
 			// Create hit effect particle
@@ -1305,13 +1199,22 @@ public:
 	void OnComboChanged(uint32 newCombo)
 	{
 		m_comboAnimation.Restart();
+		lua_getglobal(m_lua, "update_combo");
+		lua_pushinteger(m_lua, newCombo);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 	}
 	void OnScoreChanged(uint32 newScore)
 	{
-		// Update score text
-		if(m_scoreText)
+		lua_getglobal(m_lua, "update_score");
+		lua_pushinteger(m_lua, newScore);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			m_scoreText->SetText(Utility::WSprintf(L"%08d", newScore));
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
 		}
 	}
 
@@ -1398,6 +1301,13 @@ public:
 		if (m_scoring.timeSinceLaserUsed[object->index] > 3.0f)
 		{
 			m_track->SendLaserAlert(object->index);
+			lua_getglobal(m_lua, "laser_alert");
+			lua_pushboolean(m_lua, object->index == 1);
+			if (lua_pcall(m_lua, 1, 0, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				assert(false);
+			}
 		}
 	}
 
@@ -1433,12 +1343,16 @@ public:
 		else if(key == SDLK_F8)
 		{
 			m_renderDebugHUD = !m_renderDebugHUD;
-			m_psi->visibility = m_renderDebugHUD ? Visibility::Collapsed : Visibility::Visible;
+			//m_psi->visibility = m_renderDebugHUD ? Visibility::Collapsed : Visibility::Visible;
 		}
 		else if(key == SDLK_TAB)
 		{
-			g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
-			m_settingsBar->SetShow(!m_settingsBar->IsShown());
+			//g_gameWindow->SetCursorVisible(!m_settingsBar->IsShown());
+			//m_settingsBar->SetShow(!m_settingsBar->IsShown());
+		}
+		else if(key == SDLK_F9)
+		{
+			g_application->ReloadScript("gameplay", m_lua);
 		}
 	}
 	void m_OnButtonPressed(Input::Button buttonCode)

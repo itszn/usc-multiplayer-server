@@ -306,9 +306,9 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	{
 		m_laserTrackBuilder[i]->Update(m_lastMapTime);
 
-		laserAlertOpacity[i] = (-pow(m_alertTimer[i], 2.0f) + (1.5f * m_alertTimer[i])) * 5.0f;
-		laserAlertOpacity[i] = Math::Clamp<float>(laserAlertOpacity[i], 0.0f, 1.0f);
-		m_alertTimer[i] += deltaTime;
+		//laserAlertOpacity[i] = (-pow(m_alertTimer[i], 2.0f) + (1.5f * m_alertTimer[i])) * 5.0f;
+		//laserAlertOpacity[i] = Math::Clamp<float>(laserAlertOpacity[i], 0.0f, 1.0f);
+		//m_alertTimer[i] += deltaTime;
 	}
 
 
@@ -513,7 +513,7 @@ void Track::DrawOverlays(class RenderQueue& rq)
 		objectSize.y = laserPointerTexture->CalculateHeight(objectSize.x);
 		DrawSprite(rq, Vector3(pos - trackWidth * 0.5f, 0.0f, 0.0f), objectSize, laserPointerTexture, laserColors[i].WithAlpha(laserPointerOpacity[i]));
 		/// TODO: Draw alerts on HUD instead of in game world.
-		DrawSprite(rq, Vector3(-trackWidth + trackWidth * i * 2.0f, 0.1f, 0.0f), objectSize * 3, laserAlertTextures[i], laserColors[i].WithAlpha(laserAlertOpacity[i]), 0.0f);
+		// DrawSprite(rq, Vector3(-trackWidth + trackWidth * i * 2.0f, 0.1f, 0.0f), objectSize * 3, laserAlertTextures[i], laserColors[i].WithAlpha(laserAlertOpacity[i]), 0.0f);
 	}
 }
 void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffset /*= 0.05f*/, float widthScale /*= 1.0f*/)

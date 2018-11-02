@@ -5,7 +5,6 @@
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
 #include "Input.hpp"
-#include <GUI/GUI.hpp>
 #include "Game.hpp"
 #include "TransitionScreen.hpp"
 #include "GameConfig.hpp"
@@ -16,6 +15,100 @@
 #else
 #include "SDL2/SDL_keycode.h"
 #endif
+extern "C" {
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
+#include <iterator>
+
+class TextInput
+{
+public:
+	WString input;
+	WString composition;
+	uint32 backspaceCount;
+	bool active = false;
+	Delegate<const WString&> OnTextChanged;
+
+	~TextInput()
+	{
+		g_gameWindow->OnTextInput.RemoveAll(this);
+		g_gameWindow->OnTextComposition.RemoveAll(this);
+		g_gameWindow->OnKeyRepeat.RemoveAll(this);
+		g_gameWindow->OnKeyPressed.RemoveAll(this);
+	}
+
+	void OnTextInput(const WString& wstr)
+	{
+		input += wstr;
+		OnTextChanged.Call(input);
+	}
+	void OnTextComposition(const Graphics::TextComposition& comp)
+	{
+		composition = comp.composition;
+	}
+	void OnKeyRepeat(int32 key)
+	{
+		if (key == SDLK_BACKSPACE)
+		{
+			if (input.empty())
+				backspaceCount++; // Send backspace
+			else
+			{
+				auto it = input.end(); // Modify input string instead
+				--it;
+				input.erase(it);
+				OnTextChanged.Call(input);
+			}
+		}
+	}
+	void OnKeyPressed(int32 key)
+	{
+		if (key == SDLK_v)
+		{
+			if (g_gameWindow->GetModifierKeys() == ModifierKeys::Ctrl)
+			{
+				if (g_gameWindow->GetTextComposition().composition.empty())
+				{
+					// Paste clipboard text into input buffer
+					input += g_gameWindow->GetClipboard();
+				}
+			}
+		}
+	}
+	void SetActive(bool state)
+	{
+		active = state;
+		if(state)
+		{
+			SDL_StartTextInput();
+			g_gameWindow->OnTextInput.Add(this, &TextInput::OnTextInput);
+			g_gameWindow->OnTextComposition.Add(this, &TextInput::OnTextComposition);
+			g_gameWindow->OnKeyRepeat.Add(this, &TextInput::OnKeyRepeat);
+			g_gameWindow->OnKeyPressed.Add(this, &TextInput::OnKeyPressed);
+		}
+		else
+		{
+			SDL_StopTextInput();
+			g_gameWindow->OnTextInput.RemoveAll(this);
+			g_gameWindow->OnTextComposition.RemoveAll(this);
+			g_gameWindow->OnKeyRepeat.RemoveAll(this);
+			g_gameWindow->OnKeyPressed.RemoveAll(this);
+		}
+	}
+	void Reset()
+	{
+		backspaceCount = 0;
+		input.clear();
+	}
+	void Tick()
+	{
+
+	}
+};
+
+
 
 /*
 	Song preview player with fade-in/out
@@ -98,34 +191,60 @@ const float PreviewPlayer::m_fadeDuration = 0.5f;
 /*
 	Song selection wheel
 */
-class SelectionWheel : public Canvas
+class SelectionWheel
 {
 	// keyed on SongSelectIndex::id
-	Map<int32, Ref<SongSelectItem>> m_guiElements;
 	Map<int32, SongSelectIndex> m_maps;
 	Map<int32, SongSelectIndex> m_mapFilter;
 	bool m_filterSet = false;
 
 	// Currently selected selection ID
 	int32 m_currentlySelectedId = 0;
-	// Currently selected map ID
+	// Currently selected selection ID
 	int32 m_currentlySelectedMapId = 0;
-	// Currently selected sub-widget
-	Ref<SongSelectItem> m_currentSelection;
 
 	// Current difficulty index
 	int32 m_currentlySelectedDiff = 0;
 
+	// current lua map index
+	uint32 m_currentlySelectedLuaMapIndex = 0;
+
 	// Style to use for everything song select related
-	Ref<SongSelectStyle> m_style;
+	lua_State* m_lua;
 
 public:
-	SelectionWheel(Ref<SongSelectStyle> style) : m_style(style)
+	SelectionWheel()
 	{
+	}
+	bool Init()
+	{
+		CheckedLoad(m_lua = g_application->LoadScript("songselect/songwheel"));
+		lua_newtable(m_lua);
+		lua_setglobal(m_lua, "songwheel");
+		return true;
+	}
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/songwheel", m_lua);
+
+		m_SetLuaMapIndex();
+		m_SetLuaDiffIndex();
+	}
+	virtual void Render(float deltaTime)
+	{
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 	}
 	~SelectionWheel()
 	{
 		g_gameConfig.Set(GameConfigKeys::LastSelected, m_currentlySelectedMapId);
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 	void OnMapsAdded(Vector<MapIndex*> maps)
 	{
@@ -134,8 +253,8 @@ public:
 			SongSelectIndex index(m);
 			m_maps.Add(index.id, index);
 		}
-		if(!m_currentSelection)
-			AdvanceSelection(0);
+		AdvanceSelection(0);
+		m_SetLuaMaps();
 	}
 	void OnMapsRemoved(Vector<MapIndex*> maps)
 	{
@@ -144,18 +263,6 @@ public:
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
 			SongSelectIndex index = m_maps.at(m->selectId * 10);
 			m_maps.erase(index.id);
-
-			auto it = m_guiElements.find(index.id);
-			if(it != m_guiElements.end())
-			{
-				// Clear selection if a removed item was selected
-				if(m_currentSelection == it->second)
-					m_currentSelection.Release();
-
-				// Remove this item from the canvas that displays the items
-				Remove(it->second.As<GUIElementBase>());
-				m_guiElements.erase(it);
-			}
 		}
 		if(!m_maps.Contains(m_currentlySelectedId))
 		{
@@ -168,22 +275,10 @@ public:
 		{
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
 			SongSelectIndex index = m_maps.at(m->selectId * 10);
-
-			auto it = m_guiElements.find(index.id);
-			if(it != m_guiElements.end())
-			{
-				it->second->SetIndex(index.GetMap());
-			}
 		}
 	}
 	void OnMapsCleared(Map<int32, MapIndex*> newList)
 	{
-		m_currentSelection.Release();
-		for(auto g : m_guiElements)
-		{
-			Remove(g.second.As<GUIElementBase>());
-		}
-		m_guiElements.clear();
 		m_filterSet = false;
 		m_mapFilter.clear();
 		m_maps.clear();
@@ -199,6 +294,7 @@ public:
 			// TODO(local): Go through everything in this file and try to clean
 			//  up all calls to things like this, to keep it from updating like 7 times >.>
 			//AdvanceSelection(0);
+			m_SetLuaMaps();
 		}
 	}
 	void SelectRandom()
@@ -229,88 +325,13 @@ public:
 		auto it = srcCollection.find(newIndex);
 		if(it != srcCollection.end())
 		{
-			const float initialSpacing = 0.65f * m_style->frameMain->GetSize().y;
-			const float spacing = 0.8f * m_style->frameSub->GetSize().y;
-			const Anchor anchor = Anchor(0.0f, 0.5f, 1.0f, 0.5f);
-			static const int32 numItems = 10;
-			m_currentlySelectedMapId = it->second.GetMap()->id;
-			int32 istart;
-			for(istart = 0; istart > -numItems;)
-			{
-				if(it == srcCollection.begin())
-					break;
-				it--;
-				istart--;
-			}
+			m_OnMapSelected(it->second);
 
-			for(int32 i = istart; i <= numItems; i++)
-			{
-				if(it != srcCollection.end())
-				{
-					SongSelectIndex index = it->second;
-					int32 id = index.id;
-
-					visibleIndices.Add(id);
-
-					// Add a new map slot
-					bool newItem = m_guiElements.find(id) == m_guiElements.end();
-					Ref<SongSelectItem> item = m_GetMapGUIElement(index);
-					float offset = 0;
-					if(i != 0)
-					{
-						offset = initialSpacing * Math::Sign(i) +
-							spacing * (i - Math::Sign(i));
-					}
-					Canvas::Slot* slot = Add(item.As<GUIElementBase>());
-
-					int32 z = -abs(i);
-					slot->SetZOrder(z);
-
-					slot->anchor = anchor;
-					slot->autoSizeX = true;
-					slot->autoSizeY = true;
-					slot->alignment = Vector2(0, 0.5f);
-					if(newItem)
-					{
-						// Hard set target position
-						slot->offset.pos = Vector2(0, offset);
-						slot->offset.size.x = z * 50.0f;
-					}
-					else
-					{
-						// Animate towards target position
-						item->AddAnimation(Ref<IGUIAnimation>(
-							new GUIAnimation<Vector2>(&slot->offset.pos, Vector2(0, offset), 0.1f)), true);
-						item->AddAnimation(Ref<IGUIAnimation>(
-							new GUIAnimation<float>(&slot->offset.size.x, z * 50.0f, 0.1f)), true);
-					}
-
-					item->fade = 1.0f - ((float)abs(i) / (float)numItems);
-					item->innerOffset = item->fade * 100.0f;
-
-					if(i == 0)
-					{
-						m_currentlySelectedId = newIndex;
-						m_OnMapSelected(index);
-					}
-
-					it++;
-				}
-			}
+			//set index in lua
+			m_currentlySelectedLuaMapIndex = std::distance(srcCollection.begin(), it);
+			m_SetLuaMapIndex();
 		}
 		m_currentlySelectedId = newIndex;
-		
-		// Cleanup invisible elements
-		for(auto it = m_guiElements.begin(); it != m_guiElements.end();)
-		{
-			if(!visibleIndices.Contains(it->first))
-			{
-				Remove(it->second.As<GUIElementBase>());
-				it = m_guiElements.erase(it);
-				continue;
-			}
-			it++;
-		}
 	}
 	void AdvanceSelection(int32 offset)
 	{
@@ -318,14 +339,6 @@ public:
 		auto it = srcCollection.find(m_currentlySelectedId);
 		if(it == srcCollection.end())
 		{
-			if(srcCollection.empty())
-			{
-				// Remove all elements, empty
-				m_currentSelection.Release();
-				Clear();
-				m_guiElements.clear();
-				return;
-			}
 			it = srcCollection.begin();
 		}
 		for(uint32 i = 0; i < (uint32)abs(offset); i++)
@@ -348,10 +361,22 @@ public:
 			SelectMap(it->first);
 		}
 	}
+	void AdvancePage(int32 direction)
+	{
+		lua_getglobal(m_lua, "get_page_size");
+		if (lua_pcall(m_lua, 0, 1, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+		int ret = luaL_checkinteger(m_lua, 0);
+		lua_settop(m_lua, 0);
+		AdvanceSelection(ret * direction);
+	}
 	void SelectDifficulty(int32 newDiff)
 	{
-		m_currentSelection->SetSelectedDifficulty(newDiff);
 		m_currentlySelectedDiff = newDiff;
+		m_SetLuaDiffIndex();
 
 		Map<int32, SongSelectIndex> maps = m_SourceCollection();
 		SongSelectIndex* map = maps.Find(m_currentlySelectedId);
@@ -362,8 +387,6 @@ public:
 	}
 	void AdvanceDifficultySelection(int32 offset)
 	{
-		if(!m_currentSelection)
-			return;
 		Map<int32, SongSelectIndex> maps = m_SourceCollection();
 		SongSelectIndex map = maps[m_currentlySelectedId];
 		int32 newIdx = m_currentlySelectedDiff + offset;
@@ -385,6 +408,7 @@ public:
 			m_mapFilter.Add(index.id, index);
 		}
 		m_filterSet = true;
+		m_SetLuaMaps();
 		AdvanceSelection(0);
 	}
 	void SetFilter(SongFilter* filter[2])
@@ -400,6 +424,7 @@ public:
 				isFiltered = true;
 		}
 		m_filterSet = isFiltered;
+		m_SetLuaMaps();
 		AdvanceSelection(0);
 	}
 	void ClearFilter()
@@ -408,6 +433,7 @@ public:
 		{
 			m_filterSet = false;
 			AdvanceSelection(0);
+			m_SetLuaMaps();
 		}
 	}
 
@@ -425,35 +451,119 @@ public:
 			return map->GetDifficulties()[m_currentlySelectedDiff];
 		return nullptr;
 	}
+	void SetSearchFieldLua(Ref<TextInput> search)
+	{
+		lua_getglobal(m_lua, "songwheel");
+		//progress
+		lua_pushstring(m_lua, "searchText");
+		lua_pushstring(m_lua, Utility::ConvertToUTF8(search->input).c_str());
+		lua_settable(m_lua, -3);
+		//hispeed
+		lua_pushstring(m_lua, "searchInputActive");
+		lua_pushboolean(m_lua, search->active);
+		lua_settable(m_lua, -3);
+		//set global
+		lua_getglobal(m_lua, "songwheel");
+	}
 
 private:
 	const Map<int32, SongSelectIndex>& m_SourceCollection() const
 	{
 		return m_filterSet ? m_mapFilter : m_maps;
 	}
-	Ref<SongSelectItem> m_GetMapGUIElement(SongSelectIndex index)
+	void m_PushStringToTable(const char* name, const char* data)
 	{
-		auto it = m_guiElements.find(index.id);
-		if(it != m_guiElements.end())
-			return it->second;
-
-		Ref<SongSelectItem> newItem = Ref<SongSelectItem>(new SongSelectItem(m_style));
-
-		// Send first map as metadata settings
-		const BeatmapSettings& firstSettings = index.GetDifficulties()[0]->settings;
-		newItem->SetIndex(index);
-		m_guiElements.Add(index.id, newItem);
-		return newItem;
+		lua_pushstring(m_lua, name);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushFloatToTable(const char* name, float data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushnumber(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushIntToTable(const char* name, int data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushinteger(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_SetLuaDiffIndex()
+	{
+		lua_getglobal(m_lua, "set_diff");
+		lua_pushinteger(m_lua, m_currentlySelectedDiff + 1);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+	}
+	void m_SetLuaMapIndex()
+	{
+		lua_getglobal(m_lua, "set_index");
+		lua_pushinteger(m_lua, m_currentlySelectedLuaMapIndex + 1);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+	}
+	void m_SetLuaMaps()
+	{
+		lua_getglobal(m_lua, "songwheel");
+		lua_pushstring(m_lua, "songs");
+		lua_newtable(m_lua);
+		int songIndex = 0;
+		for (auto& song : m_SourceCollection())
+		{
+			lua_pushinteger(m_lua, ++songIndex);
+			lua_newtable(m_lua);
+			m_PushStringToTable("title", song.second.GetDifficulties()[0]->settings.title.c_str());
+			m_PushStringToTable("artist", song.second.GetDifficulties()[0]->settings.artist.c_str());
+			m_PushStringToTable("bpm", song.second.GetDifficulties()[0]->settings.bpm.c_str());
+			m_PushIntToTable("id", song.second.GetMap()->id);
+			m_PushStringToTable("path", song.second.GetMap()->path.c_str());
+			int diffIndex = 0;
+			lua_pushstring(m_lua, "difficulties");
+			lua_newtable(m_lua);
+			for (auto& diff : song.second.GetDifficulties())
+			{
+				lua_pushinteger(m_lua, ++diffIndex);
+				lua_newtable(m_lua);
+				auto settings = diff->settings;
+				m_PushStringToTable("jacketPath", Path::Normalize(song.second.GetMap()->path + "/" + settings.jacketPath).c_str());
+				m_PushIntToTable("level", settings.level);
+				m_PushIntToTable("difficulty", settings.difficulty);
+				m_PushIntToTable("id", diff->id);
+				m_PushStringToTable("effector", settings.effector.c_str());
+				lua_pushstring(m_lua, "scores");
+				lua_newtable(m_lua);
+				int scoreIndex = 0;
+				for (auto& score : diff->scores)
+				{
+					lua_pushinteger(m_lua, ++scoreIndex);
+					lua_newtable(m_lua);
+					m_PushFloatToTable("gauge", score->gauge);
+					m_PushIntToTable("flags", score->gameflags);
+					m_PushIntToTable("score", score->score);
+					m_PushIntToTable("perfects", score->crit);
+					m_PushIntToTable("goods", score->almost);
+					m_PushIntToTable("misses", score->miss);
+					lua_settable(m_lua, -3);
+				}
+				lua_settable(m_lua, -3);
+				lua_settable(m_lua, -3);
+			}
+			lua_settable(m_lua, -3);
+			lua_settable(m_lua, -3);
+		}
+		lua_settable(m_lua, -3);
+		lua_setglobal(m_lua, "songwheel");
 	}
 	// TODO(local): pretty sure this should be m_OnIndexSelected, and we should filter a call to OnMapSelected
 	void m_OnMapSelected(SongSelectIndex index)
 	{
-		// Update compact mode selection views
-		if(m_currentSelection)
-			m_currentSelection->SwitchCompact(true);
-		m_currentSelection = m_guiElements[index.id];
-		m_currentSelection->SwitchCompact(false);
-
 		//if(map && map->id == m_currentlySelectedId)
 		//	return;
 
@@ -466,6 +576,7 @@ private:
 		SelectDifficulty(selectDiff);
 
 		OnMapSelected.Call(index.GetMap());
+		m_currentlySelectedMapId = index.GetMap()->id;
 	}
 };
 
@@ -473,10 +584,14 @@ private:
 /*
 	Filter selection element
 */
-class FilterSelection : public Canvas
+class FilterSelection
 {
 public:
 	FilterSelection(Ref<SelectionWheel> selectionWheel) : m_selectionWheel(selectionWheel)
+	{
+
+	}
+	bool Init()
 	{
 		SongFilter* lvFilter = new SongFilter();
 		SongFilter* flFilter = new SongFilter();
@@ -487,6 +602,23 @@ public:
 		{
 			AddFilter(new LevelFilter(i), FilterType::Level);
 		}
+		CheckedLoad(m_lua = g_application->LoadScript("songselect/filterwheel"));
+		return true;
+	}
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/filterwheel", m_lua);
+	}
+	virtual void Render(float deltaTime)
+	{
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		lua_pushboolean(m_lua, Active);
+		if (lua_pcall(m_lua, 2, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 	}
 	~FilterSelection()
 	{
@@ -494,7 +626,8 @@ public:
 		g_gameConfig.Set(GameConfigKeys::LevelFilter, m_currentLevelSelection);
 		m_levelFilters.clear();
 		m_folderFilters.clear();
-		m_guiElements.clear();
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 
 	bool Active = false;
@@ -516,60 +649,30 @@ public:
 			m_levelFilters.Add(filter);
 		else
 			m_folderFilters.Add(filter);
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(Utility::ConvertToWString(filter->GetName()));
-		if (!m_selectingFolders && type == FilterType::Folder)
-			label->color.w = 0.0f;
-		else if (m_selectingFolders && type == FilterType::Level)
-			label->color.w = 0.0f;
-		m_guiElements[filter] = label;
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::MiddleLeft;
-		labelSlot->alignment = Vector2(0.f, 0.5f);
 	}
 
 	void SelectFilter(SongFilter* filter, FilterType type)
 	{
 		uint8 t = type == FilterType::Folder ? 0 : 1;
-
-		if (m_currentFilters[t])
-			m_guiElements[m_currentFilters[t]]->SetText(Utility::ConvertToWString(m_currentFilters[t]->GetName()));
-		m_guiElements[filter]->SetText(Utility::ConvertToWString(Utility::Sprintf("->%s", filter->GetName())));
-
+		int index = 0;
 		if (type == FilterType::Folder)
 		{
-			for (size_t i = 0; i < m_folderFilters.size(); i++)
-			{
-				Vector2 coordinate = Vector2(50, 0);
-				SongFilter* songFilter = m_folderFilters[i];
-
-				coordinate.y = ((int)i - (int)m_currentFolderSelection) * 40.f;
-				coordinate.x -= ((int)m_currentFolderSelection - i) * ((int)m_currentFolderSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
-				AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-			}
+			index = std::find(m_folderFilters.begin(), m_folderFilters.end(), filter) - m_folderFilters.begin();
 		}
 		else
 		{
-			g_gameConfig.Set(GameConfigKeys::LevelFilter, int32(std::find(m_levelFilters.begin(), m_levelFilters.end(), filter) - m_levelFilters.begin()));
-			for (size_t i = 0; i < m_levelFilters.size(); i++)
-			{
-				Vector2 coordinate = Vector2(50, 0);
-				SongFilter* songFilter = m_levelFilters[i];
-
-				coordinate.y = ((int)i - (int)m_currentLevelSelection) * 40.f;
-				coordinate.x -= ((int)m_currentLevelSelection - i) * ((int)m_currentLevelSelection - i) * 1.5;
-				Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[songFilter]->slot;
-				AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
-			}
+			index = std::find(m_levelFilters.begin(), m_levelFilters.end(), filter) - m_levelFilters.begin();
 		}
 
+
+		lua_getglobal(m_lua, "set_selection");
+		lua_pushnumber(m_lua, index + 1);
+		lua_pushboolean(m_lua, type == FilterType::Folder);
+		if (lua_pcall(m_lua, 2, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
 		m_currentFilters[t] = filter;
 		m_selectionWheel->SetFilter(m_currentFilters);
 	}
@@ -624,24 +727,18 @@ public:
 			if(filter->GetFiltered(Map<int32, SongSelectIndex>()).size() > 0)
 				AddFilter(filter, FilterType::Folder);
 		}
+		m_SetLuaTable();
 	}
 
 	void ToggleSelectionMode()
 	{
 		m_selectingFolders = !m_selectingFolders;
-		for (auto flFilter : m_folderFilters)
+		lua_getglobal(m_lua, "set_mode");
+		lua_pushboolean(m_lua, m_selectingFolders);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			if (m_selectingFolders)
-				m_guiElements[flFilter]->color.w = 1.0f;
-			else
-				m_guiElements[flFilter]->color.w = 0.0f;
-		}
-		for (auto lvFilter : m_levelFilters)
-		{
-			if (!m_selectingFolders)
-				m_guiElements[lvFilter]->color.w = 1.0f;
-			else
-				m_guiElements[lvFilter]->color.w = 0.0f;
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
 		}
 	}
 
@@ -651,59 +748,98 @@ public:
 	}
 
 private:
+
+	void m_PushStringToTable(const char* name, const char* data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushStringToArray(int index, const char* data)
+	{
+		lua_pushinteger(m_lua, index);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+
+	void m_SetLuaTable()
+	{
+		lua_newtable(m_lua);
+		{
+			lua_pushstring(m_lua, "level");
+			lua_newtable(m_lua); //level filters
+			{
+				for (size_t i = 0; i < m_levelFilters.size(); i++)
+				{
+					m_PushStringToArray(i + 1, m_levelFilters[i]->GetName().c_str());
+				}
+			}
+			lua_settable(m_lua, -3);
+
+			lua_pushstring(m_lua, "folder");
+			lua_newtable(m_lua); //folder filters
+			{
+				for (size_t i = 0; i < m_folderFilters.size(); i++)
+				{
+					m_PushStringToArray(i + 1, m_folderFilters[i]->GetName().c_str());
+				}
+			}
+			lua_settable(m_lua, -3);
+		}
+		lua_setglobal(m_lua, "filters");
+	}
+
 	Ref<SelectionWheel> m_selectionWheel;
 	Vector<SongFilter*> m_folderFilters;
 	Vector<SongFilter*> m_levelFilters;
 	int32 m_currentFolderSelection = 0;
 	int32 m_currentLevelSelection = 0;
 	bool m_selectingFolders = true;
-	Map<SongFilter*, Label*> m_guiElements;
 	SongFilter* m_currentFilters[2] = { nullptr };
 	MapDatabase* m_mapDB;
+	lua_State* m_lua;
 };
 
-class GameSettingsWheel : public Canvas {
+class GameSettingsWheel{
 public:
 	GameSettingsWheel()
+	{}
+	~GameSettingsWheel()
 	{
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
+	}
+	bool Init()
+	{
+		CheckedLoad(m_lua = g_application->LoadScript("songselect/settingswheel"));
 		m_gameFlags = GameFlags::None;
-
 		AddSetting(L"Hard Guage", GameFlags::Hard);
 		AddSetting(L"Mirror", GameFlags::Mirror);
 		AddSetting(L"Random", GameFlags::Random);
 		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);
 		AddSetting(L"Auto FX (unused)", GameFlags::AutoFX);
 		AddSetting(L"Auto Lasers (unused)", GameFlags::AutoLaser);
-
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(L">>");
-
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::Middle;
-		labelSlot->alignment = Vector2(0.5f, 0.5f);
-		labelSlot->offset.pos.x = -135;
+		return true;
 	}
-
+	void ReloadScript()
+	{
+		g_application->ReloadScript("songselect/settingswheel", m_lua);
+	}
+	virtual void Render(float deltaTime)
+	{
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		lua_pushboolean(m_lua, Active);
+		if (lua_pcall(m_lua, 2, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+	}
 	bool Active = false;
 
 	void AddSetting(WString name, GameFlags flag)
 	{
-		Label* label = new Label();
-		label->SetFontSize(30);
-		label->SetText(Utility::WSprintf(L"%ls: Off", name));
-		m_guiElements[flag] = label;
-
-		Canvas::Slot* labelSlot = Add(label->MakeShared());
-		labelSlot->allowOverflow = true;
-		labelSlot->autoSizeX = true;
-		labelSlot->autoSizeY = true;
-		labelSlot->anchor = Anchors::Middle;
-		labelSlot->alignment = Vector2(0.5f, 0.5f);
-
 		m_flagNames[flag] = name;
 		SelectSetting((GameFlags)1);
 	}
@@ -715,24 +851,20 @@ public:
 			Vector2 coordinate = Vector2(50, 0);
 			GameFlags flag = (GameFlags)(1 << i);
 			coordinate.y = ((int)i - log2((int)m_currentSelection)) * 40.f;
-			Canvas::Slot* labelSlot = (Canvas::Slot*)m_guiElements[flag]->slot;
-			AddAnimation(Ref<IGUIAnimation>(
-				new GUIAnimation<Vector2>(&labelSlot->offset.pos, coordinate, 0.1f)), true);
 		}
+		m_SetLuaTable();
 	}
 	void ChangeSetting()
 	{
-		Label* label = m_guiElements[m_currentSelection];
 		if ((m_gameFlags & m_currentSelection) == GameFlags::None)
 		{
 			m_gameFlags = m_gameFlags | m_currentSelection;
-			label->SetText(Utility::WSprintf(L"%ls: On", m_flagNames[m_currentSelection]));
 		}
 		else
 		{
 			m_gameFlags = m_gameFlags & (~m_currentSelection);
-			label->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[m_currentSelection]));
 		}
+		m_SetLuaTable();
 	}
 
 	void AdvanceSelection(int32 offset)
@@ -755,10 +887,54 @@ public:
 	}
 
 private:
+	void m_PushStringToTable(const char* name, const char* data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushIntToTable(const char* name, int data)
+	{
+		lua_pushstring(m_lua, name);
+		lua_pushinteger(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+	void m_PushStringToArray(int index, const char* data)
+	{
+		lua_pushinteger(m_lua, index);
+		lua_pushstring(m_lua, data);
+		lua_settable(m_lua, -3);
+	}
+
+
+	void m_SetLuaTable()
+	{
+		lua_newtable(m_lua);
+		{
+			for (size_t i = 0; i < m_flagNames.size(); i++)
+			{
+				lua_pushinteger(m_lua, i + 1);
+				lua_newtable(m_lua);
+				{
+					m_PushStringToTable("name", Utility::ConvertToUTF8(m_flagNames[(GameFlags)(1 << i)]).c_str());
+
+					lua_pushstring(m_lua, "value");
+					lua_pushboolean(m_lua, ((int)m_gameFlags & 1 << i) != 0);
+					lua_settable(m_lua, -3);
+				}
+				lua_settable(m_lua, -3);
+			}
+			m_PushIntToTable("currentSelection", (int)log2((int)m_currentSelection) + 1);
+		}
+		lua_setglobal(m_lua, "settings");
+	}
+
+
 	GameFlags m_gameFlags;
-	Map<GameFlags, Label*> m_guiElements;
+	Map<GameFlags, void*> m_guiElements;
 	Map<GameFlags, WString> m_flagNames;
 	GameFlags m_currentSelection;
+	lua_State* m_lua;
 };
 
 /*
@@ -771,27 +947,20 @@ private:
 	Ref<Canvas> m_canvas;
 	MapDatabase m_mapDatabase;
 
-	Ref<SongSelectStyle> m_style;
 	Ref<CommonGUIStyle> m_commonGUIStyle;
 
-	// Shows additional information about a map
-	Ref<SongStatistics> m_statisticsWindow;
 	// Map selection wheel
 	Ref<SelectionWheel> m_selectionWheel;
 	// Filter selection
 	Ref<FilterSelection> m_filterSelection;
 	// Game settings wheel
 	Ref<GameSettingsWheel> m_settingsWheel;
-	// Search field
-	Ref<TextInputField> m_searchField;
-	// Panel to fade out selection wheel
-	Ref<Panel> m_fadePanel;
-	
-	Ref<Label> m_filterStatus;
+	// Search text logic object
+	Ref<TextInput> m_searchInput;
+
 
 	// Score list canvas
 	Ref<Canvas> m_scoreCanvas;
-	Ref<LayoutBox> m_scoreList;
 
 	// Player of preview music
 	PreviewPlayer m_previewPlayer;
@@ -812,119 +981,42 @@ private:
 	uint64_t m_previewDelayTicks = 0;
 	Map<Input::Button, float> m_timeSinceButtonPressed;
 	Map<Input::Button, float> m_timeSinceButtonReleased;
+	lua_State* m_lua;
 
 public:
 	bool Init() override
 	{
 		m_commonGUIStyle = g_commonGUIStyle;
-		m_canvas = Utility::MakeRef(new Canvas());
-
-		// Load textures for song select
-		m_style = SongSelectStyle::Get(g_application);
-
-		// Split between statistics and selection wheel (in percentage)
-		const float screenSplit = 0.0f;
-
-		// Statistics window
-		m_statisticsWindow = Ref<SongStatistics>(new SongStatistics(m_style));
-		Canvas::Slot* statisticsSlot = m_canvas->Add(m_statisticsWindow.As<GUIElementBase>());
-		statisticsSlot->anchor = Anchor(0, 0, screenSplit, 1.0f);
-		statisticsSlot->SetZOrder(2);
-
-		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
-		{
-			m_timeSinceButtonPressed[(Input::Button)i] = 0;
-			m_timeSinceButtonReleased[(Input::Button)i] = 0;
-		}
-
-
-        // Set up input
+		CheckedLoad(m_lua = g_application->LoadScript("songselect/background"));
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
 		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);
-        
-		Panel* background = new Panel();
-		background->imageFillMode = FillMode::Fill;
-		background->texture = g_application->LoadTexture("bg.png");
-		background->color = Color(0.5f);
-		Canvas::Slot* bgSlot = m_canvas->Add(background->MakeShared());
-		bgSlot->anchor = Anchors::Full;
-		bgSlot->SetZOrder(-2);
-
-		LayoutBox* box = new LayoutBox();
-		Canvas::Slot* boxSlot = m_canvas->Add(box->MakeShared());
-		boxSlot->anchor = Anchor(screenSplit, 0, 1.0f, 1.0f);
-		box->layoutDirection = LayoutBox::Vertical;
-		{
-			m_searchField = Ref<TextInputField>(new TextInputField(m_commonGUIStyle));
-			LayoutBox::Slot* searchFieldSlot = box->Add(m_searchField.As<GUIElementBase>());
-			searchFieldSlot->fillX = true;
-			m_searchField->OnTextUpdated.Add(this, &SongSelect_Impl::OnSearchTermChanged);
-
-			m_filterStatus = Ref<Label>(new Label());
-			m_filterStatus->SetFontSize(40);
-			m_filterStatus->SetText(L"All / All");
-			LayoutBox::Slot* filterLabelSlot = box->Add(m_filterStatus->MakeShared());
-
-			m_selectionWheel = Ref<SelectionWheel>(new SelectionWheel(m_style));
-			LayoutBox::Slot* selectionSlot = box->Add(m_selectionWheel.As<GUIElementBase>());
-			selectionSlot->fillY = true;
-			m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
-			m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
-
-
-			
-		}
-
-		{
-			m_fadePanel = Ref<Panel>(new Panel());
-			m_fadePanel->color = Color(0.f);
-			m_fadePanel->color.w = 0.0f;
-			Canvas::Slot* panelSlot = m_canvas->Add(m_fadePanel->MakeShared());
-			panelSlot->anchor = Anchors::Full;
-		}
-
-		{
-			m_scoreCanvas = Ref<Canvas>(new Canvas());
-			Canvas::Slot* slot = m_canvas->Add(m_scoreCanvas->MakeShared());
-			slot->anchor = Anchor(1.0,0.0,2.0,10.0);
-
-			Panel* scoreBg = new Panel();
-			scoreBg->color = Color(Vector3(0.5), 1.0);
-			slot = m_scoreCanvas->Add(scoreBg->MakeShared());
-			slot->anchor = Anchors::Full;
-
-			m_scoreList = Ref<LayoutBox>(new LayoutBox());
-			m_scoreList->layoutDirection = LayoutBox::LayoutDirection::Vertical;
-			slot = m_scoreCanvas->Add(m_scoreList->MakeShared());
-			slot->anchor = Anchors::Full;
-		}
-
-		{
-			m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
-			Canvas::Slot* slot = m_canvas->Add(m_settingsWheel->MakeShared());
-			slot->anchor = Anchor(0.0, -1.0, 1.0, 0.0);
-		}
-
-		{
-			m_filterSelection = Ref<FilterSelection>(new FilterSelection(m_selectionWheel));
-			Canvas::Slot* slot = m_canvas->Add(m_filterSelection->MakeShared());
-			slot->anchor = Anchor(-1.0, 0.0, 0.0, 1.0);
-		}
-		m_filterSelection->SetMapDB(&m_mapDatabase);
-		// Select interface sound
+		m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
+		if (!m_settingsWheel->Init())
+			return false;
 		m_selectSound = g_audio->CreateSample("audio/menu_click.wav");
-
+		m_selectionWheel = Ref<SelectionWheel>(new SelectionWheel());
+		if (!m_selectionWheel->Init())
+			return false;
+		m_filterSelection = Ref<FilterSelection>(new FilterSelection(m_selectionWheel));
+		if (!m_filterSelection->Init())
+			return false;
+		m_filterSelection->SetMapDB(&m_mapDatabase);
+		m_selectionWheel->OnMapSelected.Add(this, &SongSelect_Impl::OnMapSelected);
+		m_selectionWheel->OnDifficultySelected.Add(this, &SongSelect_Impl::OnDifficultySelected);
 		// Setup the map database
 		m_mapDatabase.AddSearchPath(g_gameConfig.GetString(GameConfigKeys::SongFolder));
 
 		m_mapDatabase.OnMapsAdded.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsAdded);
 		m_mapDatabase.OnMapsUpdated.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsUpdated);
-		m_mapDatabase.OnMapsRemoved.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsRemoved);
 		m_mapDatabase.OnMapsCleared.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsCleared);
 		m_mapDatabase.StartSearching();
 
 		m_filterSelection->SetFiltersByIndex(g_gameConfig.GetInt(GameConfigKeys::LevelFilter), g_gameConfig.GetInt(GameConfigKeys::FolderFilter));
 		m_selectionWheel->SelectByMapId(g_gameConfig.GetInt(GameConfigKeys::LastSelected));
+
+		m_searchInput = Ref<TextInput>(new TextInput());
+		m_searchInput->OnTextChanged.Add(this, &SongSelect_Impl::OnSearchTermChanged);
+
 
 		/// TODO: Check if debugmute is enabled
 		g_audio->SetGlobalVolume(g_gameConfig.GetFloat(GameConfigKeys::MasterVolume));
@@ -939,6 +1031,8 @@ public:
 		g_input.OnButtonReleased.RemoveAll(this);
 		m_selectionWheel.Destroy();
 		m_filterSelection.Destroy();
+		if (m_lua)
+			g_application->DisposeLua(m_lua);
 	}
 
 	// When a map is selected in the song wheel
@@ -976,29 +1070,6 @@ public:
 	// When a difficulty is selected in the song wheel
 	void OnDifficultySelected(DifficultyIndex* diff)
 	{
-		m_scoreList->Clear();
-		uint32 place = 1;
-
-		for (auto it = diff->scores.rbegin(); it != diff->scores.rend(); ++it)
-		{
-			ScoreIndex s = **it;
-
-			WString grade = Utility::ConvertToWString(Scoring::CalculateGrade(s.score));
-			int badge = Scoring::CalculateBadge(s);
-
-			WString badges[] = { L"P", L"U", L"HC", L"C", L"c" };
-
-			Label* text = new Label();
-			text->SetText(Utility::WSprintf(L"--%d--\n%08d\n%d%% %ls\n%ls",place, s.score, (int)(s.gauge * 100), badges[badge], grade));
-			text->SetFontSize(32);
-			LayoutBox::Slot* slot = m_scoreList->Add(text->MakeShared());
-			slot->fillX = true;
-			slot->padding = Margin(10, 5, 0, 0);
-			
-			if (place++ > 9)
-				break;
-		}
-
 
 	}
 
@@ -1020,7 +1091,8 @@ public:
     {
 		if (m_suspended)
 			return;
-		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
+
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
 			return;
 
 		m_timeSinceButtonPressed[buttonCode] = 0;
@@ -1072,48 +1144,20 @@ public:
 			case Input::Button::FX_1:
 				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0) && !m_filterSelection->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
-
 					m_settingsWheel->Active = true;
 				}
 				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_0))
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
-
 					m_settingsWheel->Active = false;
 				}
 				break;
 			case Input::Button::FX_0:
 				if (!m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1) && !m_filterSelection->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
-
 					m_settingsWheel->Active = true;
 				}
 				else if (m_settingsWheel->Active && g_input.GetButton(Input::Button::FX_1))
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
-
 					m_settingsWheel->Active = false;
 				}
 				break;
@@ -1124,13 +1168,6 @@ public:
 				}
 				if (m_settingsWheel->Active)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
-
 					m_settingsWheel->Active = false;
 				}
 				break;
@@ -1144,9 +1181,10 @@ public:
 	{
 		if (m_suspended)
 			return;
-		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchField->HasInputFocus())
-			return;
 
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
+			return;
+		
 		m_timeSinceButtonReleased[buttonCode] = 0;
 
 		switch (buttonCode)
@@ -1156,24 +1194,10 @@ public:
 			{
 				if (!m_filterSelection->Active)
 				{
-					g_guiRenderer->SetInputFocus(nullptr);
-
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, 0.0, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.75, 0.25)), true);
 					m_filterSelection->Active = !m_filterSelection->Active;
 				}
 				else
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 					m_filterSelection->Active = !m_filterSelection->Active;
 				}
 			}
@@ -1183,14 +1207,10 @@ public:
 			{
 				if (!m_showScores)
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, -200.0f, 0.2f)), true);
 					m_showScores = !m_showScores;
 				}
 				else
 				{
-					m_canvas->AddAnimation(Ref<IGUIAnimation>(
-						new GUIAnimation<float>(&((Canvas::Slot*)m_scoreCanvas->slot)->padding.left, 0.0f, 0.2f)), true);
 					m_showScores = !m_showScores;
 				}
 			}
@@ -1216,13 +1236,6 @@ public:
 			}
 			else if (key == SDLK_ESCAPE)
 			{
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.top, -1.0, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_settingsWheel->slot)->anchor.bottom, 0.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
-
 				m_settingsWheel->Active = false;
 			}
 		}
@@ -1239,12 +1252,6 @@ public:
 			}
 			else if (key == SDLK_ESCAPE)
 			{
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.left, -1.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&((Canvas::Slot*)m_filterSelection->slot)->anchor.right, 0.0f, 0.2f)), true);
-				m_canvas->AddAnimation(Ref<IGUIAnimation>(
-					new GUIAnimation<float>(&m_fadePanel->color.w, 0.0, 0.25)), true);
 				m_filterSelection->Active = !m_filterSelection->Active;
 			}
 		}
@@ -1260,11 +1267,11 @@ public:
 			}
 			else if (key == SDLK_PAGEDOWN)
 			{
-				m_selectionWheel->AdvanceSelection(5);
+				m_selectionWheel->AdvancePage(1);
 			}
 			else if (key == SDLK_PAGEUP)
 			{
-				m_selectionWheel->AdvanceSelection(-5);
+				m_selectionWheel->AdvancePage(-1);
 			}
 			else if (key == SDLK_LEFT)
 			{
@@ -1277,11 +1284,19 @@ public:
 			else if (key == SDLK_F5)
 			{
 				m_mapDatabase.StartSearching();
+				OnSearchTermChanged(m_searchInput->input);
 			}
 			else if (key == SDLK_F2)
 			{
 				m_selectionWheel->SelectRandom();
 			}
+			else if (key == SDLK_F9)
+			{
+				m_selectionWheel->ReloadScript();
+				m_settingsWheel->ReloadScript();
+				m_filterSelection->ReloadScript();
+				g_application->ReloadScript("songselect/background", m_lua);
+      }	
 			else if (key == SDLK_F11)
 			{
 				String paramFormat = g_gameConfig.GetString(GameConfigKeys::EditorParamsFormat);
@@ -1301,10 +1316,11 @@ public:
 			}
 			else if (key == SDLK_TAB)
 			{
-				if (m_searchField->HasInputFocus())
-					g_guiRenderer->SetInputFocus(nullptr);
-				else
-					g_guiRenderer->SetInputFocus(m_searchField.GetData());
+				m_searchInput->SetActive(!m_searchInput->active);
+			}
+			else if (key == SDLK_RETURN && m_searchInput->active)
+			{
+				m_searchInput->SetActive(false);
 			}
 		}
 	}
@@ -1320,20 +1336,37 @@ public:
 			m_dbUpdateTimer.Restart();
 		}
         
-		m_filterStatus->SetText(Utility::ConvertToWString(m_filterSelection->GetStatusText()));
-
         // Tick navigation
 		if (!IsSuspended())
 		{
 			TickNavigation(deltaTime);
 			m_previewPlayer.Update(deltaTime);
-
+			m_searchInput->Tick();
+			m_selectionWheel->SetSearchFieldLua(m_searchInput);
 			// Ugly hack to get previews working with the delaty
 			/// TODO: Move the ticking of the fade timer or whatever outside of onsongselected
 			OnMapSelected(m_currentPreviewAudio);
 		}
 
 
+	}
+
+	virtual void Render(float deltaTime)
+	{
+		if (IsSuspended())
+			return;
+
+		lua_getglobal(m_lua, "render");
+		lua_pushnumber(m_lua, deltaTime);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			assert(false);
+		}
+
+		m_selectionWheel->Render(deltaTime);
+		m_filterSelection->Render(deltaTime);
+		m_settingsWheel->Render(deltaTime);
 	}
 
     void TickNavigation(float deltaTime)
@@ -1343,7 +1376,6 @@ public:
 		{
 			if(!m_lockMouse)
 				m_lockMouse = g_input.LockMouse();
-		    //g_gameWindow->SetCursorVisible(false);
 		}
 		else
 		{
@@ -1404,13 +1436,13 @@ public:
 		if (m_lockMouse)
 			m_lockMouse.Release();
 
-		g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
 		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();
+		OnSearchTermChanged(m_searchInput->input);
 		if (g_gameConfig.GetBool(GameConfigKeys::AutoResetSettings))
 		{
 			m_settingsWheel->ClearSettings();
@@ -1420,10 +1452,6 @@ public:
 			m_filterSelection->SetFiltersByIndex(0, 0);
 		}
 
-		OnSearchTermChanged(m_searchField->GetText());
-		
-		Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		slot->anchor = Anchors::Full;
 	}
 };
 

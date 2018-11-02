@@ -12,11 +12,19 @@
 #include <Shared/Profiling.hpp>
 #include "Scoring.hpp"
 #include "GameConfig.hpp"
-#include <GUI/GUIRenderer.hpp>
 #include "Input.hpp"
-#include <GUI/Canvas.hpp>
-#include <GUI/CommonGUIStyle.hpp>
 #include "TransitionScreen.hpp"
+#include "GUI/HealthGauge.hpp"
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+}
+#include "nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg_gl.h"
+#include "GUI/nanovg_lua.h"
 #ifdef _WIN32
 #include "SDL_keycode.h"
 #else
@@ -276,34 +284,20 @@ bool Application::m_Init()
 			Log("Failed to create OpenGL context", Logger::Error);
 			return false;
 		}
+		g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
 
+	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
+	m_fontMaterial->opaque = false;	
+	CheckedLoad(m_fillMaterial = LoadMaterial("guiColor"));
+	m_fillMaterial->opaque = false;
+	m_gauge = new HealthGauge();
+	LoadGauge(false);
 	// call the initial OnWindowResized now that we have intialized OpenGL
 	m_OnWindowResized(g_resolution);
 
 	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
-
-	{
-		ProfilerScope $1("GUI Init");
-
-		// GUI Rendering
-		g_guiRenderer = new GUIRenderer();
-		if (!g_guiRenderer->Init(g_gl, g_gameWindow, m_skin))
-		{
-			Logf("Failed to initialize GUI renderer", Logger::Error);
-			return false;
-		}
-	}
-
-	{
-		ProfilerScope $1("Loading common GUI elements");
-		// Load GUI style for common elements
-		g_commonGUIStyle = Ref<CommonGUIStyle>(new CommonGUIStyle(g_gl, m_skin));
-	}
-
-	// Create root canvas
-	g_rootCanvas = Ref<Canvas>(new Canvas());
-
 	return true;
 }
 void Application::m_MainLoop()
@@ -389,7 +383,7 @@ void Application::m_MainLoop()
 			// Calculate actual deltatime for timing calculations
 			currentTime = appTimer.SecondsAsFloat();
 			float actualDeltaTime = currentTime - m_lastRenderTime;
-			g_avgRenderDelta = g_avgRenderDelta * 0.75f + actualDeltaTime * 0.25f; // Calculate avg
+			g_avgRenderDelta = g_avgRenderDelta * 0.98f + actualDeltaTime * 0.02f; // Calculate avg
 
 			m_deltaTime = actualDeltaTime;
 			m_lastRenderTime = currentTime;
@@ -436,17 +430,33 @@ void Application::m_Tick()
 	if(g_resolution.x > 0 && g_resolution.y > 0)
 	{
 		glClearColor(0, 0, 0, 0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		nvgBeginFrame(g_guiState.vg, g_resolution.x, g_resolution.y, 1);
+		m_renderQueueBase = RenderQueue(g_gl, m_renderStateBase);
+		g_guiState.rq = &m_renderQueueBase;
+		g_guiState.t = Transform();
+		g_guiState.fontMaterial = &m_fontMaterial;
+		g_guiState.fillMaterial = &m_fillMaterial;
+		g_guiState.resolution = g_resolution;
+		g_guiState.scissor = Rect(0,0,-1,-1);
 
 		// Render all items
 		for(auto& tickable : g_tickables)
 		{
 			tickable->Render(m_deltaTime);
 		}
-
-		// Time to render GUI
-		g_guiRenderer->Render(m_deltaTime, Rect(Vector2(0, 0), g_resolution), g_rootCanvas.As<GUIElementBase>());
-
+		m_renderStateBase.projectionTransform = GetGUIProjection();
+		nvgReset(g_guiState.vg);
+		nvgBeginPath(g_guiState.vg);
+		nvgFontFace(g_guiState.vg, "fallback");
+		nvgFontSize(g_guiState.vg, 20);
+		nvgTextAlign(g_guiState.vg, NVG_ALIGN_RIGHT);
+		nvgFillColor(g_guiState.vg, nvgRGB(0, 200, 255));
+		String fpsText = Utility::Sprintf("%.1fFPS", GetRenderFPS());
+		nvgText(g_guiState.vg, g_resolution.x - 5, g_resolution.y - 5, fpsText.c_str(), 0);
+		nvgEndFrame(g_guiState.vg);
+		m_renderQueueBase.Process();
+		glCullFace(GL_FRONT);
 		// Swap buffers
 		g_gl->SwapBuffers();
 	}
@@ -525,6 +535,11 @@ String Application::GetCurrentMapPath()
 	return m_lastMapPath;
 }
 
+String Application::GetCurrentSkin()
+{
+	return m_skin;
+}
+
 const Vector<String>& Application::GetAppCommandLine() const
 {
 	return m_commandLine;
@@ -532,6 +547,11 @@ const Vector<String>& Application::GetAppCommandLine() const
 RenderState Application::GetRenderStateBase() const
 {
 	return m_renderStateBase;
+}
+
+RenderQueue* Application::GetRenderQueueBase()
+{
+	return &m_renderQueueBase;
 }
 
 Graphics::Image Application::LoadImage(const String& name)
@@ -592,14 +612,160 @@ Sample Application::LoadSample(const String& name, const bool& external)
 	return ret;
 }
 
+Graphics::Font Application::LoadFont(const String & name, const bool & external)
+{
+	Graphics::Font* cached = m_fonts.Find(name);
+	if (cached)
+		return *cached;
+
+	String path;
+	if (external)
+		path = name;
+	else
+		path = String("skins/") + m_skin + String("/fonts/") + name;
+
+	Graphics::Font newFont = FontRes::Create(g_gl, path);
+	m_fonts.Add(name, newFont);
+	return newFont;
+}
+
+int Application::LoadImageJob(const String & path, Vector2i size, int placeholder)
+{
+	int ret = placeholder;
+	auto it = m_jacketImages.find(path);
+	if (it == m_jacketImages.end() || !it->second)
+	{
+		CachedJacketImage* newImage = new CachedJacketImage();
+		JacketLoadingJob* job = new JacketLoadingJob();
+		job->imagePath = path;
+		job->target = newImage;
+		job->w = size.x;
+		job->h = size.y;
+		newImage->loadingJob = Ref<JobBase>(job);
+		newImage->lastUsage = m_jobTimer.SecondsAsFloat();
+		g_jobSheduler->Queue(newImage->loadingJob);
+
+		m_jacketImages.Add(path, newImage);
+	}
+	else
+	{
+		it->second->lastUsage = m_jobTimer.SecondsAsFloat();
+		// If loaded set texture
+		if (it->second->loaded)
+		{
+			ret = it->second->texture;
+		}
+	}
+	return ret;
+}
+
+lua_State* Application::LoadScript(const String & name)
+{
+	lua_State* s = luaL_newstate();
+	luaL_openlibs(s);
+	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	String commonPath = "skins/" + m_skin + "/scripts/" + "common.lua";
+	m_SetNvgLuaBindings(s);
+	if (luaL_dofile(s, commonPath.c_str()) || luaL_dofile(s, path.c_str()))
+	{
+		Logf("Lua error: %s", Logger::Error, lua_tostring(s, -1));
+		lua_close(s);
+		return nullptr;
+	}
+	return s;
+}
+
+void Application::ReloadScript(const String& name, lua_State* L)
+{
+	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
+	if (luaL_dofile(L, path.c_str()))
+	{
+		Logf("Lua error: %s", Logger::Error, lua_tostring(L, -1));
+		lua_close(L);
+		assert(false);
+	}
+}
+
+void Application::ReloadSkin()
+{
+	m_skin = g_gameConfig.GetString(GameConfigKeys::Skin);
+	g_guiState.fontCahce.clear();
+	g_guiState.textCache.clear();
+	g_guiState.nextTextId.clear();
+	g_guiState.nextPaintId.clear();
+	g_guiState.paintCache.clear();
+	m_jacketImages.clear();
+	nvgDeleteGL3(g_guiState.vg);
+	g_guiState.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+	nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
+}
+void Application::DisposeLua(lua_State* state)
+{
+	DisposeGUI(state);
+	lua_close(state);
+}
+void Application::LoadGauge(bool hard)
+{
+	String gaugePath = "gauges/normal/";
+	if (hard)
+	{
+		gaugePath = "gauges/hard/";
+		m_gauge->colorBorder = 0.3f;
+		m_gauge->lowerColor = Colori(200, 50, 0);
+		m_gauge->upperColor = Colori(255, 100, 0);
+	}
+	else
+	{
+		m_gauge->colorBorder = 0.7f;
+		m_gauge->lowerColor = Colori(0, 204, 255);
+		m_gauge->upperColor = Colori(255, 102, 255);
+	}
+	m_gauge->fillTexture = LoadTexture(gaugePath + "gauge_fill.png");
+	m_gauge->frontTexture = LoadTexture(gaugePath + "gauge_front.png");
+	m_gauge->backTexture = LoadTexture(gaugePath + "gauge_back.png");
+	m_gauge->maskTexture = LoadTexture(gaugePath + "gauge_mask.png");
+	m_gauge->fillTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->frontTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->backTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->maskTexture->SetWrap(Graphics::TextureWrap::Clamp, Graphics::TextureWrap::Clamp);
+	m_gauge->fillMaterial = LoadMaterial("gauge");
+	m_gauge->fillMaterial->opaque = false;
+	m_gauge->baseMaterial = LoadMaterial("guiTex");
+	m_gauge->baseMaterial->opaque = false;
+}
+
+void Application::DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
+{
+	m_gauge->rate = rate;
+	Mesh m = MeshGenerators::Quad(g_gl, Vector2(x, y), Vector2(w, h));
+	m_gauge->Render(m, deltaTime);
+}
+
 float Application::GetRenderFPS() const
 {
 	return 1.0f / g_avgRenderDelta;
 }
 
+Material Application::GetFontMaterial() const
+{
+	return m_fontMaterial;
+}
+
 Transform Application::GetGUIProjection() const
 {
 	return ProjectionMatrix::CreateOrthographic(0.0f, (float)g_resolution.x, (float)g_resolution.y, 0.0f, 0.0f, 100.0f);
+}
+void Application::StoreNamedSample(String name, Sample sample)
+{
+	m_samples.Add(name, sample);
+}
+void Application::PlayNamedSample(String name, bool loop)
+{
+	m_samples[name]->Play(loop);
+}
+void Application::StopNamedSample(String name)
+{
+	m_samples[name]->Stop();
 }
 void Application::m_OnKeyPressed(int32 key)
 {
@@ -642,12 +808,333 @@ void Application::m_OnWindowResized(const Vector2i& newSize)
 	g_gl->SetViewport(newSize);
 	glViewport(0, 0, newSize.x, newSize.y);
 	glScissor(0, 0, newSize.x, newSize.y);
-
 	// Set in config
 	if (g_gameWindow->IsFullscreen()){
 		g_gameConfig.Set(GameConfigKeys::FullscreenMonitorIndex, g_gameWindow->GetDisplayIndex());
 	} else{
 		g_gameConfig.Set(GameConfigKeys::ScreenWidth, newSize.x);
 		g_gameConfig.Set(GameConfigKeys::ScreenHeight, newSize.y);
+	}
+}
+
+int Application::FastText(String inputText, float x, float y, int size, int align)
+{
+	WString text = Utility::ConvertToWString(inputText);
+	Text te = g_application->LoadFont("segoeui.ttf")->CreateText(text, size);
+	Transform textTransform;
+	textTransform *= Transform::Translation(Vector2(x, y));
+
+	//vertical alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_BOTTOM) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_MIDDLE) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(0, -te->size.y / 2));
+	}
+
+	//horizontal alignment
+	if ((align & (int)NVGalign::NVG_ALIGN_CENTER) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x / 2, 0));
+	}
+	else if ((align & (int)NVGalign::NVG_ALIGN_RIGHT) != 0)
+	{
+		textTransform *= Transform::Translation(Vector2(-te->size.x, 0));
+	}
+
+	MaterialParameterSet params;
+	params.SetParameter("color", Vector4(1.f, 1.f, 1.f, 1.f));
+	g_application->GetRenderQueueBase()->Draw(textTransform, te, g_application->GetFontMaterial(), params);
+	return 0;
+}
+
+static int lGetMousePos(lua_State* L)
+{
+	Vector2i pos = g_gameWindow->GetMousePos();
+	lua_pushnumber(L, pos.x);
+	lua_pushnumber(L, pos.y);
+	return 2;
+}
+
+static int lGetResolution(lua_State* L)
+{
+	lua_pushnumber(L, g_resolution.x);
+	lua_pushnumber(L, g_resolution.y);
+	return 2;
+}
+
+static int lGetLaserColor(lua_State* L /*int laser*/)
+{
+	int laser = luaL_checkinteger(L, 1);
+	float laserHues[2] = { 0.f };
+	laserHues[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
+	laserHues[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
+	Colori c = Color::FromHSV(laserHues[laser], 1.0, 1.0).ToRGBA8();
+	lua_pushnumber(L, c.x);
+	lua_pushnumber(L, c.y);
+	lua_pushnumber(L, c.z);
+	return 3;
+}
+
+static int lLog(lua_State* L)
+{
+	String msg = luaL_checkstring(L, 1);
+	int severity = luaL_checkinteger(L, 2);
+	Log(msg, (Logger::Severity)severity);
+	return 0;
+}
+
+static int lDrawGauge(lua_State* L)
+{
+	float rate, x, y, w, h, deltaTime;
+	rate = luaL_checknumber(L, 1);
+	x = luaL_checknumber(L, 2);
+	y = luaL_checknumber(L, 3);
+	w = luaL_checknumber(L, 4);
+	h = luaL_checknumber(L, 5);
+	deltaTime = luaL_checknumber(L, 6);
+	g_application->DrawGauge(rate, x, y, w, h, deltaTime);
+	return 0;
+}
+
+static int lGetButton(lua_State* L /* int button */)
+{
+	int button = luaL_checkinteger(L, 1);
+	lua_pushboolean(L, g_input.GetButton((Input::Button)button));
+	return 1;
+}
+
+static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
+{
+	const char* filename = luaL_checkstring(L, 1);
+	int imageflags = luaL_checkinteger(L, 2);
+	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + filename;
+	int handle = nvgCreateImage(g_guiState.vg, path.c_str(), imageflags);
+	if (handle != 0)
+	{
+		g_guiState.vgImages[L].Add(handle);
+		lua_pushnumber(L, handle);
+		return 1;
+	}
+	return 0;
+}
+
+static int lLoadSkinFont(lua_State* L /*const char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	String path = "skins/" + g_application->GetCurrentSkin() + "/fonts/" + name;
+	LoadFont(name, path.c_str());
+	return 0;
+}
+
+static int lLoadSkinSample(lua_State* L /*char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	g_application->StoreNamedSample(name, g_application->LoadSample(name));
+	return 0;
+}
+
+static int lPlaySample(lua_State* L /*char* name, bool loop */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	bool loop = false;
+	if(lua_gettop(L) == 2)
+	{
+		loop = lua_toboolean(L,2) == 1;
+	}
+
+	g_application->PlayNamedSample(name, loop);
+	return 0;
+}
+
+static int lStopSample(lua_State* L /* char* name */)
+{
+	const char* name = luaL_checkstring(L, 1);
+	g_application->StopNamedSample(name);
+	return 0;
+}
+
+static int lForceRender(lua_State* L)
+{
+	nvgEndFrame(g_guiState.vg);
+	g_application->GetRenderQueueBase()->Process();
+	nvgBeginFrame(g_guiState.vg, g_resolution.x, g_resolution.y, 1);
+	return 0;
+}
+
+static int lLoadImageJob(lua_State* L /* char* path, int placeholder, int w = 0, int h = 0 */)
+{
+	const char* path = luaL_checkstring(L, 1);
+	int fallback = luaL_checkinteger(L, 2);
+	int w = 0, h = 0;
+	if (lua_gettop(L) == 4)
+	{
+		w = luaL_checkinteger(L, 3);
+		h = luaL_checkinteger(L, 4);
+	}
+	lua_pushinteger(L, g_application->LoadImageJob(path, { w,h }, fallback));
+	return 1;
+}
+
+void Application::m_SetNvgLuaBindings(lua_State * state)
+{
+	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
+	{
+		lua_pushstring(state, name);
+		lua_pushcfunction(state, func);
+		lua_settable(state, -3);
+	};
+
+	auto pushIntToTable = [&](const char* name, int data)
+	{
+		lua_pushstring(state, name);
+		lua_pushinteger(state, data);
+		lua_settable(state, -3);
+	};
+
+	//gfx
+	{
+		lua_newtable(state);
+		pushFuncToTable("BeginPath", lBeginPath);
+		pushFuncToTable("Rect", lRect);
+		pushFuncToTable("FastRect", lFastRect);
+		pushFuncToTable("Fill", lFill);
+		pushFuncToTable("FillColor", lFillColor);
+		pushFuncToTable("CreateImage", lCreateImage);
+		pushFuncToTable("CreateSkinImage", lCreateSkinImage);
+		pushFuncToTable("ImagePatternFill", lImagePatternFill);
+		pushFuncToTable("ImageRect", lImageRect);
+		pushFuncToTable("Text", lText);
+		pushFuncToTable("TextAlign", lTextAlign);
+		pushFuncToTable("FontFace", lFontFace);
+		pushFuncToTable("FontSize", lFontSize);
+		pushFuncToTable("Translate", lTranslate);
+		pushFuncToTable("Scale", lScale);
+		pushFuncToTable("Rotate", lRotate);
+		pushFuncToTable("ResetTransform", lResetTransform);
+		pushFuncToTable("LoadFont", lLoadFont);
+		pushFuncToTable("LoadSkinFont", lLoadSkinFont);
+		pushFuncToTable("FastText", lFastText);
+		pushFuncToTable("CreateLabel", lCreateLabel);
+		pushFuncToTable("DrawLabel", lDrawLabel);
+		pushFuncToTable("MoveTo", lMoveTo);
+		pushFuncToTable("LineTo", lLineTo);
+		pushFuncToTable("BezierTo", lBezierTo);
+		pushFuncToTable("QuadTo", lQuadTo);
+		pushFuncToTable("ArcTo", lArcTo);
+		pushFuncToTable("ClosePath", lClosePath);
+		pushFuncToTable("MiterLimit", lMiterLimit);
+		pushFuncToTable("StrokeWidth", lStrokeWidth);
+		pushFuncToTable("LineCap", lLineCap);
+		pushFuncToTable("LineJoin", lLineJoin);
+		pushFuncToTable("Stroke", lStroke);
+		pushFuncToTable("StrokeColor", lStrokeColor);
+		pushFuncToTable("UpdateLabel", lUpdateLabel);
+		pushFuncToTable("DrawGauge", lDrawGauge);
+		pushFuncToTable("RoundedRect", lRoundedRect);
+		pushFuncToTable("RoundedRectVarying", lRoundedRectVarying);
+		pushFuncToTable("Ellipse", lEllipse);
+		pushFuncToTable("Circle", lCircle);
+		pushFuncToTable("SkewX", lSkewX);
+		pushFuncToTable("SkewY", lSkewY);
+		pushFuncToTable("LinearGradient", lLinearGradient);
+		pushFuncToTable("BoxGradient", lBoxGradient);
+		pushFuncToTable("RadialGradient", lRadialGradient);
+		pushFuncToTable("ImagePattern", lImagePattern);
+		pushFuncToTable("GradientColors", lGradientColors);
+		pushFuncToTable("FillPaint", lFillPaint);
+		pushFuncToTable("StrokePaint", lStrokePaint);
+		pushFuncToTable("Save", lSave);
+		pushFuncToTable("Restore", lRestore);
+		pushFuncToTable("Reset", lReset);
+		pushFuncToTable("PathWinding", lPathWinding);
+		pushFuncToTable("ForceRender", lForceRender);
+		pushFuncToTable("LoadImageJob", lLoadImageJob);
+		pushFuncToTable("Scissor", lScissor);
+		pushFuncToTable("IntersectScissor", lIntersectScissor);
+		pushFuncToTable("ResetScissor", lResetScissor);
+		pushFuncToTable("TextBounds", lTextBounds);
+		pushFuncToTable("LabelSize", lLabelSize);
+		pushFuncToTable("FastTextSize", lFastTextSize);
+		pushFuncToTable("ImageSize", lImageSize);
+		//constants
+		//Text align
+		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
+		pushIntToTable("TEXT_ALIGN_BOTTOM",		NVGalign::NVG_ALIGN_BOTTOM);
+		pushIntToTable("TEXT_ALIGN_CENTER",		NVGalign::NVG_ALIGN_CENTER);
+		pushIntToTable("TEXT_ALIGN_LEFT",		NVGalign::NVG_ALIGN_LEFT);
+		pushIntToTable("TEXT_ALIGN_MIDDLE",		NVGalign::NVG_ALIGN_MIDDLE);
+		pushIntToTable("TEXT_ALIGN_RIGHT",		NVGalign::NVG_ALIGN_RIGHT);
+		pushIntToTable("TEXT_ALIGN_TOP",		NVGalign::NVG_ALIGN_TOP);
+		//Line caps and joins
+		pushIntToTable("LINE_BEVEL",	NVGlineCap::NVG_BEVEL);
+		pushIntToTable("LINE_BUTT",		NVGlineCap::NVG_BUTT);
+		pushIntToTable("LINE_MITER",	NVGlineCap::NVG_MITER);
+		pushIntToTable("LINE_ROUND",	NVGlineCap::NVG_ROUND);
+		pushIntToTable("LINE_SQUARE",	NVGlineCap::NVG_SQUARE);
+		//Image flags
+		pushIntToTable("IMAGE_GENERATE_MIPMAPS",	NVGimageFlags::NVG_IMAGE_GENERATE_MIPMAPS);
+		pushIntToTable("IMAGE_REPEATX",				NVGimageFlags::NVG_IMAGE_REPEATX);
+		pushIntToTable("IMAGE_REPEATY",				NVGimageFlags::NVG_IMAGE_REPEATY);
+		pushIntToTable("IMAGE_FLIPY",				NVGimageFlags::NVG_IMAGE_FLIPY);
+		pushIntToTable("IMAGE_PREMULTIPLIED",		NVGimageFlags::NVG_IMAGE_PREMULTIPLIED);
+		pushIntToTable("IMAGE_NEAREST",				NVGimageFlags::NVG_IMAGE_NEAREST);
+
+
+
+
+
+		lua_setglobal(state, "gfx");
+	}
+
+	//game
+	{
+		lua_newtable(state);
+		pushFuncToTable("GetMousePos", lGetMousePos);
+		pushFuncToTable("GetResolution", lGetResolution);
+		pushFuncToTable("Log", lLog);
+		pushFuncToTable("LoadSkinSample", lLoadSkinSample);
+		pushFuncToTable("PlaySample", lPlaySample);
+		pushFuncToTable("StopSample", lStopSample);
+		pushFuncToTable("GetLaserColor", lGetLaserColor);
+		pushFuncToTable("GetButton", lGetButton);
+
+		//constants
+		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
+		pushIntToTable("LOGGER_NORMAL", Logger::Severity::Normal);
+		pushIntToTable("LOGGER_WARNING", Logger::Severity::Warning);
+		pushIntToTable("LOGGER_ERROR", Logger::Severity::Error);
+		pushIntToTable("BUTTON_BTA", (int)Input::Button::BT_0);
+		pushIntToTable("BUTTON_BTB", (int)Input::Button::BT_1);
+		pushIntToTable("BUTTON_BTC", (int)Input::Button::BT_2);
+		pushIntToTable("BUTTON_BTD", (int)Input::Button::BT_3);
+		pushIntToTable("BUTTON_FXL", (int)Input::Button::FX_0);
+		pushIntToTable("BUTTON_FXR", (int)Input::Button::FX_1);
+		pushIntToTable("BUTTON_STA", (int)Input::Button::BT_S);
+
+		lua_setglobal(state, "game");
+	}
+}
+
+bool JacketLoadingJob::Run()
+{
+	// Create loading task
+	loadedImage = ImageRes::Create(imagePath);
+	if (loadedImage.IsValid()) {
+		if (loadedImage->GetSize().x > w || loadedImage->GetSize().y > h) {
+			loadedImage->ReSize({ w,h });
+		}
+	}
+	return loadedImage.IsValid();
+}
+void JacketLoadingJob::Finalize()
+{
+	if (IsSuccessfull())
+	{
+		///TODO: Maybe do the nvgCreateImage in Run() instead
+		target->texture = nvgCreateImageRGBA(g_guiState.vg, loadedImage->GetSize().x, loadedImage->GetSize().y, 0, (unsigned char*)loadedImage->GetBits());
+		target->loaded = true;
 	}
 }

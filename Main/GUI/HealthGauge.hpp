@@ -1,12 +1,11 @@
 #pragma once
-#include <GUI/GUIElement.hpp>
 
-class HealthGauge : public GUIElementBase
+class HealthGauge
 {
 public:
 	HealthGauge();
-	virtual void Render(GUIRenderData rd) override;
-	virtual Vector2 GetDesiredSize(GUIRenderData rd) override;
+	void Render(Mesh m, float deltaTime);
+	Vector2 GetDesiredSize();
 
 	// The fill rate of the gauge
 	float rate = 0.5f;
@@ -15,6 +14,7 @@ public:
 	Color lowerColor = Colori(0, 204, 255);
 
 	Material fillMaterial;
+	Material baseMaterial;
 	Texture frontTexture;
 	Texture fillTexture;
 	Texture backTexture;

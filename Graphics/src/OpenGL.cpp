@@ -129,6 +129,7 @@ namespace Graphics
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_MULTISAMPLE);
 		glEnable(GL_BLEND);
+		glEnable(GL_STENCIL_TEST);
 		int samples = 0;
 		glGetIntegerv(GL_MAX_SAMPLES, &samples);
 		samples -= 1;

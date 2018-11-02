@@ -8,4 +8,6 @@ protected:
 public:
 	virtual ~TitleScreen() = default;
 	static TitleScreen* Create();
+private:
+	void m_mousePressed(int32 button);
 };

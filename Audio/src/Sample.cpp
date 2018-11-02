@@ -59,17 +59,26 @@ public:
 	uint64 m_playbackPointer = 0;
 	uint64 m_length = 0;
 	bool m_playing = false;
+	bool m_looping = false;
 
 public:
 	~Sample_Impl()
 	{
 		Deregister();
 	}
-	virtual void Play() override
+	virtual void Play(bool looping) override
 	{
 		m_lock.lock();
 		m_playing = true;
 		m_playbackPointer = 0;
+		m_looping = looping;
+		m_lock.unlock();	
+	}
+	virtual void Stop() override
+	{
+		m_lock.lock();
+		m_playing = false;
+		m_looping = false;
 		m_lock.unlock();
 	}
 	bool Init(const String& path)
@@ -144,9 +153,16 @@ public:
 			{
 				if(m_playbackPointer >= m_length)
 				{
-					// Playback ended
-					m_playing = false;
-					break;
+					if(m_looping)
+					{
+						m_playbackPointer = 0;
+					}
+					else
+					{
+						// Playback ended
+						m_playing = false;
+						break;
+					}
 				}
 
 				int16* src = ((int16*)m_pcm.data()) + m_playbackPointer;
@@ -169,9 +185,16 @@ public:
 			{
 				if(m_playbackPointer >= m_length)
 				{
-					// Playback ended
-					m_playing = false;
-					break;
+					if(m_looping)
+					{
+						m_playbackPointer = 0;
+					}
+					else
+					{
+						// Playback ended
+						m_playing = false;
+						break;
+					}
 				}
 
 				int16* src = ((int16*)m_pcm.data()) + m_playbackPointer;
