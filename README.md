@@ -3,12 +3,14 @@ A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://re
 
 ### [**Download latest Windows build**](https://drewol.me/Downloads/Game.zip)
 
+#### [**Skinning Documentation**](https://unnamed-sdvx-clone.readthedocs.io/en/latest/index.html)
+
 #### Demo Videos:
 [![Gameplay Video](http://img.youtube.com/vi/uMlAj9xfSEA/2.jpg)](https://youtu.be/uMlAj9xfSEA)
 [![Laser Color Settings](http://img.youtube.com/vi/tJXVr1KdZsc/2.jpg)](https://youtu.be/tJXVr1KdZsc)
 
 ### Current features:
-- Basic GUI (Buttons, Sliders, Scroll Boxes)
+- Completely skinnable GUI
 - OGG/MP3 Audio streaming (with preloading for gameplay performance)
 - Uses KShoot charts (`*.ksh`) (1.6 supported)
 - Functional gameplay and scoring
@@ -23,7 +25,6 @@ A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://re
 - Linux/Windows/macOS support
 
 ### Features currently on hold / in progress:
-- GUI remake
 - Song select UI/Controls to change HiSpeed and other game settings
 
 The folder that is scanned for songs can be changed in the "Main.cfg" file (`songfolder = "path to song folder"`).  
@@ -43,13 +44,13 @@ If something breaks in the song database, delete "maps.db". **Please note this w
 - Use the arrow keys or knobs to select a song and difficulty
 - Use \[Page Down\]/\[Page Up\] to scroll faster
 - Press \[F2\] to select a random song
+- Press \[F9\] to reload the skin
 - Press \[F11\] to open the the currently selected chart in the editor specified by the `EditorPath` setting
 - Press \[F12\] to open the directory of the currently selected song in your file explorer
 - Press \[Enter\] or \[Start\] to start a song
 - Press \[Ctrl\]+\[Start\] to start song with autoplay
 - Press \[FX-L\] to open up filter select to filter the displayed songs
 - Press \[Start\] when selecting filters to toggle between level and folder filters
-- Press \[FX-R\] to display a score list for the currently selected song
 - Press \[FX-L\] + \[FX-R\] to open up game settings (Hard gauge, Random, Mirror, etc.)
 - Use the Search bar on the top to search for songs
 
@@ -68,6 +69,7 @@ Just run 'Main_Release' or 'Main_Debug' from within the 'bin' folder. Or, to pla
 - `-test` - Runs test scene, for development purposes only
 
 ## How to build:
+Clone the project and then run `git submodule update --init` to download the required submodules.
 
 ### Windows:
 It is not required to build from source. A download link to a pre-built copy of the game is located at the beginning of this README. But, if you must:
