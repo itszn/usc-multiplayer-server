@@ -880,10 +880,7 @@ public:
 	void ClearSettings()
 	{
 		m_gameFlags = (GameFlags)0;
-		for (size_t i = 0; i < m_guiElements.size(); i++)
-		{
-			m_guiElements[(GameFlags)(1 << i)]->SetText(Utility::WSprintf(L"%ls: Off", m_flagNames[(GameFlags)(1 << i)]));
-		}
+		m_SetLuaTable();
 	}
 
 private:
