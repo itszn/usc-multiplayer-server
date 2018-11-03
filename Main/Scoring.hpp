@@ -207,6 +207,7 @@ private:
 	void m_CalculateLaserTicks(LaserObjectState* laserRoot, Vector<ScoreTick>& ticks) const;
 	void m_OnObjectEntered(ObjectState* obj);
 	void m_OnObjectLeaved(ObjectState* obj);
+	void m_OnFXBegin(HoldObjectState* obj);
 
 	// Button event handlers
 	void m_OnButtonPressed(Input::Button buttonCode);

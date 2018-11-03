@@ -64,6 +64,7 @@ void Scoring::SetPlayback(BeatmapPlayback& playback)
 		m_playback->OnObjectLeaved.RemoveAll(this);
 	}
 	m_playback = &playback;
+	m_playback->OnFXBegin.Add(this, &Scoring::m_OnFXBegin);
 	m_playback->OnObjectEntered.Add(this, &Scoring::m_OnObjectEntered);
 	m_playback->OnObjectLeaved.Add(this, &Scoring::m_OnObjectLeaved);
 }
@@ -460,6 +461,11 @@ void Scoring::m_CalculateLaserTicks(LaserObjectState* laserRoot, Vector<ScoreTic
 	AddTicks();
 	if(ticks.size() > 0)
 		ticks.back().SetFlag(TickFlags::End);
+}
+void Scoring::m_OnFXBegin(HoldObjectState* obj)
+{
+	if(autoplay || autoplayButtons)
+		m_SetHoldObject((ObjectState*)obj, obj->index);
 }
 
 void Scoring::m_OnObjectEntered(ObjectState* obj)
