@@ -516,8 +516,6 @@ void EchoDSP::Process(float* out, uint32 numSamples)
 		{
 			continue;
 		}
-		// Insert new samples before current position
-		size_t insertPos = (m_bufferOffset - 2) % m_bufferLength;
 
 		float l0 = data[m_bufferOffset + 0];
 		float l1 = data[m_bufferOffset + 1];
@@ -530,8 +528,8 @@ void EchoDSP::Process(float* out, uint32 numSamples)
 		}
 
 		// Inject new sample
-		data[insertPos + 0] = out[i * 2] * feedback;
-		data[insertPos + 1] = out[i * 2 + 1] * feedback;
+		data[m_bufferOffset + 0] = out[i * 2] * feedback;
+		data[m_bufferOffset + 1] = out[i * 2 + 1] * feedback;
 
 		m_bufferOffset += 2;
 		if(m_bufferOffset >= m_bufferLength)
@@ -552,7 +550,7 @@ void SidechainDSP::Process(float* out, uint32 numSamples)
 {
 	if(m_length == 0)
 		return;
-		
+
 	int32 startSample = startTime * audio->GetSampleRate() / 1000.0;
 	int32 currentSample = audioBase->GetPosition() * audio->GetSampleRate() / 1000.0;
 
