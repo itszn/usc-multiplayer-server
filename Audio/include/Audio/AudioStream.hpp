@@ -17,8 +17,6 @@ public:
 
 	virtual bool HasEnded() const = 0;
 
-	// Gets the playback position in millisecond
-	virtual int32 GetPosition() const = 0;
 	// Sets the playback position in milliseconds
 	// negative time alowed, which will produce no audio for a certain amount of time
 	virtual void SetPosition(int32 pos) = 0;

@@ -185,7 +185,7 @@ void BeatmapPlayback::Update(MapTime newTime)
 				continue;
 			}
 			if (obj->hold.effectType != EffectType::None && // Hold button with effect
-				obj->time <= m_playbackTime + audioOffset && endTime > m_playbackTime + audioOffset) // Hold button in active range
+				obj->time - 100 <= m_playbackTime + audioOffset && endTime - 100 > m_playbackTime + audioOffset) // Hold button in active range
 			{
 				if (!m_effectObjects.Contains(*obj))
 				{

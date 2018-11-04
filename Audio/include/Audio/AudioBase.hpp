@@ -14,6 +14,7 @@ public:
 
 	float mix = 1.0f;
 	uint32 priority = 0;
+	uint32 startTime = 0;
 	class AudioBase* audioBase = nullptr;
 	class Audio_Impl* audio = nullptr;
 };
@@ -27,6 +28,10 @@ public:
 	virtual ~AudioBase();
 	// Process <numSamples> amount of samples in stereo float format
 	virtual void Process(float* out, uint32 numSamples) = 0;
+	
+	// Gets the playback position in millisecond
+	virtual int32 GetPosition() const = 0;
+	
 	void ProcessDSPs(float*& out, uint32 numSamples);
 	// Adds a signal processor to the audio
 	void AddDSP(DSP* dsp);

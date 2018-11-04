@@ -140,6 +140,7 @@ void AudioPlayback::SetEffect(uint32 index, HoldObjectState* object, class Beatm
 		m_buttonEffects[index].SetParams(dsp, *this, object);
 		// Initialize mix value to previous value
 		dsp->mix = m_effectMix[index];
+		dsp->startTime = object->GetRoot()->time;
 	}
 }
 void AudioPlayback::SetEffectEnabled(uint32 index, bool enabled)

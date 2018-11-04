@@ -224,6 +224,10 @@ public:
 	{
 		return m_format.nChannels;
 	}
+	int32 GetPosition() const
+	{
+		return 0;
+	}
 
 };
 

@@ -64,7 +64,7 @@ void Scoring::SetPlayback(BeatmapPlayback& playback)
 		m_playback->OnObjectLeaved.RemoveAll(this);
 	}
 	m_playback = &playback;
-	m_playback->OnFXBegin.Add(this, &Scoring::m_OnFXBegin);
+	//m_playback->OnFXBegin.Add(this, &Scoring::m_OnFXBegin);
 	m_playback->OnObjectEntered.Add(this, &Scoring::m_OnObjectEntered);
 	m_playback->OnObjectLeaved.Add(this, &Scoring::m_OnObjectLeaved);
 }
@@ -162,6 +162,23 @@ void Scoring::Tick(float deltaTime)
 {
 	m_UpdateLasers(deltaTime);
 	m_UpdateTicks();
+	if (autoplay | autoplayButtons)
+	{
+		
+		for(size_t i = 0; i < 6; i++)
+		{
+			if(m_ticks[i].size() > 0)
+			{
+				auto tick = m_ticks[i].front();
+				if(tick->HasFlag(TickFlags::Hold))
+				{
+					if(tick->object->time <= m_playback->GetLastTime())
+						m_SetHoldObject(tick->object, i);
+				}
+			}
+		}
+		
+	}
 }
 
 float Scoring::GetLaserRollOutput(uint32 index)
