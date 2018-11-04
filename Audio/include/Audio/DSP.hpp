@@ -94,7 +94,7 @@ public:
 
 	virtual void Process(float* out, uint32 numSamples);
 private:
-	float m_gating = 0.75f;
+	float m_gating = 0.5f;
 	uint32 m_length = 0;
 	uint32 m_fadeIn = 0; // Fade In mark
 	uint32 m_fadeOut = 0; // Fade Out mark

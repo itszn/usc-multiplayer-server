@@ -147,7 +147,7 @@ void GameAudioEffect::SetParams(DSP* dsp, AudioPlayback& playback, HoldObjectSta
 	{
 		GateDSP* gateDSP = (GateDSP*)dsp;
 		gateDSP->SetLength(noteDuration / object->effectParams[0]);
-		gateDSP->SetGating(0.75f);
+		gateDSP->SetGating(0.5f);
 		break;
 	}
 	case EffectType::TapeStop:
