@@ -522,6 +522,26 @@ public:
 
 	bool Init()
 	{
+		if (m_isGamepad)
+		{
+			m_gamepad = g_gameWindow->OpenGamepad(m_gamepadIndex);
+			if (!m_gamepad)
+			{
+				Logf("Failed to open gamepad: %s", Logger::Error, m_gamepadIndex);
+				false;
+			}
+			if (m_knobs)
+			{
+				for (size_t i = 0; i < m_gamepad->NumAxes(); i++)
+				{
+					m_gamepadAxes.Add(m_gamepad->GetAxis(i));
+				}
+			}
+			else
+			{
+				m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
+			}
+		}
 		return true;
 	}
 
@@ -580,7 +600,6 @@ public:
 					m_gamepadAxes.Add(m_gamepad->GetAxis(i));
 				}
 			}
-			m_gamepad->OnButtonPressed.Add(this, &ButtonBindingScreen_Impl::OnButtonPressed);
 		}
 
 		g_application->FastText(prompt, g_resolution.x / 2, g_resolution.y / 2, 40, NVGalign::NVG_ALIGN_CENTER | NVGalign::NVG_ALIGN_MIDDLE);
