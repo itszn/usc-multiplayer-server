@@ -86,7 +86,7 @@ class GateDSP : public DSP
 {
 public:
 	// The amount of time for a single cycle in samples
-	void SetLength(uint32 length);
+	void SetLength(double length);
 	void SetGating(float gating);
 
 	// Low volume
@@ -105,7 +105,7 @@ private:
 class TapeStopDSP : public DSP
 {
 public:
-	void SetLength(uint32 length);
+	void SetLength(double length);
 
 	virtual void Process(float* out, uint32 numSamples);
 private:
@@ -119,7 +119,7 @@ private:
 class RetriggerDSP : public DSP
 {
 public:
-	void SetLength(uint32 length);
+	void SetLength(double length);
 	void SetResetDuration(uint32 resetDuration);
 	void SetGating(float gating);
 	void SetMaxLength(uint32 length);
@@ -139,7 +139,7 @@ private:
 class WobbleDSP : public BQFDSP
 {
 public:
-	void SetLength(uint32 length);
+	void SetLength(double length);
 
 	// Frequency range
 	float fmin = 500.0f;
@@ -164,7 +164,7 @@ public:
 	float fb = 0.2f; //feedback
 	float lmix = 0.33f; //local mix
 
-	void SetLength(uint32 length);
+	void SetLength(double length);
 
 	virtual void Process(float* out, uint32 numSamples);
 
@@ -186,7 +186,7 @@ private:
 class FlangerDSP : public DSP
 {
 public:
-	void SetLength(uint32 length);
+	void SetLength(double length);
 	void SetDelayRange(uint32 min, uint32 max);
 
 	virtual void Process(float* out, uint32 numSamples);
@@ -206,7 +206,7 @@ private:
 class EchoDSP : public DSP
 {
 public:
-	void SetLength(uint32 length);
+	void SetLength(double length);
 
 	float feedback = 0.6f;
 
@@ -223,7 +223,7 @@ class SidechainDSP : public DSP
 {
 public:
 	// Set sidechain length in samples
-	void SetLength(uint32 length);
+	void SetLength(double length);
 
 	// Volume multiplier for the sidechaing
 	float amount = 0.25f;

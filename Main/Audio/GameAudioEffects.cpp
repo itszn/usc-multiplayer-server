@@ -146,27 +146,27 @@ void GameAudioEffect::SetParams(DSP* dsp, AudioPlayback& playback, HoldObjectSta
 	case EffectType::Gate:
 	{
 		GateDSP* gateDSP = (GateDSP*)dsp;
-		gateDSP->SetLength((uint32)(noteDuration / object->effectParams[0]));
+		gateDSP->SetLength(noteDuration / object->effectParams[0]);
 		gateDSP->SetGating(0.75f);
 		break;
 	}
 	case EffectType::TapeStop:
 	{
 		TapeStopDSP* tapestopDSP = (TapeStopDSP*)dsp;
-		tapestopDSP->SetLength((uint32)(1000 * ((double)16 / Math::Max(object->effectParams[0], (int16)1))));
+		tapestopDSP->SetLength((1000 * ((double)16 / Math::Max(object->effectParams[0], (int16)1))));
 		break;
 	}
 	case EffectType::Retrigger:
 	{
 		RetriggerDSP* retriggerDSP = (RetriggerDSP*)dsp;
-		retriggerDSP->SetLength((uint32)(noteDuration / object->effectParams[0]));
+		retriggerDSP->SetLength(noteDuration / object->effectParams[0]);
 		retriggerDSP->SetGating(0.65f);
 		break;
 	}
 	case EffectType::Wobble:
 	{
 		WobbleDSP* wb = (WobbleDSP*)dsp;
-		wb->SetLength((uint32)(noteDuration / object->effectParams[0]));
+		wb->SetLength(noteDuration / object->effectParams[0]);
 		break;
 	}
 	case EffectType::Phaser:

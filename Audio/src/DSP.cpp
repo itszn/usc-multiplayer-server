@@ -161,9 +161,9 @@ void BitCrusherDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void GateDSP::SetLength(uint32 length)
+void GateDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 	SetGating(m_gating);
 }
@@ -220,11 +220,10 @@ void GateDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void TapeStopDSP::SetLength(uint32 length)
+void TapeStopDSP::SetLength(double length)
 {
 	assert(audio);
-
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 	m_sampleBuffer.clear();
 	m_sampleBuffer.reserve(length);
@@ -264,9 +263,9 @@ void TapeStopDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void RetriggerDSP::SetLength(uint32 length)
+void RetriggerDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 	SetGating(m_gating);
 	if (!m_bufferReserved)
@@ -342,9 +341,9 @@ void RetriggerDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void WobbleDSP::SetLength(uint32 length)
+void WobbleDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 }
 void WobbleDSP::Process(float* out, uint32 numSamples)
@@ -378,9 +377,9 @@ void WobbleDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void PhaserDSP::SetLength(uint32 length)
+void PhaserDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 }
 void PhaserDSP::Process(float* out, uint32 numSamples)
@@ -436,9 +435,9 @@ float PhaserDSP::APF::Update(float in)
 	return y;
 }
 
-void FlangerDSP::SetLength(uint32 length)
+void FlangerDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 }
 void FlangerDSP::SetDelayRange(uint32 min, uint32 max)
@@ -494,9 +493,9 @@ void FlangerDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void EchoDSP::SetLength(uint32 length)
+void EchoDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_sampleBuffer.clear();
 	m_bufferLength = (uint32)flength * 2;
 	m_sampleBuffer.resize(m_bufferLength);
@@ -540,9 +539,9 @@ void EchoDSP::Process(float* out, uint32 numSamples)
 	}
 }
 
-void SidechainDSP::SetLength(uint32 length)
+void SidechainDSP::SetLength(double length)
 {
-	float flength = (float)length / 1000.0f * (float)audio->GetSampleRate();
+	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_length = (uint32)flength;
 	m_time = 0;
 }
