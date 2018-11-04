@@ -497,7 +497,7 @@ void EchoDSP::SetLength(double length)
 {
 	double flength = length / 1000.0 * audio->GetSampleRate();
 	m_sampleBuffer.clear();
-	m_bufferLength = (uint32)flength * 2;
+	m_bufferLength = (uint32)(flength * 2);
 	m_sampleBuffer.resize(m_bufferLength);
 	memset(m_sampleBuffer.data(), 0, sizeof(float) * m_bufferLength);
 	m_numLoops = 0;

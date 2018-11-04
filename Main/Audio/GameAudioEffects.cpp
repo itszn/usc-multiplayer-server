@@ -28,7 +28,7 @@ DSP* GameAudioEffect::CreateDSP(class AudioBase* audioTrack, AudioPlayback& play
 	{
 		EchoDSP* echoDSP = new EchoDSP();
 		audioTrack->AddDSP(echoDSP);
-		echoDSP->feedback = echo.feedback.Sample(filterInput);
+		echoDSP->feedback = echo.feedback.Sample(filterInput) / 100.0f;
 		echoDSP->SetLength(actualLength);
 		ret = echoDSP;
 		break;
@@ -161,6 +161,13 @@ void GameAudioEffect::SetParams(DSP* dsp, AudioPlayback& playback, HoldObjectSta
 		RetriggerDSP* retriggerDSP = (RetriggerDSP*)dsp;
 		retriggerDSP->SetLength(noteDuration / object->effectParams[0]);
 		retriggerDSP->SetGating(0.65f);
+		break;
+	}
+	case EffectType::Echo:
+	{
+		EchoDSP* echoDSP = (EchoDSP*)dsp;
+		echoDSP->SetLength(noteDuration / object->effectParams[0]);
+		echoDSP->feedback = object->effectParams[1] / 100.0f;
 		break;
 	}
 	case EffectType::Wobble:
