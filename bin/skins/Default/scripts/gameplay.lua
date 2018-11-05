@@ -21,7 +21,10 @@ local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
 local bottomFill = gfx.CreateSkinImage("fill_bottom.png",0)
 local topFill = gfx.CreateSkinImage("fill_top.png",0)
 local diffNames = {"NOV", "ADV", "EXH", "INF"}
-
+local introTimer = 2
+local outroTimer = 0
+local clearTexts = {"TRACK FAILED", "TRACK COMPLETE", "TRACK COMPLETE", "FULL COMBO", "PERFECT" }
+local yshift = 0
 
 draw_stat = function(x,y,w,h, name, value, format,r,g,b)
   gfx.Save()
@@ -126,12 +129,12 @@ drawGauge = function(deltaTime)
     local height = 1024 * scale * 0.35
     local width = 512 * scale * 0.35
     local posy = resy / 2 - height / 2
-    local posx = resx - width
+    local posx = resx - width * (1 - math.max(introTimer - 1, 0))
     if portrait then
         width = width * 0.8
         height = height * 0.8
         posy = posy - 30
-        posx = resx - width
+        posx = resx - width * (1 - math.max(introTimer - 1, 0))
     end
     gfx.DrawGauge(gameplay.gauge, posx, posy, width, height, deltaTime);
 end
@@ -179,8 +182,10 @@ drawFill = function(deltaTime)
     bw,bh = gfx.ImageSize(bottomFill)
     bottomAspect = bh/bw
     bottomHeight = desw * bottomAspect
+    gfx.Translate(0, (bottomHeight + 100) * math.max(introTimer - 1, 0))
     gfx.Rect(0, desh * critLinePos[2] + bottomHeight - 20, desw, 100)
     gfx.ImageRect(0, desh * critLinePos[2],  desw, bottomHeight, bottomFill, 1,0)
+    gfx.Translate(0, (bottomHeight + 100) * -math.max(introTimer - 1, 0))
 
 
     gfx.BeginPath()
@@ -194,6 +199,7 @@ drawFill = function(deltaTime)
     local yoff = ar * topHeight
     local retoff = ar * 20
     if ar < 0 then yoff = 0 end
+    yoff = yoff + bottomHeight * math.max(introTimer - 1, 0)
     gfx.ImageRect(0,-yoff,desw, topHeight, topFill, 1, 0)
     gfx.BeginPath()
     return topHeight - yoff - retoff
@@ -259,17 +265,46 @@ drawAlerts = function(deltaTime)
 end
 
 render = function(deltaTime)
+    if introTimer > 0 then
+        gfx.BeginPath()
+        gfx.Rect(0,0,resx,resy)
+        gfx.FillColor(0,0,0, math.floor(255 * math.min(introTimer, 1)))
+        gfx.Fill()
+    end
     gfx.Scale(scale,scale)
-    local yshift = 0
     if portrait then yshift = drawFill(deltaTime) end
-    gfx.Translate(0, yshift)
+    gfx.Translate(0, yshift - 150 * math.max(introTimer - 1, 0))
     drawSongInfo(deltaTime)
     drawScore(deltaTime)
-    gfx.Translate(0, -yshift)
+    gfx.Translate(0, -yshift + 150 * math.max(introTimer - 1, 0))
     drawGauge(deltaTime)
     drawEarlate(deltaTime)
     drawCombo(deltaTime)
     drawAlerts(deltaTime)
+end
+
+render_intro = function(deltaTime)
+    introTimer = introTimer - deltaTime
+    introTimer = math.max(introTimer, 0)
+    return introTimer <= 0
+end
+
+render_outro = function(deltaTime, clearState)
+    if clearState == 0 then return true end
+    gfx.ResetTransform()
+    gfx.BeginPath()
+    gfx.Rect(0,0,resx,resy)
+    gfx.FillColor(0,0,0, math.floor(127 * math.min(outroTimer, 1)))
+    gfx.Fill()
+    gfx.Scale(scale,scale)
+    gfx.Translate(0, yshift)
+    gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE)
+    gfx.FillColor(255,255,255, math.floor(255 * math.min(outroTimer, 1)))
+    gfx.LoadSkinFont("NovaMono.ttf")
+    gfx.FontSize(40)
+    gfx.Text(clearTexts[clearState], desw / 2, desh / 2)
+    outroTimer = outroTimer + deltaTime
+    return outroTimer > 2
 end
 
 update_score = function(newScore)

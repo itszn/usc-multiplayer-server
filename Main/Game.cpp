@@ -66,8 +66,11 @@ public:
 private:
 	bool m_playing = true;
 	bool m_started = false;
+	bool m_introCompleted = false;
+	bool m_outroCompleted = false;
 	bool m_paused = false;
 	bool m_ended = false;
+	bool m_transitioning = false;
 
 	bool m_renderDebugHUD = false;
 
@@ -348,6 +351,14 @@ public:
 		// Load particle material
 		m_particleSystem = ParticleSystemRes::Create(g_gl);
 
+
+		return true;
+	}
+	virtual bool AsyncFinalize() override
+	{
+		if (!loader.Finalize())
+			return false;
+
 		//Lua
 		m_lua = g_application->LoadScript("gameplay");
 		if (!m_lua)
@@ -366,6 +377,7 @@ public:
 			lua_settable(m_lua, -3);
 		};
 
+		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
 		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
 		//Set gameplay table
 		{
@@ -377,13 +389,6 @@ public:
 			pushIntToTable("level", mapSettings.level);
 			lua_setglobal(m_lua, "gameplay");
 		}
-		return true;
-	}
-	virtual bool AsyncFinalize() override
-	{
-		if (!loader.Finalize())
-			return false;
-
 
 		// Background 
 		/// TODO: Load this async
@@ -697,6 +702,34 @@ public:
 			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
 			assert(false);
 		}
+		if (!m_introCompleted)
+		{
+			// Render Lua Intro
+			lua_getglobal(m_lua, "render_intro");
+			lua_pushnumber(m_lua, deltaTime);
+			if (lua_pcall(m_lua, 1, 1, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				assert(false);
+			}
+			m_introCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
+			lua_settop(m_lua, 0);
+		}
+		if (m_ended)
+		{
+			// Render Lua Outro
+			lua_getglobal(m_lua, "render_outro");
+			lua_pushnumber(m_lua, deltaTime);
+			///TODO: Push clear state as second parameter
+			lua_pushnumber(m_lua, m_getClearState());
+			if (lua_pcall(m_lua, 2, 1, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				assert(false);
+			}
+			m_outroCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
+			lua_settop(m_lua, 0);
+		}
 
 		// Render debug hud if enabled
 		if(m_renderDebugHUD)
@@ -724,7 +757,7 @@ public:
 		}
 		m_lastMapTime = 0;
 		MapTime firstObjectTime = (*firstObj)->time;
-		if(firstObjectTime < 1000)
+		if(firstObjectTime < 3000)
 		{
 			// Set start time
 			m_lastMapTime = firstObjectTime - 5000;
@@ -789,7 +822,7 @@ public:
 	// Processes input and Updates scoring, also handles audio timing management
 	void TickGameplay(float deltaTime)
 	{
-		if(!m_started)
+		if(!m_started && m_introCompleted)
 		{
 			// Start playback of audio in first gameplay tick
 			m_audioPlayback.Play();
@@ -907,6 +940,14 @@ public:
 		{
 			FinishGame();
 		}
+		if (m_outroCompleted && !m_transitioning)
+		{
+			// Transition to score screen
+			TransitionScreen* transition = TransitionScreen::Create(ScoreScreen::Create(this));
+			transition->OnLoadingComplete.Add(this, &Game_Impl::OnScoreScreenLoaded);
+			g_application->AddTickable(transition);
+			m_transitioning = true;
+		}
 	}
 
 	// Called when game is finished and the score screen should show up
@@ -914,11 +955,6 @@ public:
 	{
 		if(m_ended)
 			return;
-
-		// Transition to score screen
-		TransitionScreen* transition = TransitionScreen::Create(ScoreScreen::Create(this));
-		transition->OnLoadingComplete.Add(this, &Game_Impl::OnScoreScreenLoaded);
-		g_application->AddTickable(transition);
 
 		m_ended = true;
 	}
@@ -1361,6 +1397,19 @@ public:
 				FinishGame();
 			}
 		}
+	}
+	int m_getClearState()
+	{
+		if (m_manualExit)
+			return 0;
+		ScoreIndex scoreData;
+		scoreData.miss = m_scoring.categorizedHits[0];
+		scoreData.almost = m_scoring.categorizedHits[1];
+		scoreData.crit = m_scoring.categorizedHits[2];
+		scoreData.gameflags = (uint32)m_flags;
+		scoreData.gauge = m_scoring.currentGauge;
+		scoreData.score = m_scoring.CalculateCurrentScore();
+		return Scoring::CalculateBadge(scoreData);
 	}
 
 	// Skips ahead to the right before the first object in the map
