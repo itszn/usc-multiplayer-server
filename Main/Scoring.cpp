@@ -45,15 +45,31 @@ String Scoring::CalculateGrade(uint32 score)
 uint8 Scoring::CalculateBadge(const ScoreIndex& score)
 {
 	if (score.score == 10000000) //Perfect
-		return 0;
+		return 5;
 	if (score.miss == 0) //Full Combo
-		return 1;
+		return 4;
 	if (((GameFlags)score.gameflags & GameFlags::Hard) != GameFlags::None && score.gauge > 0) //Hard Clear
-		return 2;
-	if (((GameFlags)score.gameflags & GameFlags::Hard) == GameFlags::None && score.gauge >= 0.70) //Normal Clear
 		return 3;
+	if (((GameFlags)score.gameflags & GameFlags::Hard) == GameFlags::None && score.gauge >= 0.70) //Normal Clear
+		return 2;
 
-	return 4; //Failed
+	return 1; //Failed
+}
+
+uint8 Scoring::CalculateBestBadge(Vector<ScoreIndex*> scores)
+{
+	if (scores.size() < 1)
+		return 0;
+	uint8 top = 1;
+	for (ScoreIndex* score : scores)
+	{
+		uint8 temp = CalculateBadge(*score);
+		if (temp > top)
+		{
+			top = temp;
+		}
+	}
+	return top;
 }
 
 void Scoring::SetPlayback(BeatmapPlayback& playback)

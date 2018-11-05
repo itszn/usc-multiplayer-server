@@ -41,6 +41,15 @@ local grades = {
   {["max"] = 9899999, ["image"] = gfx.CreateSkinImage("score/AAA+.png", 0)},
   {["max"] = 99999999, ["image"] = gfx.CreateSkinImage("score/S.png", 0)}
 }
+
+local badges = {
+    gfx.CreateSkinImage("badges/played.png", 0),
+    gfx.CreateSkinImage("badges/clear.png", 0),
+    gfx.CreateSkinImage("badges/hard-clear.png", 0),
+    gfx.CreateSkinImage("badges/full-combo.png", 0),
+    gfx.CreateSkinImage("badges/perfect.png", 0)
+}
+
 gfx.LoadSkinFont("segoeui.ttf");
 
 game.LoadSkinSample("menu_click")
@@ -152,16 +161,14 @@ draw_scores = function(difficulty, x, y, w, h)
         break
       end
     end
+    if difficulty.topBadge ~= 0 then
+        gfx.BeginPath()
+        gfx.ImageRect(x+xOffset+w-h/2, y+h/2 +5, (h/2-10), h/2-10, badges[difficulty.topBadge], 1, 0)
+    end
     gfx.FillColor(255,255,255)
 		gfx.FontSize(40);
     gfx.TextAlign(gfx.TEXT_ALIGN_MIDDLE + gfx.TEXT_ALIGN_CENTER);
 		gfx.DrawLabel(scoreLabel, x+(w/2),y+(h/4)*3,w)
-    gfx.TextAlign(gfx.TEXT_ALIGN_MIDDLE + gfx.TEXT_ALIGN_RIGHT);
-    if highScore.misses == 0 and highScore.goods == 0 then
-      gfx.FastText("+", x+w-20,y+(h/4)*3 )
-    elseif highScore.misses == 0 then
-      gfx.FastText("x", x+w-20,y+(h/4)*3 )
-    end
 	end
 end
 

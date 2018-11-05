@@ -39,6 +39,7 @@ A difficulty contains the following fields:
     int difficulty // 0 = nov, 1 = adv, etc.
     int id //unique static identifier
     string effector
+    int bestBadge //top badge for this difficulty
     difficulty[] scores //array of all scores on this diff
     
     
@@ -55,6 +56,19 @@ A score contains the following fields:
     int perfects
     int goods
     int misses
+    int badge
+    
+Badge
+*****
+Values::
+    
+    0 = No badge/Never played
+    1 = Played but not cleared
+    2 = Cleared
+    3 = Hard Cleared
+    4 = Full Combo
+    5 = Perfect
+
 
 get_page_size
 *************

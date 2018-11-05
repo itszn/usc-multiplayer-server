@@ -22,9 +22,6 @@ extern "C"
 class ScoreScreen_Impl : public ScoreScreen
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Canvas> m_canvas;
-	Ref<HealthGauge> m_gauge;
 	//Ref<Panel> m_jacket;
 	Ref<Canvas> m_timingStatsCanvas;
 	//Ref<LayoutBox> m_itemBox;
@@ -47,6 +44,7 @@ private:
 	uint32 m_timedHits[2];
 	float m_meanHitDelta;
 	MapTime m_medianHitDelta;
+	ScoreIndex m_scoredata;
 
 	Vector<ScoreIndex*> m_highScores;
 
@@ -88,6 +86,12 @@ public:
 		m_timedHits[1] = scoring.timedHits[1];
 		m_flags = game->GetFlags();
 		m_highScores = game->GetDifficultyIndex().scores;
+		m_scoredata.score = m_score;
+		m_scoredata.crit = m_categorizedHits[2];
+		m_scoredata.almost = m_categorizedHits[1];
+		m_scoredata.miss = m_categorizedHits[0];
+		m_scoredata.gauge = m_finalGaugeValue;
+		m_scoredata.gameflags = (uint32)m_flags;
 
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 		m_meanHitDelta = scoring.GetMeanHitDelta();
@@ -127,26 +131,10 @@ public:
 	AsyncAssetLoader loader;
 	virtual bool AsyncLoad() override
 	{
-		m_guiStyle = g_commonGUIStyle;
-		String gaugePath = "gauges/normal/";
-		m_gauge = Ref<HealthGauge>(new HealthGauge());
-		if ((m_flags & GameFlags::Hard) != GameFlags::None)
-		{
-			gaugePath = "gauges/hard/";
-			m_gauge->colorBorder = 0.3f;
-			m_gauge->lowerColor = Colori(200, 50, 0);
-			m_gauge->upperColor = Colori(255, 100, 0);
-		}
-
-		loader.AddTexture(m_gauge->fillTexture, gaugePath + "gauge_fill.png");
-		loader.AddTexture(m_gauge->frontTexture, gaugePath + "gauge_front.png");
-		loader.AddTexture(m_gauge->backTexture, gaugePath + "gauge_back.png");
-		loader.AddTexture(m_gauge->maskTexture, gaugePath + "gauge_mask.png");
-		loader.AddMaterial(m_gauge->fillMaterial, "gauge");
-		m_gauge->rate = m_finalGaugeValue;
-		//m_canvas = Utility::MakeRef(new Canvas());
 		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
 		CheckedLoad(m_applause = g_audio->CreateSample("skins/" + skin + "/audio/applause.wav"));
+
+		
 
 		return loader.Load();
 	}
@@ -154,7 +142,10 @@ public:
 	{
 		if(!loader.Finalize())
 			return false;
+
 		m_lua = g_application->LoadScript("result");
+		if (!m_lua)
+			return false;
 		//set lua table
 		lua_newtable(m_lua);
 		m_PushIntToTable("score", m_score);
@@ -175,6 +166,8 @@ public:
 		m_PushIntToTable("earlies", m_timedHits[0]);
 		m_PushIntToTable("lates", m_timedHits[1]);
 		m_PushStringToTable("grade", Scoring::CalculateGrade(m_score).c_str());
+		m_PushIntToTable("badge", Scoring::CalculateBadge(m_scoredata));
+
 		//Push gauge samples
 		lua_pushstring(m_lua, "gaugeSamples");
 		lua_newtable(m_lua);
@@ -198,17 +191,15 @@ public:
 			m_PushIntToTable("perfects", score->crit);
 			m_PushIntToTable("goods", score->almost);
 			m_PushIntToTable("misses", score->miss);
+			m_PushIntToTable("badge", Scoring::CalculateBadge(*score));
 			lua_settable(m_lua, -3);
 		}
 		lua_settable(m_lua, -3);
-
 
 		///TODO: maybe push complete hit stats
 
 		lua_setglobal(m_lua, "result");
 
-		// Make gauge material transparent
-		m_gauge->fillMaterial->opaque = false;
 		return true;
 	}
 	bool Init() override

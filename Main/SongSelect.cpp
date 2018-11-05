@@ -537,6 +537,7 @@ private:
 				m_PushIntToTable("difficulty", settings.difficulty);
 				m_PushIntToTable("id", diff->id);
 				m_PushStringToTable("effector", settings.effector.c_str());
+				m_PushIntToTable("topBadge", Scoring::CalculateBestBadge(diff->scores));
 				lua_pushstring(m_lua, "scores");
 				lua_newtable(m_lua);
 				int scoreIndex = 0;
@@ -550,6 +551,7 @@ private:
 					m_PushIntToTable("perfects", score->crit);
 					m_PushIntToTable("goods", score->almost);
 					m_PushIntToTable("misses", score->miss);
+					m_PushIntToTable("badge", Scoring::CalculateBadge(*score));
 					lua_settable(m_lua, -3);
 				}
 				lua_settable(m_lua, -3);

@@ -21,6 +21,7 @@ The following fields are available under the ``result`` table:
     float meanHitDelta
     int earlies
     int lates
+    int badge //same as song wheel badge
     float gaugeSamples[256] //gauge values sampled throughout the song
     string grade // "S", "AAA+", "AAA", etc.
     score[] highScores // Same as song wheel scores
