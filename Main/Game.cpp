@@ -503,6 +503,10 @@ public:
 		m_hideLane = false;
 		m_playback.Reset(m_lastMapTime);
 		m_scoring.Reset();
+		m_camera.pLaneZoom = m_playback.GetZoom(0);
+		m_camera.pLanePitch = m_playback.GetZoom(1);
+		m_camera.pLaneOffset = m_playback.GetZoom(2);
+		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
 
 		for(uint32 i = 0; i < 2; i++)
 		{
@@ -793,6 +797,13 @@ public:
 		m_playback.OnFXEnd.Add(this, &Game_Impl::OnFXEnd);
 		m_playback.OnLaserAlertEntered.Add(this, &Game_Impl::OnLaserAlertEntered);
 		m_playback.Reset();
+
+		// Set camera start position
+		m_camera.pLaneZoom = m_playback.GetZoom(0);
+		m_camera.pLanePitch = m_playback.GetZoom(1);
+		m_camera.pLaneOffset = m_playback.GetZoom(2);
+		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
+
         // If c-mod is used
 		if (m_usecMod)
 		{

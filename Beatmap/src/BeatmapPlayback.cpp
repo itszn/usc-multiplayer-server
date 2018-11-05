@@ -25,6 +25,13 @@ bool BeatmapPlayback::Reset(MapTime startTime)
 	m_currentLaserObj = &m_objects.front();
 	m_currentTiming = &m_timingPoints.front();
 	m_currentZoomPoint = m_zoomPoints.empty() ? nullptr : &m_zoomPoints.front();
+	for (ZoomControlPoint* z : m_zoomPoints)
+	{
+		if (z->time != INT32_MIN) //Not a starting point.
+			break;
+
+		m_zoomStartPoints[z->index] = z;
+	}
 	m_currentLaneTogglePoint = m_laneTogglePoints.empty() ? nullptr : &m_laneTogglePoints.front();
 
 	//hittableLaserEnter = (*m_currentTiming)->beatDuration * 4.0;
