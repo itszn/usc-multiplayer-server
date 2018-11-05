@@ -118,7 +118,7 @@ private:
 	Background* m_foreground = nullptr;
 
 	// Lua state
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 
 	// Currently active timing point
 	const TimingPoint* m_currentTiming;
@@ -234,11 +234,6 @@ public:
 
 		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
 
-		// Try to load beatmap jacket image
-		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
-		m_jacketImage = ImageRes::Create(jacketPath);
-
-
 		m_gaugeSamples[256] = { 0.0f };
 		MapTime firstObjectTime = m_beatmap->GetLinearObjects().front()->time;
 		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
@@ -339,6 +334,7 @@ public:
 		// Load particle textures
 		loader.AddTexture(basicParticleTexture, "particle_flare.png");
 		loader.AddTexture(squareParticleTexture, "particle_square.png");
+		loader.AddMaterial(particleMaterial, "particle");
 
 		if(!InitHUD())
 			return false;
@@ -349,28 +345,13 @@ public:
 		// Always hide mouse during gameplay no matter what input mode.
 		g_gameWindow->SetCursorVisible(false);
 
-		return true;
-	}
-	virtual bool AsyncFinalize() override
-	{
-		g_application->LoadGauge((m_flags & GameFlags::Hard) != GameFlags::None);
-
-		if(!loader.Finalize())
-			return false;
-
 		// Load particle material
 		m_particleSystem = ParticleSystemRes::Create(g_gl);
-		CheckedLoad(particleMaterial = g_application->LoadMaterial("particle"));
-		particleMaterial->blendMode = MaterialBlendMode::Additive;
-		particleMaterial->opaque = false;
-
-		// Background 
-		/// TODO: Load this async
-		CheckedLoad(m_background = CreateBackground(this));
-		CheckedLoad(m_foreground = CreateBackground(this, true));
 
 		//Lua
-		CheckedLoad(m_lua = g_application->LoadScript("gameplay"));
+		m_lua = g_application->LoadScript("gameplay");
+		if (!m_lua)
+			return false;
 
 		auto pushStringToTable = [&](const char* name, String data)
 		{
@@ -385,8 +366,6 @@ public:
 			lua_settable(m_lua, -3);
 		};
 
-		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
-		// Try to load beatmap jacket image
 		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
 		//Set gameplay table
 		{
@@ -398,7 +377,22 @@ public:
 			pushIntToTable("level", mapSettings.level);
 			lua_setglobal(m_lua, "gameplay");
 		}
+		return true;
+	}
+	virtual bool AsyncFinalize() override
+	{
+		if (!loader.Finalize())
+			return false;
 
+
+		// Background 
+		/// TODO: Load this async
+		CheckedLoad(m_background = CreateBackground(this));
+		CheckedLoad(m_foreground = CreateBackground(this, true));
+		g_application->LoadGauge((m_flags & GameFlags::Hard) != GameFlags::None);
+
+		particleMaterial->blendMode = MaterialBlendMode::Additive;
+		particleMaterial->opaque = false;
 		// Do this here so we don't get input events while still loading
 		m_scoring.SetFlags(m_flags);
 		m_scoring.SetPlayback(m_playback);

@@ -210,7 +210,7 @@ class SelectionWheel
 	uint32 m_currentlySelectedLuaMapIndex = 0;
 
 	// Style to use for everything song select related
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 
 public:
 	SelectionWheel()
@@ -797,7 +797,7 @@ private:
 	bool m_selectingFolders = true;
 	SongFilter* m_currentFilters[2] = { nullptr };
 	MapDatabase* m_mapDB;
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 };
 
 class GameSettingsWheel{
@@ -931,7 +931,7 @@ private:
 	Map<GameFlags, void*> m_guiElements;
 	Map<GameFlags, WString> m_flagNames;
 	GameFlags m_currentSelection;
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 };
 
 /*
@@ -978,7 +978,7 @@ private:
 	uint64_t m_previewDelayTicks = 0;
 	Map<Input::Button, float> m_timeSinceButtonPressed;
 	Map<Input::Button, float> m_timeSinceButtonReleased;
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 
 public:
 	bool Init() override

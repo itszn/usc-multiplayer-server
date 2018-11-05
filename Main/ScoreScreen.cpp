@@ -33,7 +33,7 @@ private:
 	Graphics::Font m_specialFont;
 	Sample m_applause;
 	Texture m_categorizedHitTextures[4];
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 	bool m_autoplay;
 	bool m_autoButtons;
 	bool m_startPressed;

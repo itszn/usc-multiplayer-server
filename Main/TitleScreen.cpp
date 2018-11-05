@@ -26,7 +26,7 @@ class TitleScreen_Impl : public TitleScreen
 private:
 	Ref<CommonGUIStyle> m_guiStyle;
 	Ref<Canvas> m_canvas;
-	lua_State* m_lua;
+	lua_State* m_lua = nullptr;
 
 
 	void Exit()
