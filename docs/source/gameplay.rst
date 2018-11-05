@@ -57,3 +57,39 @@ For starting laser alert animations::
 
     if isRight == true then restart right alert animation
     else restart left alert animation
+    
+render_intro(deltaTime)
+^^^^^^^^^^^^^^^^^^^^^^^
+Function for rendering an intro or keeping an intro timer. This function will be
+called every frame untill it returns ``true`` and never again after it has.
+
+Example:
+
+.. code-block:: lua
+
+    render_intro = function(deltaTime)
+        if not game.GetButton(game.BUTTON_STA) then
+            introTimer = introTimer - deltaTime
+        end
+        introTimer = math.max(introTimer, 0)
+        return introTimer <= 0
+    end
+
+render_outro(deltaTime, clearState)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Function for rendering an outro or keeping an outro timer.
+
+
+This function gets called when the game has ended till the game has transitioned into
+the result screen, the game starts transitioning when this function returns ``true``
+for the first time.
+
+``clearState`` tells this function if the player failed or cleared the game for example.
+These are all the possible states::
+
+    0 = Player manually exited the game
+    1 = Failed
+    2 = Cleared
+    3 = Hard Cleared
+    4 = Full Combo
+    5 = Perfect

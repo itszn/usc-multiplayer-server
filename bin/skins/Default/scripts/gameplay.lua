@@ -284,7 +284,9 @@ render = function(deltaTime)
 end
 
 render_intro = function(deltaTime)
-    introTimer = introTimer - deltaTime
+    if not game.GetButton(game.BUTTON_STA) then
+        introTimer = introTimer - deltaTime
+    end
     introTimer = math.max(introTimer, 0)
     return introTimer <= 0
 end
@@ -297,11 +299,10 @@ render_outro = function(deltaTime, clearState)
     gfx.FillColor(0,0,0, math.floor(127 * math.min(outroTimer, 1)))
     gfx.Fill()
     gfx.Scale(scale,scale)
-    gfx.Translate(0, yshift)
     gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE)
     gfx.FillColor(255,255,255, math.floor(255 * math.min(outroTimer, 1)))
     gfx.LoadSkinFont("NovaMono.ttf")
-    gfx.FontSize(40)
+    gfx.FontSize(70)
     gfx.Text(clearTexts[clearState], desw / 2, desh / 2)
     outroTimer = outroTimer + deltaTime
     return outroTimer > 2
