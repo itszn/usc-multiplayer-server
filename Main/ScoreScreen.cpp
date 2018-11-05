@@ -131,12 +131,7 @@ public:
 	AsyncAssetLoader loader;
 	virtual bool AsyncLoad() override
 	{
-		String skin = g_gameConfig.GetString(GameConfigKeys::Skin);
-		CheckedLoad(m_applause = g_audio->CreateSample("skins/" + skin + "/audio/applause.wav"));
-
-		
-
-		return loader.Load();
+		return true;
 	}
 	virtual bool AsyncFinalize() override
 	{
@@ -204,13 +199,6 @@ public:
 	}
 	bool Init() override
 	{
-		// Add to screen
-		//Canvas::Slot* rootSlot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		//rootSlot->anchor = Anchors::Full;
-
-		// Play score screen sound
-		m_applause->Play();
-
 		return true;
 	}
 

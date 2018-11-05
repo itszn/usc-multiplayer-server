@@ -14,6 +14,8 @@ else
 end
 local diffNames = {"NOV", "ADV", "EXH", "INF"}
 local backgroundImage = gfx.CreateSkinImage("bg.png", 1);
+game.LoadSkinSample("applause")
+local played = false
 
 
 draw_stat = function(x,y,w,h, name, value, format,r,g,b)
@@ -89,6 +91,10 @@ render = function(deltaTime, showStats)
     gfx.ImageRect(0, 0, resx, resy, backgroundImage, 0.5, 0);
     gfx.Scale(scale,scale)
     gfx.Translate(moveX,moveY)
+    if result.badge > 1 and not played then
+        game.PlaySample("applause")
+        played = true
+    end
     if jacket == nil then
         jacket = gfx.CreateImage(result.jacketPath, 0)
     end
