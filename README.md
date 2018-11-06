@@ -6,8 +6,9 @@ A game based on [KShootMania](http://www.kshootmania.com/) and [SDVX](https://re
 #### [**Skinning Documentation**](https://unnamed-sdvx-clone.readthedocs.io/en/latest/index.html)
 
 #### Demo Videos:
-[![Gameplay Video](http://img.youtube.com/vi/uMlAj9xfSEA/2.jpg)](https://youtu.be/uMlAj9xfSEA)
-[![Laser Color Settings](http://img.youtube.com/vi/tJXVr1KdZsc/2.jpg)](https://youtu.be/tJXVr1KdZsc)
+[![Gameplay Video](http://img.youtube.com/vi/1GCraT0ktrc/2.jpg)](https://youtu.be/1GCraT0ktrc)
+[![Portrait Gameplay](http://img.youtube.com/vi/kP1tD6bkPa4/2.jpg)](https://youtu.be/kP1tD6bkPa4)
+[![Various Settings](http://img.youtube.com/vi/_g9Xv5RDwa0/2.jpg)](https://youtu.be/_g9Xv5RDwa0)
 
 ### Current features:
 - Completely skinnable GUI
