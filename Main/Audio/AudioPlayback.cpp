@@ -248,9 +248,21 @@ const String& AudioPlayback::GetBeatmapRootPath() const
 {
 	return m_beatmapRootPath;
 }
-float * AudioPlayback::GetPlaybackSpeedPtr()
+void AudioPlayback::SetPlaybackSpeed(float speed)
 {
-	return &m_music->PlaybackSpeed;
+	m_music->PlaybackSpeed = speed;
+	if (m_fxtrack)
+		m_fxtrack->PlaybackSpeed = speed;
+}
+float AudioPlayback::GetPlaybackSpeed() const
+{
+	return m_music->PlaybackSpeed;
+}
+void AudioPlayback::SetVolume(float volume)
+{
+	m_music->SetVolume(volume);
+	if (m_fxtrack)
+		m_fxtrack->SetVolume(volume);
 }
 void AudioPlayback::m_CleanupDSP(DSP*& ptr)
 {

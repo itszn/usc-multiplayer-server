@@ -732,7 +732,9 @@ public:
 			}
 			if (lua_isnumber(m_lua, lua_gettop(m_lua)))
 			{
-				*m_audioPlayback.GetPlaybackSpeedPtr() = Math::Clamp((float)lua_tonumber(m_lua, lua_gettop(m_lua)),0.0f,1.0f);
+				float speed = Math::Clamp((float)lua_tonumber(m_lua, lua_gettop(m_lua)), 0.0f, 1.0f);
+				m_audioPlayback.SetPlaybackSpeed(speed);
+				m_audioPlayback.SetVolume(Math::Clamp(speed * 10.0f, 0.0f, 1.0f));
 			}
 			lua_pop(m_lua, 1);
 			m_outroCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
@@ -1516,10 +1518,8 @@ public:
 	}
 	virtual float GetPlaybackSpeed() override
 	{
-		return *m_audioPlayback.GetPlaybackSpeedPtr();
+		return m_audioPlayback.GetPlaybackSpeed();
 	}
-
-
 	virtual const String& GetMapRootPath() const
 	{
 		return m_mapRootPath;

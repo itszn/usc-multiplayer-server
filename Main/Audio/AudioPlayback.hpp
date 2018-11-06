@@ -70,7 +70,9 @@ public:
 	BeatmapPlayback& GetBeatmapPlayback();
 	const Beatmap& GetBeatmap() const;
 	const String& GetBeatmapRootPath() const;
-	float* GetPlaybackSpeedPtr();
+	void SetPlaybackSpeed(float speed);
+	float GetPlaybackSpeed() const;
+	void SetVolume(float volume);
 
 private:
 	// Returns the track that should have effects applied to them
