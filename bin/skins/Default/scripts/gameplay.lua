@@ -305,7 +305,7 @@ render_outro = function(deltaTime, clearState)
     gfx.FontSize(70)
     gfx.Text(clearTexts[clearState], desw / 2, desh / 2)
     outroTimer = outroTimer + deltaTime
-    return outroTimer > 2
+    return outroTimer > 2, 1 - outroTimer
 end
 
 update_score = function(newScore)

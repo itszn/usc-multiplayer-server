@@ -79,6 +79,20 @@ render_outro(deltaTime, clearState)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Function for rendering an outro or keeping an outro timer.
 
+This function can return two values, the first being a boolean to tell the game
+when the outro has completed and the second must be a number that sets the playback
+speed, like so:
+
+.. code-block:: lua
+    
+    local outroTimer = 0
+    --Slows the playback to a stop for the first second
+    --and then goes to the result screen after another second
+    render_outro = function(deltaTime, clearState)
+        outroTimer = outroTimer + deltaTime --counts timer up
+        return outroTimer > 2, 1 - outroTimer
+    end
+
 
 This function gets called when the game has ended till the game has transitioned into
 the result screen, the game starts transitioning when this function returns ``true``

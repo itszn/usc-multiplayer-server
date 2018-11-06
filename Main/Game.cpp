@@ -724,13 +724,17 @@ public:
 			// Render Lua Outro
 			lua_getglobal(m_lua, "render_outro");
 			lua_pushnumber(m_lua, deltaTime);
-			///TODO: Push clear state as second parameter
 			lua_pushnumber(m_lua, m_getClearState());
-			if (lua_pcall(m_lua, 2, 1, 0) != 0)
+			if (lua_pcall(m_lua, 2, 2, 0) != 0)
 			{
 				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
 				assert(false);
 			}
+			if (lua_isnumber(m_lua, lua_gettop(m_lua)))
+			{
+				*m_audioPlayback.GetPlaybackSpeedPtr() = Math::Clamp((float)lua_tonumber(m_lua, lua_gettop(m_lua)),0.0f,1.0f);
+			}
+			lua_pop(m_lua, 1);
 			m_outroCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
 			lua_settop(m_lua, 0);
 		}

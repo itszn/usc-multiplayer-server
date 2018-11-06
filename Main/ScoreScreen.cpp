@@ -35,6 +35,7 @@ private:
 	bool m_autoButtons;
 	bool m_startPressed;
 	bool m_showStats;
+	bool m_manualExit;
 	uint32 m_score;
 	uint32 m_maxCombo;
 	uint32 m_categorizedHits[3];
@@ -92,6 +93,7 @@ public:
 		m_scoredata.miss = m_categorizedHits[0];
 		m_scoredata.gauge = m_finalGaugeValue;
 		m_scoredata.gameflags = (uint32)m_flags;
+		m_manualExit = game->GetManualExit();
 
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 		m_meanHitDelta = scoring.GetMeanHitDelta();
@@ -161,7 +163,10 @@ public:
 		m_PushIntToTable("earlies", m_timedHits[0]);
 		m_PushIntToTable("lates", m_timedHits[1]);
 		m_PushStringToTable("grade", Scoring::CalculateGrade(m_score).c_str());
-		m_PushIntToTable("badge", Scoring::CalculateBadge(m_scoredata));
+		if(m_manualExit)
+			m_PushIntToTable("badge", 0);
+		else
+			m_PushIntToTable("badge", Scoring::CalculateBadge(m_scoredata));
 
 		//Push gauge samples
 		lua_pushstring(m_lua, "gaugeSamples");
