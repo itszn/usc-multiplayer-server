@@ -115,9 +115,7 @@ public:
 	Texture scoreHitTexture;
 	Texture laserPointerTexture;
 	Texture scoreHitTextures[3]; // Ok, Miss, Perfect
-	Texture scoreTimeTextures[2]; // Early, Late
 	// Combo counter sprite sheet
-	Texture comboSpriteSheet;
 	Mesh comboSpriteMeshes[10];
 	/* Reusable sprite mesh and material */
 	Mesh centeredTrackMesh;
@@ -129,7 +127,7 @@ public:
 	int objectGlowState;
 
 	// Early/Late indicator
-	struct TimedHitEffect* timedHitEffect;
+	struct TimedHitEffect* timedHitEffect = nullptr;
 
 	// Track Origin position
 	Transform trackOrigin;

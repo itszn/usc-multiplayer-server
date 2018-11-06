@@ -112,7 +112,8 @@ void TimedHitEffect::Draw(class RenderQueue& rq)
 
 	if (on == 1)
 	{
-		Texture hitTexture = track->scoreTimeTextures[late ? 1 : 0];
+		//Texture hitTexture = track->scoreTimeTextures[late ? 1 : 0];
+		Texture hitTexture = track->scoreHitTextures[late ? 1 : 0];
 
 		// Size of effect
 		Vector2 hitEffectSize = Vector2(track->buttonWidth * 2.f, 0.0f);

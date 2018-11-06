@@ -36,7 +36,8 @@ Track::~Track()
 	{
 		delete *it;
 	}
-	delete timedHitEffect;
+	if(timedHitEffect)
+		delete timedHitEffect;
 }
 bool Track::AsyncLoad()
 {
@@ -82,11 +83,6 @@ bool Track::AsyncLoad()
 	{
 		loader->AddTexture(scoreHitTextures[i], Utility::Sprintf("score%d.png", i));
 	}
-	for (uint32 i = 0; i < 2; i++)
-	{
-		loader->AddTexture(scoreTimeTextures[i], Utility::Sprintf("timed%d.png", i));
-	}
-
 
 	// Load Button object
 	loader->AddTexture(buttonTexture, "button.png");
@@ -102,13 +98,6 @@ bool Track::AsyncLoad()
 	// Entry and exit textures for laser
 	loader->AddTexture(laserTailTextures[0], "laser_entry.png");
 	loader->AddTexture(laserTailTextures[1], "laser_exit.png");
-
-	// Load laser alerts
-	loader->AddTexture(laserAlertTextures[0], "alert_l.png");
-	loader->AddTexture(laserAlertTextures[1], "alert_r.png");
-	
-
-	loader->AddTexture(comboSpriteSheet, "combo.png");
 
 	// Track materials
 	loader->AddMaterial(trackMaterial, "track");
@@ -177,20 +166,6 @@ bool Track::AsyncFinalize()
 
 	// Overlay shader
 	trackOverlay->opaque = false;
-
-	// Combo number meshes for the combo sprite sheet
-	Vector2i comboFontSize = comboSpriteSheet->GetSize();
-	Vector2i comboFontSizePerCharacter = comboFontSize / Vector2i(10, 1);
-	Vector2 comboFontTexCoordSize = Vector2(1.0f / 10.0f, 1.0f);
-	for(uint32 i = 0; i < 10; i++)
-	{
-		Vector2 texStart = comboFontTexCoordSize * Vector2((float)i, 0);
-		Vector<MeshGenerators::SimpleVertex> verts;
-		MeshGenerators::GenerateSimpleXYQuad(Rect3D(Vector2(-0.5f), Vector2(1.0f)), Rect(texStart, comboFontTexCoordSize), verts);
-		Mesh m = comboSpriteMeshes[i] = MeshRes::Create(g_gl);
-		m->SetData(verts);
-		m->SetPrimitiveType(PrimitiveType::TriangleList);
-	}
 
 	// Create a laser track builder for each laser object
 	// these will output and cache meshes for rendering lasers
@@ -564,8 +539,9 @@ void Track::DrawCombo(RenderQueue& rq, uint32 score, Color color, float scale)
 	float size = (float)(meshes.size()-1) * seperation;
 	float halfSize = size * 0.5f;
 
+	///TODO: cleanup
 	MaterialParameterSet params;
-	params.SetParameter("mainTex", comboSpriteSheet);
+	params.SetParameter("mainTex", 0);
 	params.SetParameter("color", color);
 	for(uint32 i = 0; i < meshes.size(); i++)
 	{

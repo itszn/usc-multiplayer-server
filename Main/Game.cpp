@@ -94,9 +94,6 @@ private:
 	Image m_jacketImage;
 	Texture m_jacketTexture;
 
-	// Combo colors
-	Color m_comboColors[3];
-
 	// The beatmap
 	Ref<Beatmap> m_beatmap;
 	// Scoring system object
@@ -253,16 +250,7 @@ public:
 			lastObjectTime += lastHold->duration;
 		}
 		
-		// Load combo colors
-		Image comboColorPalette;
-		comboColorPalette = g_application->LoadImage("combocolors.png");
-		assert(comboColorPalette->GetSize().x >= 3);
-		for (uint32 i = 0; i < 3; i++)
-			m_comboColors[i] = comboColorPalette->GetBits()[i];
-
 		m_gaugeSampleRate = lastObjectTime / 256;
-
-
 
         // Move this somewhere else?
         // Set hi-speed for m-Mod
