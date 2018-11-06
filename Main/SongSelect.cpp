@@ -815,7 +815,7 @@ public:
 	{
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/settingswheel"));
 		m_gameFlags = GameFlags::None;
-		AddSetting(L"Hard Guage", GameFlags::Hard);
+		AddSetting(L"Hard Gauge", GameFlags::Hard);
 		AddSetting(L"Mirror", GameFlags::Mirror);
 		AddSetting(L"Random", GameFlags::Random);
 		AddSetting(L"Auto BT (unused)", GameFlags::AutoBT);

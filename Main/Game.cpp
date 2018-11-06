@@ -967,6 +967,7 @@ public:
 		if(m_ended)
 			return;
 
+		m_scoring.FinishGame();
 		m_ended = true;
 	}
 	void OnScoreScreenLoaded(IAsyncLoadableApplicationTickable* tickable)

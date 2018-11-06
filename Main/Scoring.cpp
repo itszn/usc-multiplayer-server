@@ -174,13 +174,22 @@ void Scoring::Reset()
 	OnScoreChanged.Call(0);
 }
 
+void Scoring::FinishGame()
+{
+	m_CleanupInput();
+	m_CleanupTicks();
+	for (size_t i = 0; i < 8; i++)
+	{
+		m_ReleaseHoldObject(i);
+	}
+}
+
 void Scoring::Tick(float deltaTime)
 {
 	m_UpdateLasers(deltaTime);
 	m_UpdateTicks();
 	if (autoplay | autoplayButtons)
 	{
-		
 		for(size_t i = 0; i < 6; i++)
 		{
 			if(m_ticks[i].size() > 0)
@@ -193,7 +202,6 @@ void Scoring::Tick(float deltaTime)
 				}
 			}
 		}
-		
 	}
 }
 

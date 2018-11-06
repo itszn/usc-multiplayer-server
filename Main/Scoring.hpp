@@ -82,6 +82,8 @@ public:
 	// Called after SetPlayback
 	void Reset();
 
+	void FinishGame();
+
 	// Updates the list of objects that are possible to hit
 	void Tick(float deltaTime);
 
