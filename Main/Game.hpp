@@ -55,7 +55,7 @@ public:
 	virtual Ref<class Beatmap> GetBeatmap() = 0;
 	// Song was manually ended
 	virtual bool GetManualExit() = 0;
-
+	virtual float GetPlaybackSpeed() = 0;
 	// The folder that contians the map
 	virtual const String& GetMapRootPath() const = 0;
 	// Full path to map

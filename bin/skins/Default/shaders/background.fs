@@ -6,7 +6,7 @@ layout(location=0) out vec4 target;
 
 uniform ivec2 screenCenter;
 // x = bar time
-// y = object glow
+// y = off-sync but smooth bpm based timing
 // z = real time since song start
 uniform vec3 timing;
 uniform ivec2 viewport;
@@ -102,7 +102,7 @@ void main()
 	float fog = -1. / (diff * 10. * Scale.x) + 1.;
     
     float texY = thing2;
-    texY += timing.x * speed;
+    texY += timing.y * speed;
 
     
     float rot = (atan(point_diff.x,point_diff.y) + BaseTexRotation) / TWO_PI;

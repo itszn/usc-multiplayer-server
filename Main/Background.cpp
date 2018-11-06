@@ -38,6 +38,7 @@ public:
 	Texture frameBufferTexture;
 	MaterialParameterSet fullscreenMaterialParams;
 	float clearTransition = 0.0f;
+	float offsyncTimer = 0.0f;
 	bool foreground;
 };
 
@@ -100,12 +101,9 @@ class TestBackground : public FullscreenBackground
 		const TimingPoint& tp = game->GetPlayback().GetCurrentTimingPoint();
 		timing.x = game->GetPlayback().GetBeatTime();
 		timing.z = game->GetPlayback().GetLastTime() / 1000.0f;
-		// every 1/4 tick
-		float tickTime = fmodf(timing.x * (float)tp.numerator, 1.0f);
-		//timing.y = powf(tickTime, 2);
-		timing.y = powf(1.0f-tickTime, 1);
-		//if(tickTime > 0.7f)
-		//	timing.y += ((tickTime - 0.7f) / 0.3f) * 0.8f; // Gradual build up again
+		offsyncTimer += (deltaTime / tp.beatDuration) * 1000.0 * game->GetPlaybackSpeed();
+		offsyncTimer = fmodf(offsyncTimer, 1.0f);
+		timing.y = offsyncTimer;
 
 		float clearBorder = 0.70f;
 		if ((game->GetFlags() & GameFlags::Hard) != GameFlags::None)

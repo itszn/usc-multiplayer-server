@@ -336,6 +336,8 @@ public:
 	void AdvanceSelection(int32 offset)
 	{
 		auto& srcCollection = m_SourceCollection();
+		if (srcCollection.size() == 0)
+			return;
 		auto it = srcCollection.find(m_currentlySelectedId);
 		if(it == srcCollection.end())
 		{

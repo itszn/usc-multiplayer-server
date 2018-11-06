@@ -1514,6 +1514,10 @@ public:
 	{
 		return m_manualExit;
 	}
+	virtual float GetPlaybackSpeed() override
+	{
+		return *m_audioPlayback.GetPlaybackSpeedPtr();
+	}
 
 
 	virtual const String& GetMapRootPath() const
