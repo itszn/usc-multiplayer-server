@@ -90,6 +90,10 @@ namespace Graphics
 		// Used to get current IME working data
 		const TextComposition& GetTextComposition() const;
 
+		// Show a simple message box
+		// level 0 = error, 1 = warning, 2 = info
+		void ShowMessageBox(String title, String message, int severity);
+
 		// Get the text currently in the clipboard
 		WString GetClipboard() const;
 

@@ -669,6 +669,7 @@ lua_State* Application::LoadScript(const String & name)
 	if (luaL_dofile(s, commonPath.c_str()) || luaL_dofile(s, path.c_str()))
 	{
 		Logf("Lua error: %s", Logger::Error, lua_tostring(s, -1));
+		g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(s, -1), 0);
 		lua_close(s);
 		return nullptr;
 	}
@@ -681,6 +682,7 @@ void Application::ReloadScript(const String& name, lua_State* L)
 	if (luaL_dofile(L, path.c_str()))
 	{
 		Logf("Lua error: %s", Logger::Error, lua_tostring(L, -1));
+		g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(L, -1), 0);
 		lua_close(L);
 		assert(false);
 	}

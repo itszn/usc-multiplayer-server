@@ -114,6 +114,22 @@ namespace Graphics
 		{
 			SDL_SetWindowPosition(m_window, pos.x, pos.y);
 		}
+		void ShowMessageBox(String title, String message, int severity)
+		{
+			uint32 flags = 0;
+			switch (severity)
+			{
+			case 0:
+				flags = SDL_MESSAGEBOX_ERROR;
+				break;
+			case 1:
+				flags = SDL_MESSAGEBOX_WARNING;
+				break;
+			default:
+				flags = SDL_MESSAGEBOX_INFORMATION;
+			}
+			SDL_ShowSimpleMessageBox(flags, title.c_str(), message.c_str(), m_window);
+		}
 		Vector2i GetWindowPos() const
 		{
 			Vector2i res;
@@ -524,6 +540,11 @@ namespace Graphics
 	const Graphics::TextComposition& Window::GetTextComposition() const
 	{
 		return m_impl->m_textComposition;
+	}
+
+	void Window::ShowMessageBox(String title, String message, int severity)
+	{
+		m_impl->ShowMessageBox(title, message, severity);
 	}
 
 	WString Window::GetClipboard() const

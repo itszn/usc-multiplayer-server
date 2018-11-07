@@ -53,6 +53,7 @@ private:
 		if (lua_pcall(m_lua, 1, 1, 0) != 0)
 		{
 			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 		int ret = luaL_checkinteger(m_lua, 1);
@@ -95,6 +96,7 @@ public:
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
 			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 	}
