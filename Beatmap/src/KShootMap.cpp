@@ -135,6 +135,8 @@ bool KShootMap::Init(BinaryStream& input, bool metadataOnly)
 				continue;
 			if (line.substr(0, 2).compare("//") == 0)
 				continue;
+			if (line.substr(0, 1).compare(";") == 0)
+				continue;
 
 			String k, v;
 			if(line[0] == '#')

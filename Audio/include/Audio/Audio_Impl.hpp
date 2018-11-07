@@ -14,7 +14,7 @@ public:
 	void Start();
 	void Stop();
 	// Get samples
-	virtual void Mix(float* data, uint32& numSamples) override;
+	virtual void Mix(void* data, uint32& numSamples) override;
 	// Registers an AudioBase to be rendered
 	void Register(AudioBase* audio);
 	// Removes an AudioBase so it is no longer rendered

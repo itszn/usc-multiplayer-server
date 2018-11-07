@@ -18,7 +18,7 @@ static uint32 testSongOffset = 0;
 Test("Audio.Playback")
 {
 	Audio* audio = new Audio();
-	TestEnsure(audio->Init());
+	TestEnsure(audio->Init(false));
 
 	Sample testSample = audio->CreateSample(testSamplePath);
 	TestEnsure(testSample.IsValid());

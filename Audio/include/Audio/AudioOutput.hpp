@@ -3,7 +3,7 @@
 class IMixer
 {
 public:
-	virtual void Mix(float* data, uint32& numSamples) = 0;
+	virtual void Mix(void* data, uint32& numSamples) = 0;
 };
 
 /*
@@ -15,7 +15,7 @@ public:
 	AudioOutput();
 	~AudioOutput();
 
-	bool Init();
+	bool Init(bool exclusive);
 
 	// Safe to start mixing
 	void Start(IMixer* mixer);
@@ -27,6 +27,7 @@ public:
 
 	// The actual length of the buffer in seconds
 	double GetBufferLength() const;
+	bool IsIntegerFormat() const;
 
 private:
 	class AudioOutput_Impl* m_impl;

@@ -259,7 +259,7 @@ bool Application::m_Init()
 
 		// Init audio
 		new Audio();
-		if(!g_audio->Init())
+		if(!g_audio->Init(g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive)))
 		{
 			Log("Audio initialization failed", Logger::Error);
 			delete g_audio;

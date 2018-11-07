@@ -15,7 +15,7 @@ public:
 	Audio();
 	~Audio();
 	// Initializes the audio device
-	bool Init();
+	bool Init(bool exclusive);
 	void SetGlobalVolume(float vol);
 
 	// Opens a stream at path

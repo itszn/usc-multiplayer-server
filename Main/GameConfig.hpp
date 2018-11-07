@@ -83,7 +83,9 @@ DefineEnum(GameConfigKeys,
 	AutoResetToSpeed, //Mod-Speed to reset to after each song (when AutoResetSettings is true)
 
 	EditorPath,
-	EditorParamsFormat
+	EditorParamsFormat,
+
+	WASAPI_Exclusive
 	);
 
 // Config for game settings

@@ -57,7 +57,6 @@ public:
 	struct IMMDevice* m_device = nullptr;
 	tWAVEFORMATEX m_format;
 	IMMDeviceEnumerator* m_deviceEnumerator = nullptr;
-
 	// The output wave buffer
 	uint32_t m_numBufferFrames;
 
@@ -80,6 +79,7 @@ public:
 	bool m_runAudioThread = false;
 	Thread m_audioThread;
 	IMixer* m_mixer = nullptr;
+	bool m_exclusive = false;
 
 public:
 	AudioOutput_Impl()
@@ -121,14 +121,15 @@ public:
 			m_audioThread.join();
 	}
 
-	bool Init()
+	bool Init(bool exclusive)
 	{
+		m_exclusive = exclusive;
+
 		// Initialize the WASAPI device enumerator
 		HRESULT res;
 		const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 		const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 		CoInitialize(nullptr);
-
 		if(!m_deviceEnumerator)
 		{
 			res = CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&m_deviceEnumerator);
@@ -184,14 +185,36 @@ public:
 		if(res != S_OK)
 			throw _com_error(res);
 
-		// Aquire format and initialize device for shared mode
 		WAVEFORMATEX* mixFormat = nullptr;
 		res = m_audioClient->GetMixFormat(&mixFormat);
-
-		// Init client
-		res = m_audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0,
-			bufferDuration, 0, mixFormat, nullptr);
-
+		if (m_exclusive)
+		{
+			// Aquire format and initialize device for exclusive mode
+			REFERENCE_TIME defaultDevicePeriod, minDevicePeriod;
+			m_audioClient->GetDevicePeriod(&defaultDevicePeriod, &minDevicePeriod);
+			res = m_audioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, mixFormat, NULL);
+			if (res == AUDCLNT_E_UNSUPPORTED_FORMAT)
+			{
+				Log("Format not supported in exclusive mode, attempting other formats", Logger::Error);
+				mixFormat->wFormatTag = WAVE_FORMAT_PCM;
+				mixFormat->nChannels = 2;
+				mixFormat->nSamplesPerSec = 44100L;
+				mixFormat->nAvgBytesPerSec = 176400L;
+				mixFormat->nBlockAlign = 4;
+				mixFormat->wBitsPerSample = 16;
+				mixFormat->cbSize = 0;
+				
+			}
+			// Init client
+			res = m_audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, 0,
+				bufferDuration, defaultDevicePeriod, mixFormat, nullptr);
+		}
+		else
+		{
+			// Init client
+			res = m_audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0,
+				bufferDuration, 0, mixFormat, nullptr);
+		}
 		// Store selected format
 		m_format = *mixFormat;
 		CoTaskMemFree(mixFormat);
@@ -352,9 +375,9 @@ AudioOutput::~AudioOutput()
 {
 	delete m_impl;
 }
-bool AudioOutput::Init()
+bool AudioOutput::Init(bool exclusive)
 {
-	return m_impl->Init();
+	return m_impl->Init(exclusive);
 }
 void AudioOutput::Start(IMixer* mixer)
 {
@@ -377,5 +400,10 @@ uint32_t AudioOutput::GetSampleRate() const
 double AudioOutput::GetBufferLength() const
 {
 	return m_impl->m_bufferLength;
+}
+bool AudioOutput::IsIntegerFormat() const
+{
+	///TODO: check more cases?
+	return m_impl->m_format.wFormatTag == WAVE_FORMAT_PCM && m_impl->m_format.wBitsPerSample != 32;
 }
 #endif
