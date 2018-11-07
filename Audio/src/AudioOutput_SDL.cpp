@@ -119,7 +119,7 @@ AudioOutput::~AudioOutput()
 {
 	delete m_impl;
 }
-bool AudioOutput::Init()
+bool AudioOutput::Init(bool exclusive)
 {
 	return m_impl->Init();
 }
@@ -142,5 +142,9 @@ void AudioOutput::Start(IMixer* mixer)
 void AudioOutput::Stop()
 {
 	m_impl->m_mixer = nullptr;
+}
+bool AudioOutput::IsIntegerFormat() const
+{
+	return false;
 }
 #endif

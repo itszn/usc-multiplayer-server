@@ -112,6 +112,7 @@ private:
 	float m_laserColors[2] = { 0.25f, 0.75f };
 	String m_controllerButtonNames[7];
 	String m_controllerLaserNames[2];
+	int m_wasapi = 1;
 
 	std::queue<SDL_Event> eventQueue;
 
@@ -213,6 +214,7 @@ private:
 		g_gameConfig.Set(GameConfigKeys::Laser1Color, m_laserColors[1]);
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
 		g_gameConfig.Set(GameConfigKeys::GlobalOffset, m_globalOffset);
+		g_gameConfig.Set(GameConfigKeys::WASAPI_Exclusive, m_wasapi == 0);
 		g_gameConfig.Set(GameConfigKeys::InputOffset, m_inputOffset);
 		g_gameConfig.Set(GameConfigKeys::InputBounceGuard, m_bounceGuard);
 		if(m_skins.size() > 0)
@@ -329,6 +331,7 @@ public:
 		m_globalOffset = g_gameConfig.GetInt(GameConfigKeys::GlobalOffset);
 		m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
 		m_bounceGuard = g_gameConfig.GetInt(GameConfigKeys::InputBounceGuard);
+		m_wasapi = g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive) ? 0 : 1;
 
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 		auto skinSearch = std::find(m_skins.begin(), m_skins.end(), g_gameConfig.GetString(GameConfigKeys::Skin));
@@ -473,6 +476,12 @@ public:
 			nk_slider_float(m_nctx, 0, m_laserColors+1, 360, 0.1);
 
 			nk_layout_row_dynamic(m_nctx, 30, 1);
+#ifdef _WIN32
+			nk_radio_label(m_nctx, "WASAPI Exclusive Mode (requires restart)", &m_wasapi);
+			nk_spacing(m_nctx, 1);
+#endif // _WIN32
+
+
 			if (nk_button_label(m_nctx, "Exit")) Exit();
 			nk_end(m_nctx);
 		}

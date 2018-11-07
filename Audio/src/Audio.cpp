@@ -8,7 +8,7 @@
 Audio* g_audio = nullptr;
 Audio_Impl impl;
 
-void Audio_Impl::Mix(float* data, uint32& numSamples)
+void Audio_Impl::Mix(void* data, uint32& numSamples)
 {
 #if _DEBUG
 	static const uint32 guardBand = 1024;
@@ -22,7 +22,14 @@ void Audio_Impl::Mix(float* data, uint32& numSamples)
 	double adv = GetSecondsPerSample();
 
 	uint32 outputChannels = this->output->GetNumChannels();
-	memset(data, 0, numSamples * sizeof(float) * outputChannels);
+	if (output->IsIntegerFormat())
+	{
+		memset(data, 0, numSamples * sizeof(int16) * outputChannels);
+	}
+	else
+	{
+		memset(data, 0, numSamples * sizeof(float) * outputChannels);
+	}
 
 	uint32 currentNumberOfSamples = 0;
 	while(currentNumberOfSamples < numSamples)
@@ -91,7 +98,14 @@ void Audio_Impl::Mix(float* data, uint32& numSamples)
 			{
 				for(uint32 i = 0; i < maxSamples; i++)
 				{
-					data[(currentNumberOfSamples + i) * outputChannels + c] = m_sampleBuffer[(sampleOffset + i) * 2 + c];
+					if (output->IsIntegerFormat())
+					{
+						((int16*)data)[(currentNumberOfSamples + i) * outputChannels + c] = (int16)(0x7FFF * Math::Clamp(m_sampleBuffer[(sampleOffset + i) * 2 + c],-1.f,1.f));
+					}
+					else
+					{
+						((float*)data)[(currentNumberOfSamples + i) * outputChannels + c] = m_sampleBuffer[(sampleOffset + i) * 2 + c];
+					}
 				}
 			}
 			// TODO: Mix to surround channels as well?
@@ -162,12 +176,12 @@ Audio::~Audio()
 	assert(g_audio == this);
 	g_audio = nullptr;
 }
-bool Audio::Init()
+bool Audio::Init(bool exclusive)
 {
 	audioLatency = 0;
 
 	impl.output = new AudioOutput();
-	if(!impl.output->Init())
+	if(!impl.output->Init(exclusive))
 	{
 		delete impl.output;
 		impl.output = nullptr;
