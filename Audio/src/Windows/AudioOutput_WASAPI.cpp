@@ -195,15 +195,61 @@ public:
 			res = m_audioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, mixFormat, NULL);
 			if (res == AUDCLNT_E_UNSUPPORTED_FORMAT)
 			{
-				Log("Format not supported in exclusive mode, attempting other formats", Logger::Error);
-				mixFormat->wFormatTag = WAVE_FORMAT_PCM;
-				mixFormat->nChannels = 2;
-				mixFormat->nSamplesPerSec = 44100L;
-				mixFormat->nAvgBytesPerSec = 176400L;
-				mixFormat->nBlockAlign = 4;
-				mixFormat->wBitsPerSample = 16;
-				mixFormat->cbSize = 0;
+				Log("Default format not supported in exclusive mode, attempting other formats", Logger::Error);
+
+				int numFormats = 2;
+				WORD formats[2] = { WAVE_FORMAT_PCM, WAVE_FORMAT_IEEE_FLOAT };
+
+				int numRates = 5;
+				long sampleRates[5] = {192000L, 96000L, 88200L, 48000L, 44100L};
+
+				int numDepths = 3;
+				int bitDepths[3] = {32, 24, 16 };
 				
+				Vector<WAVEFORMATEX> allFormats;
+				for (size_t f = 0; f < numFormats; f++)
+				{
+					for (size_t d = 0; d < numDepths; d++)
+					{
+						for (size_t r = 0; r < numRates; r++)
+						{
+							long avgBytesPerSec = (bitDepths[d] / 8) * sampleRates[r] * 2;
+							WAVEFORMATEX newformat;
+							newformat.wFormatTag = formats[f];
+							newformat.nChannels = 2;
+							newformat.nSamplesPerSec = sampleRates[r];
+							newformat.nAvgBytesPerSec = avgBytesPerSec;
+							newformat.nBlockAlign = 4;
+							newformat.wBitsPerSample = bitDepths[d];
+							newformat.cbSize = 0;
+							allFormats.Add(newformat);
+						}
+					}
+				}
+
+				int attemptingFormat = 0;
+				while (res != S_OK)
+				{
+					*mixFormat = allFormats[attemptingFormat];
+
+					Logf("Attempting exclusive mode format:\nSample Rate: %dhz,\nBit Depth: %dbit,\nFormat: %s\n-----", Logger::Info,
+						mixFormat->nSamplesPerSec,
+						mixFormat->wBitsPerSample,
+						mixFormat->wFormatTag == WAVE_FORMAT_PCM ? "PCM" : "IEEE FLOAT"
+						);
+
+					res = m_audioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, mixFormat, NULL);
+					attemptingFormat++;
+					if (attemptingFormat >= allFormats.size())
+					{
+						break;
+					}
+				}
+				if (res == S_OK)
+					Log("Format successful", Logger::Info);
+				else
+					Log("No accepted format found", Logger::Error);
+
 			}
 			// Init client
 			res = m_audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, 0,
