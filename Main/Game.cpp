@@ -129,7 +129,7 @@ private:
 	// Rate to sample gauge;
 	MapTime m_gaugeSampleRate;
 	float m_gaugeSamples[256] = { 0.0f };
-
+	MapTime m_endTime;
 
 	// Combo gain animation
 	Timer m_comboAnimation;
@@ -237,8 +237,13 @@ public:
 		m_gaugeSamples[256] = { 0.0f };
 		MapTime firstObjectTime = m_beatmap->GetLinearObjects().front()->time;
 		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
-		MapTime lastObjectTime = (*lastObj)->time;
+		while ((*lastObj)->type == ObjectType::Event && lastObj != &m_beatmap->GetLinearObjects().front())
+		{
+			lastObj--;
+		}
 
+		MapTime lastObjectTime = (*lastObj)->time;
+		m_endTime = lastObjectTime;
 		if ((*lastObj)->type == ObjectType::Hold)
 		{
 			HoldObjectState* lastHold = (HoldObjectState*)(*lastObj);
@@ -920,7 +925,7 @@ public:
 		lua_getglobal(m_lua, "gameplay");
 		//progress
 		lua_pushstring(m_lua, "progress");
-		lua_pushnumber(m_lua, Math::Clamp((float)playbackPositionMs / (*lastObj)->time,0.f,1.f));
+		lua_pushnumber(m_lua, Math::Clamp((float)playbackPositionMs / m_endTime,0.f,1.f));
 		lua_settable(m_lua, -3);
 		//hispeed
 		lua_pushstring(m_lua, "hispeed");
