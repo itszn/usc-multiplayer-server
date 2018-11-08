@@ -586,9 +586,9 @@ public:
 			auto ObjectRenderPriorty = [](const TObjectState<void>* a)
 			{
 				if (a->type == ObjectType::Single)
-					return (((ButtonObjectState*)a)->index < 4) ? 2 : 1;
+					return (((ButtonObjectState*)a)->index < 4) ? 1 : 2;
 				else if (a->type == ObjectType::Hold)
-					return (((ButtonObjectState*)a)->index < 4) ? 4 : 3;
+					return (((ButtonObjectState*)a)->index < 4) ? 3 : 4;
 				else
 					return 0;
 			};
