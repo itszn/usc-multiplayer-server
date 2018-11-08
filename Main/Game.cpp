@@ -243,7 +243,6 @@ public:
 		}
 
 		MapTime lastObjectTime = (*lastObj)->time;
-		m_endTime = lastObjectTime;
 		if ((*lastObj)->type == ObjectType::Hold)
 		{
 			HoldObjectState* lastHold = (HoldObjectState*)(*lastObj);
@@ -255,6 +254,7 @@ public:
 			lastObjectTime += lastHold->duration;
 		}
 		
+		m_endTime = lastObjectTime;
 		m_gaugeSampleRate = lastObjectTime / 256;
 
         // Move this somewhere else?
@@ -1375,7 +1375,7 @@ public:
 		else if(key == SDLK_ESCAPE)
 		{
 			ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
-			MapTime timePastEnd = m_lastMapTime - (*lastObj)->time;
+			MapTime timePastEnd = m_lastMapTime - m_endTime;
 			if (timePastEnd < 0)
 				m_manualExit = true;
 			FinishGame();

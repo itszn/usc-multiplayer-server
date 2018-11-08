@@ -706,6 +706,20 @@ void Application::DisposeLua(lua_State* state)
 	DisposeGUI(state);
 	lua_close(state);
 }
+void Application::SetGaugeColor(int i, Color c)
+{
+	m_gaugeColors[i] = c;
+	if (m_gauge->colorBorder < 0.5f)
+	{
+		m_gauge->lowerColor = m_gaugeColors[2];
+		m_gauge->upperColor = m_gaugeColors[3];
+	}
+	else
+	{
+		m_gauge->lowerColor = m_gaugeColors[0];
+		m_gauge->upperColor = m_gaugeColors[1];
+	}
+}
 void Application::LoadGauge(bool hard)
 {
 	String gaugePath = "gauges/normal/";
@@ -713,14 +727,14 @@ void Application::LoadGauge(bool hard)
 	{
 		gaugePath = "gauges/hard/";
 		m_gauge->colorBorder = 0.3f;
-		m_gauge->lowerColor = Colori(200, 50, 0);
-		m_gauge->upperColor = Colori(255, 100, 0);
+		m_gauge->lowerColor = m_gaugeColors[2];
+		m_gauge->upperColor = m_gaugeColors[3];
 	}
 	else
 	{
 		m_gauge->colorBorder = 0.7f;
-		m_gauge->lowerColor = Colori(0, 204, 255);
-		m_gauge->upperColor = Colori(255, 102, 255);
+		m_gauge->lowerColor = m_gaugeColors[0];
+		m_gauge->upperColor = m_gaugeColors[1];
 	}
 	m_gauge->fillTexture = LoadTexture(gaugePath + "gauge_fill.png");
 	m_gauge->frontTexture = LoadTexture(gaugePath + "gauge_front.png");
@@ -980,6 +994,18 @@ static int lLoadImageJob(lua_State* L /* char* path, int placeholder, int w = 0,
 	return 1;
 }
 
+static int lSetGaugeColor(lua_State* L /*int colorIndex, int r, int g, int b*/)
+{
+	int colorindex, r, g, b;
+	colorindex = luaL_checkinteger(L, 1);
+	r = luaL_checkinteger(L, 2);
+	g = luaL_checkinteger(L, 3);
+	b = luaL_checkinteger(L, 4);
+
+	g_application->SetGaugeColor(colorindex, Colori(r, g, b));
+	return 0;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -1035,6 +1061,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("StrokeColor", lStrokeColor);
 		pushFuncToTable("UpdateLabel", lUpdateLabel);
 		pushFuncToTable("DrawGauge", lDrawGauge);
+		pushFuncToTable("SetGaugeColor", lSetGaugeColor);
 		pushFuncToTable("RoundedRect", lRoundedRect);
 		pushFuncToTable("RoundedRectVarying", lRoundedRectVarying);
 		pushFuncToTable("Ellipse", lEllipse);

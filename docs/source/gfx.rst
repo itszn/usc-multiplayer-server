@@ -258,6 +258,23 @@ DrawGauge(float rate, float x, float y, float w, float h, float deltaTime)
 **************************************************************************
 Draws the currently loaded gauge, the game loads the gauge on its own.
 
+SetGaugeColor(int colorindex, int r, int g, int b)
+***************************************************
+Sets the gauge color for the specified ``colorindex``. The color indexes are::
+
+    0 = Normal gauge fail
+    1 = Normal gauge clear
+    2 = Hard gauge low (<30%)
+    3 = Hard gauge high (>30%)
+
+Example:
+
+.. code-block:: lua
+
+    gfx.SetGaugeColor(0,50,50,50) --Normal gauge fail = dark grey
+    gfx.SetGaugeColor(1,255,255,255) --Normal gauge clear = white
+    gfx.SetGaugeColor(2,50,0,0) --Hard gauge low (<30%) = dark red
+    gfx.SetGaugeColor(3,255,0,0) --Hard gauge high (>30%) = red
 
 RoundedRect(float x, float y, float w, float h, float r)
 **************************************************************************
