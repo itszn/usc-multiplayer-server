@@ -884,14 +884,13 @@ public:
 		if (!m_ended)
 		{
 			m_scoring.Tick(deltaTime);
+			// Update scoring gauge
+			int32 gaugeSampleSlot = playbackPositionMs;
+			gaugeSampleSlot /= m_gaugeSampleRate;
+			gaugeSampleSlot = Math::Clamp(gaugeSampleSlot, (int32)0, (int32)255);
+			m_gaugeSamples[gaugeSampleSlot] = m_scoring.currentGauge;
 		}
 
-		// Update scoring gauge
-
-		int32 gaugeSampleSlot = playbackPositionMs;
-		gaugeSampleSlot /= m_gaugeSampleRate;
-		gaugeSampleSlot = Math::Clamp(gaugeSampleSlot, (int32)0, (int32)255);
-		m_gaugeSamples[gaugeSampleSlot] = m_scoring.currentGauge;
 
 		// Get the current timing point
 		m_currentTiming = &m_playback.GetCurrentTimingPoint();
@@ -1317,6 +1316,10 @@ public:
 		else if(key == EventKey::SlamVolume)
 		{
 			m_slamSample->SetVolume(data.floatVal);
+		}
+		else if (key == EventKey::ChartEnd)
+		{
+			FinishGame();
 		}
 	}
 

@@ -508,7 +508,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 	uint8 sampleIndex = 0;
 	ZoomControlPoint *firstControlPoints[4] = { nullptr };
-
+	MapTime lastMapTime = 0;
 	for (KShootMap::TickIterator it(kshootMap); it; ++it)
 	{
 		const KShootBlock& block = it.GetCurrentBlock();
@@ -1148,6 +1148,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				}
 			}
 		}
+
+		lastMapTime = mapTime;
 	}
 
 	for (int i = 0; i < sizeof(firstControlPoints) / sizeof(ZoomControlPoint *); i++)
@@ -1162,6 +1164,12 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 		m_zoomControlPoints.insert(m_zoomControlPoints.begin(), dup);
 	}
+
+	//Add chart end event
+	EventObjectState* evt = new EventObjectState();
+	evt->time = lastMapTime + 2000;
+	evt->key = EventKey::ChartEnd;
+	m_objectStates.Add(*evt);
 
 	// Re-sort collection to fix some inconsistencies caused by corrections after laser slams
 	ObjectState::SortArray(m_objectStates);

@@ -36,6 +36,7 @@ enum class EventKey : uint8
 	LaserEffectType, // Effect
 	LaserEffectMix, // Float
 	TrackRollBehaviour, // uint8
+	ChartEnd,
 };
 
 enum class TrackRollBehaviour : uint8
