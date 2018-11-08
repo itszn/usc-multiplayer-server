@@ -580,18 +580,21 @@ public:
 		}
 		m_currentObjectSet = m_playback.GetObjectsInRange(msViewRange);
 		// Sort objects to draw
+		// fx holds -> bt holds -> fx chips -> bt chips
 		m_currentObjectSet.Sort([](const TObjectState<void>* a, const TObjectState<void>* b)
 		{
 			auto ObjectRenderPriorty = [](const TObjectState<void>* a)
 			{
-				if (a->type == ObjectType::Single || a->type == ObjectType::Hold)
-					return (((ButtonObjectState*)a)->index < 4) ? 1 : 0;
+				if (a->type == ObjectType::Single)
+					return (((ButtonObjectState*)a)->index < 4) ? 2 : 1;
+				else if (a->type == ObjectType::Hold)
+					return (((ButtonObjectState*)a)->index < 4) ? 4 : 3;
 				else
-					return 2;
+					return 0;
 			};
 			uint32 renderPriorityA = ObjectRenderPriorty(a);
 			uint32 renderPriorityB = ObjectRenderPriorty(b);
-			return renderPriorityA < renderPriorityB;
+			return renderPriorityA > renderPriorityB;
 		});
 
 		/// TODO: Performance impact analysis.
