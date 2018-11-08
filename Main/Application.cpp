@@ -263,7 +263,7 @@ bool Application::m_Init()
 		{
 			Log("Audio initialization failed", Logger::Error);
 			delete g_audio;
-			return 1;
+			return false;
 		}
 
 		// Debug Mute?

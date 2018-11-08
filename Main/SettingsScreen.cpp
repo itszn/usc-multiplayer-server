@@ -112,6 +112,8 @@ private:
 	float m_laserColors[2] = { 0.25f, 0.75f };
 	String m_controllerButtonNames[7];
 	String m_controllerLaserNames[2];
+	char m_songsPath[1024];
+	int m_pathlen = 0;
 	int m_wasapi = 1;
 
 	std::queue<SDL_Event> eventQueue;
@@ -217,6 +219,12 @@ private:
 		g_gameConfig.Set(GameConfigKeys::WASAPI_Exclusive, m_wasapi == 0);
 		g_gameConfig.Set(GameConfigKeys::InputOffset, m_inputOffset);
 		g_gameConfig.Set(GameConfigKeys::InputBounceGuard, m_bounceGuard);
+
+		String songsPath = String(m_songsPath, m_pathlen);
+		songsPath.TrimBack('\n');
+		songsPath.TrimBack(' ');
+		g_gameConfig.Set(GameConfigKeys::SongFolder, songsPath);
+
 		if(m_skins.size() > 0)
 			g_gameConfig.Set(GameConfigKeys::Skin, m_skins[m_selectedSkin]);
 
@@ -332,6 +340,10 @@ public:
 		m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
 		m_bounceGuard = g_gameConfig.GetInt(GameConfigKeys::InputBounceGuard);
 		m_wasapi = g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive) ? 0 : 1;
+
+		String songspath = g_gameConfig.GetString(GameConfigKeys::SongFolder);
+		strcpy(m_songsPath, songspath.c_str());
+		m_pathlen = songspath.length();
 
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
 		auto skinSearch = std::find(m_skins.begin(), m_skins.end(), g_gameConfig.GetString(GameConfigKeys::Skin));
@@ -477,11 +489,11 @@ public:
 
 			nk_layout_row_dynamic(m_nctx, 30, 1);
 #ifdef _WIN32
-			nk_radio_label(m_nctx, "WASAPI Exclusive Mode (requires restart)", &m_wasapi);
-			nk_spacing(m_nctx, 1);
+			nk_checkbox_label(m_nctx, "WASAPI Exclusive Mode (requires restart)", &m_wasapi);
 #endif // _WIN32
-
-
+			nk_label(m_nctx, "Songs folder path:", nk_text_alignment::NK_TEXT_LEFT);
+			nk_edit_string(m_nctx, NK_EDIT_FIELD, m_songsPath, &m_pathlen, 1024, nk_filter_default);
+			nk_spacing(m_nctx, 1);
 			if (nk_button_label(m_nctx, "Exit")) Exit();
 			nk_end(m_nctx);
 		}
