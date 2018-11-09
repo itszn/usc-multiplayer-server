@@ -56,7 +56,7 @@ endmacro(enable_cpp11)
 macro(set_output_postfixes projectName)
 	set_target_properties(${projectName} PROPERTIES 
 		OUTPUT_NAME_DEBUG ${projectName}_Debug
-		OUTPUT_NAME_RELEASE ${projectName}_Release)
+		OUTPUT_NAME_RELEASE ${projectName})
 endmacro(set_output_postfixes)
 
 # Sub-Project directories
