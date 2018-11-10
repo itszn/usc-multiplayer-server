@@ -155,6 +155,8 @@ private:
 	float m_shakeAmount = 3;
 	float m_shakeDuration = 0.083;
 
+	Map<ScoreIndex*, ScoreReplay> m_scoreReplays;
+
 public:
 	Game_Impl(const String& mapPath, GameFlags flags)
 	{
@@ -380,6 +382,9 @@ public:
 			pushStringToTable("artist", mapSettings.artist);
 			pushIntToTable("difficulty", mapSettings.difficulty);
 			pushIntToTable("level", mapSettings.level);
+			lua_pushstring(m_lua, "scoreReplays");
+			lua_newtable(m_lua);
+			lua_settable(m_lua, -3);
 			lua_setglobal(m_lua, "gameplay");
 		}
 
@@ -515,6 +520,12 @@ public:
 				m_holdEmitters[i].Release();
 			}
 		}
+
+		for (ScoreIndex* score : m_diffIndex.scores)
+		{
+			m_scoreReplays[score] = ScoreReplay();
+		}
+
 		m_track->ClearEffects();
 		m_particleSystem->Reset();
 	}
@@ -924,8 +935,50 @@ public:
 		// Update song info display
 		ObjectState *const* lastObj = &m_beatmap->GetLinearObjects().back();
 
+		
+
+
+
 		//set lua
 		lua_getglobal(m_lua, "gameplay");
+
+
+		// Update score replays
+		lua_getfield(m_lua, -1, "scoreReplays");
+		int replayCounter = 1;
+		for (ScoreIndex* index : m_diffIndex.scores)
+		{
+			m_scoreReplays[index].maxScore = index->score;
+			if (index->hitStats.size() > 0)
+			{
+				while (m_scoreReplays[index].nextHitStat < index->hitStats.size()
+					&& index->hitStats[m_scoreReplays[index].nextHitStat].time < m_lastMapTime)
+				{
+					SimpleHitStat shs = index->hitStats[m_scoreReplays[index].nextHitStat];
+					if (shs.rating < 3)
+					{
+						m_scoreReplays[index].currentScore += shs.rating;
+					}
+					m_scoreReplays[index].nextHitStat++;
+				}
+			}
+			lua_pushnumber(m_lua, replayCounter);
+			lua_newtable(m_lua);
+
+			lua_pushstring(m_lua, "maxScore");
+			lua_pushnumber(m_lua, index->score);
+			lua_settable(m_lua, -3);
+
+			lua_pushstring(m_lua, "currentScore");
+			lua_pushnumber(m_lua, m_scoring.CalculateScore(m_scoreReplays[index].currentScore));
+			lua_settable(m_lua, -3);
+
+			lua_settable(m_lua, -3);
+			replayCounter++;
+		}
+		lua_setfield(m_lua, -1, "scoreReplays");
+
+
 		//progress
 		lua_pushstring(m_lua, "progress");
 		lua_pushnumber(m_lua, Math::Clamp((float)playbackPositionMs / m_endTime,0.f,1.f));

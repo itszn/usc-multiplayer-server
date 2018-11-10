@@ -3,7 +3,7 @@
 
 HitStat::HitStat(ObjectState* object) : object(object)
 {
-
+	time = object->time;
 }
 bool HitStat::operator<(const HitStat& other)
 {

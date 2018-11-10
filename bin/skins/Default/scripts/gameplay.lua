@@ -106,6 +106,21 @@ drawSongInfo = function(deltaTime)
     gfx.Restore()
 end
 
+drawBestDiff = function(deltaTime,x,y)
+    if not gameplay.scoreReplays[1] then return end
+    gfx.BeginPath()
+    gfx.FontSize(40)
+    difference = score - gameplay.scoreReplays[1].currentScore
+    local prefix = ""
+    gfx.FillColor(255,255,255)
+    if difference < 0 then 
+        gfx.FillColor(255,50,50)
+        difference = math.abs(difference)
+        prefix = "-"
+    end
+    gfx.Text(string.format("%s%08d", prefix, difference), x, y)
+end
+
 drawScore = function(deltaTime)
     gfx.BeginPath()
     gfx.LoadSkinFont("NovaMono.ttf")
@@ -121,7 +136,7 @@ drawScore = function(deltaTime)
     gfx.TextAlign(gfx.TEXT_ALIGN_RIGHT + gfx.TEXT_ALIGN_TOP)
     gfx.FontSize(60)
     gfx.Text(string.format("%08d", score),desw,0)
-    
+    drawBestDiff(deltaTime, desw, 66)
     gfx.Translate(5,-5) -- undo margin
 end
 
@@ -177,6 +192,8 @@ drawEarlate = function(deltaTime)
         gfx.Text("EARLY", desw / 2, ypos)
     end
 end
+
+
 
 drawFill = function(deltaTime)
     bw,bh = gfx.ImageSize(bottomFill)

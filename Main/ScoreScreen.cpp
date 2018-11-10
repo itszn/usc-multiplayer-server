@@ -13,11 +13,7 @@
 #else
 #include "SDL2/SDL_keycode.h"
 #endif
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-}
+#include "lua.hpp"
 
 class ScoreScreen_Impl : public ScoreScreen
 {
@@ -48,6 +44,7 @@ private:
 	ScoreIndex m_scoredata;
 
 	Vector<ScoreIndex*> m_highScores;
+	Vector<SimpleHitStat> m_simpleHitStats;
 
 	BeatmapSettings m_beatmapSettings;
 	Texture m_jacketImage;
@@ -98,11 +95,48 @@ public:
 		memcpy(m_categorizedHits, scoring.categorizedHits, sizeof(scoring.categorizedHits));
 		m_meanHitDelta = scoring.GetMeanHitDelta();
 		m_medianHitDelta = scoring.GetMedianHitDelta();
+		for (HitStat* stat : scoring.hitStats)
+		{
+			if (!stat->forReplay)
+				continue;
+			SimpleHitStat shs;
+			if (stat->object)
+			{
+				if (stat->object->type == ObjectType::Hold)
+				{
+					shs.lane = ((HoldObjectState*)stat->object)->index;
+				}
+				else if (stat->object->type == ObjectType::Single)
+				{
+					shs.lane = ((ButtonObjectState*)stat->object)->index;
+				}
+				else
+				{
+					shs.lane = ((LaserObjectState*)stat->object)->index + 6;
+				}
+			}
+
+			shs.rating = (int8)stat->rating;
+			shs.time = stat->time;
+			shs.delta = stat->delta;
+			shs.hold = stat->hold;
+			shs.holdMax = stat->holdMax;
+			m_simpleHitStats.Add(shs);
+		}
 
 		// Don't save the score if autoplay was on or if the song was launched using command line
 		// also don't save the score if the song was manually exited
-		if(!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1 && !game->GetManualExit())
-			m_mapDatabase.AddScore(game->GetDifficultyIndex(), m_score, m_categorizedHits[2], m_categorizedHits[1], m_categorizedHits[0], m_finalGaugeValue, (uint32)m_flags);
+		if (!m_autoplay && !m_autoButtons && game->GetDifficultyIndex().mapId != -1 && !game->GetManualExit())
+		{
+			m_mapDatabase.AddScore(game->GetDifficultyIndex(),
+				m_score,
+				m_categorizedHits[2],
+				m_categorizedHits[1],
+				m_categorizedHits[0],
+				m_finalGaugeValue,
+				(uint32)m_flags,
+				m_simpleHitStats);
+		}
 
 		// Used for jacket images
 

@@ -19,6 +19,13 @@ enum class GameFlags : uint32
 
 	AutoLaser = 0b100000,
 End};
+
+struct ScoreReplay
+{
+	int32 currentScore = 0;
+	int32 maxScore = 0;
+	int32 nextHitStat = 0;
+};
 GameFlags operator|(const GameFlags& a, const GameFlags& b);
 GameFlags operator&(const GameFlags& a, const GameFlags& b);
 GameFlags operator~(const GameFlags& a);

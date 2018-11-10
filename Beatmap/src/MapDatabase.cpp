@@ -64,7 +64,7 @@ public:
 	List<Event> m_pendingChanges;
 	mutex m_pendingChangesLock;
 
-	static const int32 m_version = 8;
+	static const int32 m_version = 9;
 
 public:
 	MapDatabase_Impl(MapDatabase& outer) : m_outer(outer)
@@ -77,13 +77,15 @@ public:
 		}
 
 		bool rebuild = false;
+		bool update = false;
 		DBStatement versionQuery = m_database.Query("SELECT version FROM `Database`");
+		int32 gotVersion = 0;
 		if(versionQuery && versionQuery.Step())
 		{
-			int32 gotVersion = versionQuery.IntColumn(0);
+			gotVersion = versionQuery.IntColumn(0);
 			if(gotVersion != m_version)
 			{
-				rebuild = true;
+				update = true;
 			}
 		}
 		else
@@ -101,6 +103,15 @@ public:
 			m_CreateTables();
 
 			// Update database version
+			m_database.Exec(Utility::Sprintf("UPDATE Database SET `version`=%d WHERE `rowid`=1", m_version));
+		}
+		else if (update)
+		{
+			///TODO: Make loop for doing iterative upgrades
+			if (gotVersion == 8 && m_version == 9)  //upgrade from 8 to 9
+			{
+				m_database.Exec("ALTER TABLE Scores ADD COLUMN hitstats BLOB");
+			}
 			m_database.Exec(Utility::Sprintf("UPDATE Database SET `version`=%d WHERE `rowid`=1", m_version));
 		}
 		else
@@ -437,9 +448,12 @@ public:
 		}
 	}
 
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags)
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats)
 	{
-		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,gameflags,diffid) VALUES(?,?,?,?,?,?,?)");
+		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,gameflags,hitstats,diffid) VALUES(?,?,?,?,?,?,?,?)");
+		Buffer hitstats;
+		MemoryWriter hitstatWriter(hitstats);
+		hitstatWriter.SerializeObject(simpleHitStats);
 
 		m_database.Exec("BEGIN");
 
@@ -449,7 +463,8 @@ public:
 		addScore.BindInt(4, miss);
 		addScore.BindDouble(5, gauge);
 		addScore.BindInt(6, gameflags);
-		addScore.BindInt(7, diff.id);
+		addScore.BindBlob(7, hitstats);
+		addScore.BindInt(8, diff.id);
 
 		addScore.Step();
 		addScore.Rewind();
@@ -486,7 +501,7 @@ private:
 			"FOREIGN KEY(mapid) REFERENCES Maps(rowid))");
 
 		m_database.Exec("CREATE TABLE Scores"
-			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, gameflags INTEGER, diffid INTEGER,"
+			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, gameflags INTEGER, diffid INTEGER, hitstats BLOB, "
 			"FOREIGN KEY(diffid) REFERENCES Difficulties(rowid))");
 	}
 	void m_LoadInitialData()
@@ -547,7 +562,7 @@ private:
 		}
 
 		// Select Scores
-		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,gameflags,diffid FROM Scores");
+		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,gameflags,hitstats,diffid FROM Scores");
 		
 		while (scoreScan.StepRow())
 		{
@@ -559,7 +574,13 @@ private:
 			score->miss = scoreScan.IntColumn(4);
 			score->gauge = scoreScan.DoubleColumn(5);
 			score->gameflags = scoreScan.IntColumn(6);
-			score->diffid = scoreScan.IntColumn(7);
+
+			Buffer hitstats = scoreScan.BlobColumn(7);
+			MemoryReader hitstatreader(hitstats);
+			if(hitstats.size() > 0)
+				hitstatreader.SerializeObject(score->hitStats);
+
+			score->diffid = scoreScan.IntColumn(8);
 
 			// Add difficulty to map and resort difficulties
 			auto diffIt = m_difficulties.find(score->diffid);
@@ -745,7 +766,7 @@ void MapDatabase::RemoveSearchPath(const String& path)
 {
 	m_impl->RemoveSearchPath(path);
 }
-void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags)
+void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats)
 {
-	m_impl->AddScore(diff, score, crit, almost, miss, gauge, gameflags);
+	m_impl->AddScore(diff, score, crit, almost, miss, gauge, gameflags, simpleHitStats);
 }

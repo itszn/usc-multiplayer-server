@@ -112,6 +112,7 @@ public:
 
 	// Actual score, in the range 0-10,000,000
 	uint32 CalculateCurrentScore() const;
+	uint32 CalculateScore(uint32 hitScore) const;
 
 	// Calculates the grade connected to the current score
 	// Ranges from 0 to 5 (AAA,AA,A,B,C,D) in that order

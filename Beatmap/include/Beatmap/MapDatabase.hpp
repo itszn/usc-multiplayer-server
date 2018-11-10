@@ -1,6 +1,19 @@
 #pragma once
 #include "Beatmap.hpp"
 
+struct SimpleHitStat
+{
+	// 0 = miss, 1 = near, 2 = crit, 3 = idle
+	int8 rating;
+	int8 lane;
+	int32 time;
+	int32 delta;
+	// Hold state
+	// This is the amount of gotten ticks in a hold sequence
+	uint32 hold = 0;
+	// This is the amount of total ticks in this hold sequence
+	uint32 holdMax = 0;
+};
 
 struct ScoreIndex
 {
@@ -12,6 +25,7 @@ struct ScoreIndex
 	int32 miss;
 	float gauge;
 	uint32 gameflags;
+	Vector<SimpleHitStat> hitStats;
 };
 
 
@@ -71,7 +85,7 @@ public:
 	MapIndex* GetMap(int32 idx);
 
 	void AddSearchPath(const String& path);
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags);
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats);
 	void RemoveSearchPath(const String& path);
 
 	// (mapId, mapIndex)

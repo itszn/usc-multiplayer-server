@@ -505,7 +505,8 @@ void EchoDSP::SetLength(double length)
 void EchoDSP::Process(float* out, uint32 numSamples)
 {
 	float* data = m_sampleBuffer.data();
-
+	if (!data)
+		return;
 	int32 startSample = startTime * audio->GetSampleRate() / 1000.0;
 	int32 currentSample = audioBase->GetPosition() * audio->GetSampleRate() / 1000.0;
 

@@ -30,4 +30,6 @@ struct HitStat
 	uint32 holdMax = 0;
 	// If at least one hold tick has been missed
 	bool hasMissed = false;
+
+	bool forReplay = true;
 };

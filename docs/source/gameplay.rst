@@ -14,6 +14,7 @@ The following fields are available under the ``gameplay`` table:
     float bpm
     float gauge
     int comboState // 2 = puc, 1 = uc, 0 = normal
+    ScoreReplay[] scoreReplays //Array of previous scores for the current song
     
 Example:    
 
@@ -35,6 +36,16 @@ Example:
     gfx.Text(tostring(combo), posx, posy)
 
     
+ScoreReplay
+***********
+A ``ScoreReplay`` contains the following fields:
+    
+.. code-block:: c
+
+    int maxScore //the final score of this replay
+    int currentScore //the current score of this replay
+    
+
 Calls made to lua
 *****************
 These are functions the game calls in the gameplay lua script so they need to be defined in there. The reason for having these is mostly for updating and starting animations.

@@ -327,6 +327,7 @@ HitStat* Scoring::m_AddOrUpdateHitStat(ObjectState* object)
 		Vector<MapTime> ticks;
 		m_CalculateHoldTicks(hold, ticks);
 		stat->holdMax = (uint32)ticks.size();
+		stat->forReplay = false;
 
 		return stat;
 	}
@@ -344,6 +345,7 @@ HitStat* Scoring::m_AddOrUpdateHitStat(ObjectState* object)
 		Vector<ScoreTick> ticks;
 		m_CalculateLaserTicks(rootLaser, ticks);
 		stat->holdMax = (uint32)ticks.size();
+		stat->forReplay = false;
 
 		return stat;
 	}
@@ -624,6 +626,10 @@ void Scoring::m_UpdateTicks()
 					if((m_input && m_input->GetButton(button) && holdStart - goodHitTime < m_buttonHitTime[(uint8)button]) || autoplay || autoplayButtons)
 					{							
 						m_TickHit(tick, buttonCode);
+						HitStat* stat = new HitStat(tick->object);
+						stat->time = currentTime;
+						stat->rating = ScoreHitRating::Perfect;
+						hitStats.Add(stat);
 						processed = true;
 					}
 				}
@@ -644,6 +650,10 @@ void Scoring::m_UpdateTicks()
 						if(dirSign == inputSign && delta > -10 && posDelta >= -laserDistanceLeniency)
 						{
 							m_TickHit(tick, buttonCode);
+							HitStat* stat = new HitStat(tick->object);
+							stat->time = currentTime;
+							stat->rating = ScoreHitRating::Perfect;
+							hitStats.Add(stat);
 							processed = true;
 						}
 					}
@@ -663,6 +673,10 @@ void Scoring::m_UpdateTicks()
 						if(laserDelta < laserDistanceLeniency)
 						{
 							m_TickHit(tick, buttonCode);
+							HitStat* stat = new HitStat(tick->object);
+							stat->time = currentTime;
+							stat->rating = ScoreHitRating::Perfect;
+							hitStats.Add(stat);
 							processed = true;
 						}
 					}
@@ -1123,7 +1137,12 @@ MapTotals Scoring::CalculateMapTotals() const
 
 uint32 Scoring::CalculateCurrentScore() const
 {
-	return (uint32)(((double)currentHitScore / (double)mapTotals.maxScore) * 10000000.0);
+	return CalculateScore(currentHitScore);
+}
+
+uint32 Scoring::CalculateScore(uint32 hitScore) const
+{
+	return (uint32)(((double)hitScore / (double)mapTotals.maxScore) * 10000000.0);
 }
 
 uint32 Scoring::CalculateCurrentGrade() const
