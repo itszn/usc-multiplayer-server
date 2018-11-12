@@ -346,6 +346,10 @@ public:
 		m_pathlen = songspath.length();
 
 		m_selectedGamepad = g_gameConfig.GetInt(GameConfigKeys::Controller_DeviceID);
+		if (m_selectedGamepad >= m_gamePads.size())
+		{
+			m_selectedGamepad = 0;
+		}
 		auto skinSearch = std::find(m_skins.begin(), m_skins.end(), g_gameConfig.GetString(GameConfigKeys::Skin));
 		if (skinSearch == m_skins.end())
 			m_selectedSkin = 0;

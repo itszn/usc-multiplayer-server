@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <algorithm>
 #include "Shared/Utility.hpp"
 #include "Shared/Vector.hpp"
 
@@ -32,6 +33,8 @@ public:
 	StringBase& operator=(const T* cs);
 	StringBase& operator=(const std::basic_string<T>& ss);
 	const T* operator*() const;
+	void ToLower();
+	void ToUpper();
 	bool Split(const StringBase& delim, StringBase* l, StringBase* r) const;
 	bool SplitLast(const StringBase& delim, StringBase* l, StringBase* r) const;
 	Vector<StringBase> Explode(const StringBase& delim) const;
@@ -122,6 +125,16 @@ template<typename T>
 const T* StringBase<T>::operator*() const
 {
 	return c_str();
+}
+template<typename T>
+inline void StringBase<T>::ToLower()
+{
+	std::transform(begin(), end(), begin(), ::tolower);
+}
+template<typename T>
+inline void StringBase<T>::ToUpper()
+{
+	std::transform(begin(), end(), begin(), ::toupper);
 }
 template<typename T>
 bool StringBase<T>::Split(const StringBase& delim, StringBase* l, StringBase* r) const

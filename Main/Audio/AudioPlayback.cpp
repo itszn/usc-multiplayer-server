@@ -46,7 +46,7 @@ bool AudioPlayback::Init(class BeatmapPlayback& playback, const String& mapRootP
 		Logf("Failed to load any audio for beatmap \"%s\"", Logger::Error, audioPath);
 		return false;
 	}
-	m_music->SetVolume(1.0f);
+	m_music->SetVolume(mapSettings.musicVolume);
 
 	// Load FX track
 	audioPath = Path::Normalize(m_beatmapRootPath + Path::sep + mapSettings.audioFX);

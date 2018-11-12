@@ -334,6 +334,7 @@ void Track::DrawBase(class RenderQueue& rq)
 
 	// Draw the main beat ticks on the track
 	params.SetParameter("mainTex", trackTickTexture);
+	params.SetParameter("hasSample", false);
 	for(float f : m_barTicks)
 	{
 		float fLocal = f / m_viewRange;
@@ -507,6 +508,7 @@ void Track::DrawDarkTrack(RenderQueue & rq)
 	Transform transform = trackOrigin;
 	//transform *= Transform::Translation({ 0.0f, 0.0f, 0.1f });
 	params.SetParameter("mainTex", trackDarkTexture);
+	params.SetParameter("hasSample", false);
 	rq.Draw(transform, trackDarkMesh, buttonMaterial, params);
 }
 void Track::DrawSprite(RenderQueue& rq, Vector3 pos, Vector2 size, Texture tex, Color color /*= Color::White*/, float tilt /*= 0.0f*/)

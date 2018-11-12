@@ -43,6 +43,7 @@ struct BeatmapSettings
 	// Initial audio settings
 	float slamVolume = 1.0f;
 	float laserEffectMix = 1.0f;
+	float musicVolume = 1.0f;
 	EffectType laserEffectType = EffectType::PeakingFilter;
 };
 

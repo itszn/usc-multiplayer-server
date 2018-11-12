@@ -13,10 +13,10 @@ void main()
     if(hasSample)
     {
         float addition = abs(0.5 - fsTex.x) * - 1.;
-        addition += 0.3;
+        addition += 0.2;
         addition = max(addition,0.);
-        addition *= 1.2;
-        mainColor.xyz += addition;
+        addition *= 2.8;
+        mainColor.xyzw += addition;
     }
 	target = mainColor;
 }

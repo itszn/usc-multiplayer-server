@@ -49,6 +49,81 @@ public:
 	Audio* m_audio;
 	Buffer m_pcm;
 	WavFormat m_format = { 0 };
+	uint32 m_samplesTotal;
+
+	uint32 m_decode_ms_adpcm(const Buffer& encoded, int16* pcm, uint64 pos)
+	{
+		int8* src = ((int8*)encoded.data()) + pos;
+		int8 blockPredictors[] = { 0, 0 };
+		int32 ideltas[] = { 0, 0 };
+		int32 sample1[] = { 0, 0 };
+		int32 sample2[] = { 0, 0 };
+
+		blockPredictors[0] = *src++;
+		blockPredictors[1] = *src++;
+		assert(blockPredictors[0] >= 0 && blockPredictors[0] < 7);
+		assert(blockPredictors[1] >= 0 && blockPredictors[0] < 7);
+
+		int16* src_16 = (int16*)src;
+		ideltas[0] = *src_16++;
+		ideltas[1] = *src_16++;
+
+		sample1[0] = *src_16++;
+		sample1[1] = *src_16++;
+
+		sample2[0] = *src_16++;
+		sample2[1] = *src_16++;
+
+		*pcm++ = sample2[0];
+		*pcm++ = sample2[1];
+		*pcm++ = sample1[0];
+		*pcm++ = sample1[1];
+
+
+		src = (int8*)src_16;
+		uint32 decodedCount = 2;
+
+		int AdaptationTable[] = {
+			230, 230, 230, 230, 307, 409, 512, 614,
+			768, 614, 512, 409, 307, 230, 230, 230
+		};
+		int AdaptCoeff1[] = { 256, 512, 0, 192, 240, 460, 392 };
+		int AdaptCoeff2[] = { 0, -256, 0, 64, 0, -208, -232 };
+
+		// Decode the rest of the data in the block
+		int remainingInBlock = m_format.nBlockAlign - 14;
+		while (remainingInBlock > 0)
+		{
+			int8 nibbleData = *src++;
+
+			int8 nibbles[] = { 0, 0 };
+			nibbles[0] = nibbleData >> 4;
+			nibbles[0] &= 0x0F;
+			nibbles[1] = nibbleData & 0x0F;
+
+			int16 predictors[] = { 0, 0 };
+			for (size_t i = 0; i < 2; i++)
+			{
+
+
+				predictors[i] = ((sample1[i] * AdaptCoeff1[blockPredictors[i]]) + (sample2[i] * AdaptCoeff2[blockPredictors[i]])) / 256;
+				if (nibbles[i] & 0x08)
+					predictors[i] += (nibbles[i] - 0x10) * ideltas[i];
+				else
+					predictors[i] += nibbles[i] * ideltas[i];
+				*pcm++ = predictors[i];
+				sample2[i] = sample1[i];
+				sample1[i] = predictors[i];
+				ideltas[i] = (AdaptationTable[nibbles[i]] * ideltas[i]) / 256;
+				if (ideltas[i] < 16)
+					ideltas[i] = 16;
+			}
+			decodedCount++;
+			remainingInBlock--;
+		}
+		return decodedCount;
+	}
+
 
 	mutex m_lock;
 
@@ -111,22 +186,58 @@ public:
 				//Logf("Bps: %d", Logger::Info, m_format.nBitsPerSample);
 
 				// In case there's some extra data at the end that we dont use.
+				if (m_format.nFormat == 2)
+				{
+					uint16 cbSize;
+					stream << cbSize;
+					stream.Skip(cbSize);
+				}
+				else
 				stream.Skip(chunkHdr.nLength - sizeof(WavFormat));
+			}
+			else if (chunkHdr == "fact")
+			{
+				uint32 fh;
+				stream << fh;
+				m_samplesTotal = fh;
 			}
 			else if(chunkHdr == "data") // data Chunk
 			{
 				// validate header
-				if(m_format.nFormat != 1)
+				if(m_format.nFormat != 1 && m_format.nFormat != 2)
 					return false;
 				if(m_format.nChannels > 2 || m_format.nChannels == 0)
 					return false;
-				if(m_format.nBitsPerSample != 16)
+				if(m_format.nFormat == 1 && m_format.nBitsPerSample != 16)
+					return false;
+				if (m_format.nFormat == 2 && m_format.nBitsPerSample != 4)
 					return false;
 
-				// Read data
-				m_length = chunkHdr.nLength / sizeof(short);
-				m_pcm.resize(chunkHdr.nLength);
-				stream.Serialize(m_pcm.data(), chunkHdr.nLength);
+				if (m_format.nFormat == 1)
+				{
+					// Read data
+					m_length = chunkHdr.nLength / sizeof(short);
+					m_pcm.resize(chunkHdr.nLength);
+					stream.Serialize(m_pcm.data(), chunkHdr.nLength);
+				}
+				else if (m_format.nFormat == 2)
+				{
+					m_length = chunkHdr.nLength;
+					Buffer encoded(m_length * m_format.nChannels * sizeof(short));
+					stream.Serialize(encoded.data(), chunkHdr.nLength);
+					m_pcm.resize(m_length * m_format.nChannels * sizeof(short));
+					int16* pcmptr = (int16*)m_pcm.data();
+					int pos = 0;
+					int totalDecoded = 0;
+					while (pos <= m_length)
+					{
+						int decoded = m_decode_ms_adpcm(encoded, pcmptr, pos);
+						pcmptr += 2 * decoded;
+						totalDecoded += decoded;
+						pos += m_format.nBlockAlign;
+					}
+					m_length = totalDecoded * 2;
+				}
 			}
 			else
 			{

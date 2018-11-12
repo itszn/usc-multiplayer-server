@@ -20,6 +20,7 @@ struct TempButtonState
 
 	uint8 sampleIndex = 0xFF;
 	bool usingSample = false;
+	float sampleVolume = 1.0f;
 
 };
 struct TempLaserState
@@ -462,6 +463,10 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		{
 			m_settings.total = atoi(*s.second);
 		}
+		else if (s.first == "mvol")
+		{
+			m_settings.musicVolume = (float)atoi(*s.second) / 100.0f;
+		}
 	}
 
 	// Temporary map for timing points
@@ -506,7 +511,6 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 	const uint32 maxEffectParamsPerButtons = 2;
 	float laserRanges[2] = { 1.0f, 1.0f };
 
-	uint8 sampleIndex = 0;
 	ZoomControlPoint *firstControlPoints[4] = { nullptr };
 	MapTime lastMapTime = 0;
 	for (KShootMap::TickIterator it(kshootMap); it; ++it)
@@ -514,7 +518,9 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 		const KShootBlock& block = it.GetCurrentBlock();
 		KShootTime time = it.GetTime();
 		const KShootTick& tick = *it;
-
+		float fxSampleVolume[2] = { 1.0, 1.0 };
+		bool useFxSample[2] = { false, false };
+		uint8 fxSampleIndex[2] = { 0,0 };
 		// Calculate MapTime from current tick
 		double blockDuration = lastTimingPoint->GetBarDuration();
 		uint32 blockFromStartOfTimingPoint = (time.block - timingPointBlockOffset);
@@ -759,17 +765,54 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 
 				m_objectStates.Add(*evt);
 			}
-			else if (p.first == "fx_sample")
+			else if (p.first == "fx-r_se")
 			{
-				auto it = std::find(m_samplePaths.begin(), m_samplePaths.end(), p.second);
-				if (it == m_samplePaths.end())
+				String filename, vol;
+				int fxi = 1;
+				useFxSample[fxi] = true;
+				if (p.second.Split(";", &filename, &vol))
 				{
-					sampleIndex = m_samplePaths.size();
-					m_samplePaths.Add(p.second);
+					fxSampleVolume[fxi] = (float)atoi(*vol) / 100.0f;
 				}
 				else
 				{
-					sampleIndex = std::distance(m_samplePaths.begin(), it);
+					filename = p.second;
+				}
+
+				auto it = std::find(m_samplePaths.begin(), m_samplePaths.end(), filename);
+				if (it == m_samplePaths.end())
+				{
+					fxSampleIndex[fxi] = m_samplePaths.size();
+					m_samplePaths.Add(filename);
+				}
+				else
+				{
+					fxSampleIndex[fxi] = std::distance(m_samplePaths.begin(), it);
+				}
+			}
+			else if (p.first == "fx-l_se")
+			{
+				String filename, vol;
+				int fxi = 0;
+				useFxSample[fxi] = true;
+				if (p.second.Split(";", &filename, &vol))
+				{
+					fxSampleVolume[fxi] = (float)atoi(*vol) / 100.0f;
+				}
+				else
+				{
+					filename = p.second;
+				}
+
+				auto it = std::find(m_samplePaths.begin(), m_samplePaths.end(), filename);
+				if (it == m_samplePaths.end())
+				{
+					fxSampleIndex[fxi] = m_samplePaths.size();
+					m_samplePaths.Add(filename);
+				}
+				else
+				{
+					fxSampleIndex[fxi] = std::distance(m_samplePaths.begin(), it);
 				}
 			}
 			else if (p.first == "stop")
@@ -819,6 +862,7 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					obj->index = i;
 					obj->hasSample = state->usingSample;
 					obj->sampleIndex = state->sampleIndex;
+					obj->sampleVolume = state->sampleVolume;
 					m_objectStates.Add(*obj);
 				}
 
@@ -864,9 +908,8 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				else
 				{
 					// FX object '2' is always individual
-					// FX objext '3' is like '2' but with sound sample
-					state->fineSnap = c != '2' && c != '3';
-
+					state->fineSnap = c != '2';
+					
 					// Set effect
 					if (c == 'B')
 					{
@@ -919,10 +962,11 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 						else
 							state->effectParams[0] = 50;
 					}
-					else if (c == '3')
+					else if (c == '2')
 					{
-						state->usingSample = true;
-						state->sampleIndex = sampleIndex;
+						state->sampleIndex = fxSampleIndex[i - 4];
+						state->usingSample = useFxSample[i - 4];
+						state->sampleVolume = fxSampleVolume[i - 4];
 					}
 					else
 					{
@@ -958,12 +1002,15 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 					else
 					{
 						// Hold are always on a high enough snap to make suere they are seperate when needed
-						state->fineSnap = c != '2' && c != '3';
-						if (c == '3')
+						if (c == '2')
 						{
-							state->usingSample = true;
-							state->sampleIndex = sampleIndex;
+							state->fineSnap = false;
+							state->sampleIndex = fxSampleIndex[i - 4];
+							state->usingSample = useFxSample[i - 4];
+							state->sampleVolume = fxSampleVolume[i - 4];
 						}
+						else
+							state->fineSnap = true;
 					}
 				}
 				else

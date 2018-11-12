@@ -612,7 +612,7 @@ Sample Application::LoadSample(const String& name, const bool& external)
     else
         path = String("skins/") + m_skin + String("/audio/") + name + ".wav";
 
-	Sample ret = g_audio->CreateSample(path);
+	Sample ret = g_audio->CreateSample(Path::Normalize(path));
 	assert(ret);
 	return ret;
 }

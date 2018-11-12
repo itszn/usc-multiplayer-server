@@ -798,7 +798,17 @@ public:
 		m_fxSamples = new Sample[samples.size()];
 		for (int i = 0; i < samples.size(); i++)
 		{
-			CheckedLoad(m_fxSamples[i] = g_application->LoadSample(m_mapRootPath + "/" + samples[i], true));
+			String ext = samples[i].substr(samples[i].length() - 4, 4);
+			ext.ToUpper();
+			if (ext == ".WAV")
+			{
+				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(m_mapRootPath + "/" + samples[i], true));
+			}
+			else
+			{
+				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(samples[i]));
+			}
+
 		}
 
 		return true;
@@ -1251,6 +1261,7 @@ public:
 
 		if (st != nullptr && st->hasSample)
 		{
+			m_fxSamples[st->sampleIndex]->SetVolume(st->sampleVolume);
 			m_fxSamples[st->sampleIndex]->Play();
 		}
 
