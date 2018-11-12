@@ -15,11 +15,7 @@
 #else
 #include "SDL2/SDL_keycode.h"
 #endif
-extern "C" {
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
+#include "lua.hpp"
 #include <iterator>
 
 class TextInput
@@ -999,6 +995,7 @@ public:
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/background"));
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
 		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);
+		g_gameWindow->OnMouseScroll.Add(this, &SongSelect_Impl::m_OnMouseScroll);
 		m_settingsWheel = Ref<GameSettingsWheel>(new GameSettingsWheel());
 		if (!m_settingsWheel->Init())
 			return false;
@@ -1038,6 +1035,7 @@ public:
 		m_mapDatabase.OnMapsCleared.Clear();
 		g_input.OnButtonPressed.RemoveAll(this);
 		g_input.OnButtonReleased.RemoveAll(this);
+		g_gameWindow->OnMouseScroll.RemoveAll(this);
 		m_selectionWheel.Destroy();
 		m_filterSelection.Destroy();
 		if (m_lua)
@@ -1226,6 +1224,21 @@ public:
 			break;
 		}
 
+	}
+	void m_OnMouseScroll(int32 steps)
+	{
+		if (m_settingsWheel->Active)
+		{
+			m_settingsWheel->AdvanceSelection(steps);
+		}
+		else if (m_filterSelection->Active)
+		{
+			m_filterSelection->AdvanceSelection(steps);
+		}
+		else
+		{
+			m_selectionWheel->AdvanceSelection(steps);
+		}
 	}
 	virtual void OnKeyPressed(int32 key)
 	{
