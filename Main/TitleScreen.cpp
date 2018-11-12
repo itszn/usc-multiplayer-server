@@ -14,12 +14,7 @@
 #include "Shared/Jobs.hpp"
 #include "ScoreScreen.hpp"
 #include "Shared/Enum.hpp"
-extern "C"
-{
-	#include "lua.h"
-	#include "lualib.h"
-	#include "lauxlib.h"
-}
+#include "lua.hpp"
 
 class TitleScreen_Impl : public TitleScreen
 {
