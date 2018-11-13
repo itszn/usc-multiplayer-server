@@ -259,11 +259,26 @@ bool Application::m_Init()
 
 		// Init audio
 		new Audio();
-		if(!g_audio->Init(g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive)))
+		bool exclusive = g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive);
+		if(!g_audio->Init(exclusive))
 		{
-			Log("Audio initialization failed", Logger::Error);
-			delete g_audio;
-			return false;
+			if (exclusive)
+			{
+				Log("Failed to open in WASAPI Exclusive mode, attempting shared mode.", Logger::Warning);
+				g_gameWindow->ShowMessageBox("WASAPI Exclusive mode error.", "Failed to open in WASAPI Exclusive mode, attempting shared mode.", 1);
+				if (!g_audio->Init(false))
+				{
+					Log("Audio initialization failed", Logger::Error);
+					delete g_audio;
+					return false;
+				}
+			}
+			else
+			{
+				Log("Audio initialization failed", Logger::Error);
+				delete g_audio;
+				return false;
+			}
 		}
 
 		// Debug Mute?
