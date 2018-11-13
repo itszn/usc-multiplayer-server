@@ -14,6 +14,7 @@
 #include "SDL2/SDL_keycode.h"
 #endif
 #include "lua.hpp"
+#include "Shared/Time.hpp"
 
 class ScoreScreen_Impl : public ScoreScreen
 {
@@ -250,7 +251,7 @@ public:
 		}
 		if (key == SDLK_PRINTSCREEN)
 		{
-			TextureRes::CreateFromFrameBuffer(g_gl, g_resolution)->DumpToFile("test.png");
+			TextureRes::CreateFromFrameBuffer(g_gl, g_resolution)->DumpToFile(Time::Now().ToString() + ".png");
 			g_gameWindow->ShowMessageBox("Screenshot saved", "Screenshot saved", 2);
 		}
 	}
