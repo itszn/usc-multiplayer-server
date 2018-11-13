@@ -31,7 +31,7 @@ namespace Graphics
 	public:
 		virtual void Init(Vector2i size, TextureFormat format = TextureFormat::RGBA8) = 0;
 		virtual void SetData(Vector2i size, void* pData) = 0;
-		virtual void SetFromFrameBuffer() = 0;
+		virtual void SetFromFrameBuffer(Vector2i pos = { 0, 0 }) = 0;
 		virtual void SetMipmaps(bool enabled) = 0;
 		virtual void SetFilter(bool enabled, bool mipFiltering = true, float anisotropic = 1.0f) = 0;
 		virtual const Vector2i& GetSize() const = 0;
@@ -42,6 +42,7 @@ namespace Graphics
 		float CalculateWidth(float height);
 
 		// Binds the texture to a given texture unit (default = 0)
+		virtual void DumpToFile(String file) = 0;
 		virtual void Bind(uint32 index = 0) = 0;
 		virtual uint32 Handle() = 0;
 		virtual void SetWrap(TextureWrap u, TextureWrap v) = 0;

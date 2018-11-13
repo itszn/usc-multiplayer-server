@@ -340,8 +340,7 @@ public:
 		if(!loader.Load())
 			return false;
 
-		// Always hide mouse during gameplay no matter what input mode.
-		g_gameWindow->SetCursorVisible(false);
+
 
 		// Load particle material
 		m_particleSystem = ParticleSystemRes::Create(g_gl);
@@ -353,6 +352,9 @@ public:
 	{
 		if (!loader.Finalize())
 			return false;
+
+		// Always hide mouse during gameplay no matter what input mode.
+		g_gameWindow->SetCursorVisible(false);
 
 		//Lua
 		m_lua = g_application->LoadScript("gameplay");

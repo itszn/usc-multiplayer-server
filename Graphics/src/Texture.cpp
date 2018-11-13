@@ -4,6 +4,12 @@
 #include "Image.hpp"
 #include <Graphics/ResourceManagers.hpp>
 
+#ifdef __APPLE__
+#include "libpng16/png.h"
+#else
+#include "png.h"
+#endif
+
 namespace Graphics
 {
 	class Texture_Impl : public TextureRes
@@ -68,13 +74,13 @@ namespace Graphics
 			UpdateFilterState();
 			UpdateWrap();
 		}
-		virtual void SetFromFrameBuffer()
+		virtual void SetFromFrameBuffer(Vector2i pos = { 0, 0 })
 		{
 			m_gl->BlitFramebuffer();
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glReadBuffer(GL_BACK);
 			glBindTexture(GL_TEXTURE_2D, m_texture);
-			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, m_size.x, m_size.y);
+			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pos.x, pos.y, m_size.x, m_size.y);
 			GLenum err;
 			bool errored = false;
 			while ((err = glGetError()) != GL_NO_ERROR)
@@ -86,6 +92,43 @@ namespace Graphics
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
+		virtual void DumpToFile(String file)
+		{
+			Buffer data;
+			png_image image;
+			data.resize(m_size.x * m_size.y * 4);
+			png_byte* dataPtr = data.data();
+			int pitch = m_size.x * 4;
+			glBindTexture(GL_TEXTURE_2D, m_texture);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
+			FILE* f = std::fopen(*file, "wb");
+			///TODO: Move elsewhere
+			png_structp png_ptr = NULL;
+			png_infop info_ptr = NULL;
+			png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+			info_ptr = png_create_info_struct(png_ptr);
+			if (setjmp(png_jmpbuf(png_ptr)))
+			{
+				/* If we get here, we had a problem writing the file */
+				fclose(f);
+				png_destroy_write_struct(&png_ptr, &info_ptr);
+				assert(false);
+			}
+			png_set_IHDR(png_ptr, info_ptr, m_size.x, m_size.y,
+				8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+				PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+			png_bytep* row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * m_size.y);
+			for (size_t i = 0; i < m_size.y; ++i) {
+				row_pointers[m_size.y - i - 1] = dataPtr + i*pitch;
+			}
+
+			png_init_io(png_ptr, f);
+			png_set_rows(png_ptr, info_ptr, row_pointers);
+			png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+			std::fclose(f);
+			free(row_pointers);
+		}
 
 		virtual void SetData(Vector2i size, void* pData)
 		{

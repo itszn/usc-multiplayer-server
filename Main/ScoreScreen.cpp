@@ -248,6 +248,11 @@ public:
 		{
 			g_application->RemoveTickable(this);
 		}
+		if (key == SDLK_PRINTSCREEN)
+		{
+			TextureRes::CreateFromFrameBuffer(g_gl, g_resolution)->DumpToFile("test.png");
+			g_gameWindow->ShowMessageBox("Screenshot saved", "Screenshot saved", 2);
+		}
 	}
 	virtual void OnKeyReleased(int32 key) override
 	{
