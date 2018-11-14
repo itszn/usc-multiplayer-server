@@ -18,6 +18,14 @@ game.LoadSkinSample("applause")
 local played = false
 
 
+get_capture_rect = function()
+    local x = moveX * scale
+    local y = moveY * scale
+    local w = 500 * scale
+    local h = 800 * scale
+    return x,y,w,h
+end
+
 draw_stat = function(x,y,w,h, name, value, format,r,g,b)
     gfx.Save()
     gfx.Translate(x,y)
@@ -176,6 +184,4 @@ render = function(deltaTime, showStats)
 
 
     draw_highscores()
-    
-    
 end

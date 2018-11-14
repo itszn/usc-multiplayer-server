@@ -25,3 +25,14 @@ The following fields are available under the ``result`` table:
     float gaugeSamples[256] //gauge values sampled throughout the song
     string grade // "S", "AAA+", "AAA", etc.
     score[] highScores // Same as song wheel scores 
+
+Calls made to lua
+*****************
+Calls made from the game to the script, these need to be defined for the game
+to function properly.
+
+get_capture_rect()
+^^^^^^^^^^^^^^^^^^
+The region of the screen to be saved in score screenshots.
+
+Has to return ``x,y,w,h`` in pixel coordinates to the game.

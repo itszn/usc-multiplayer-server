@@ -42,7 +42,6 @@ namespace Graphics
 		float CalculateWidth(float height);
 
 		// Binds the texture to a given texture unit (default = 0)
-		virtual void DumpToFile(String file) = 0;
 		virtual void Bind(uint32 index = 0) = 0;
 		virtual uint32 Handle() = 0;
 		virtual void SetWrap(TextureWrap u, TextureWrap v) = 0;

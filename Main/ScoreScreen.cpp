@@ -251,7 +251,29 @@ public:
 		}
 		if (key == SDLK_PRINTSCREEN)
 		{
-			TextureRes::CreateFromFrameBuffer(g_gl, g_resolution)->DumpToFile(Time::Now().ToString() + ".png");
+			auto luaPopInt = [this]
+			{
+				int a = lua_tonumber(m_lua, lua_gettop(m_lua));
+				lua_pop(m_lua, 1);
+				return a;
+			};
+			int x, y, w, h;
+			lua_getglobal(m_lua, "get_capture_rect");
+			if (lua_pcall(m_lua, 0, 4, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+				assert(false);
+			}
+			h = luaPopInt();
+			w = luaPopInt();
+			y = luaPopInt();
+			x = luaPopInt();
+			Vector2i size(w, h);
+
+			Image screenshot = ImageRes::Screenshot(g_gl, size, { x,y });
+			screenshot->SavePNG(Time::Now().ToString() + ".png");
+			screenshot.Release();
 			g_gameWindow->ShowMessageBox("Screenshot saved", "Screenshot saved", 2);
 		}
 	}
