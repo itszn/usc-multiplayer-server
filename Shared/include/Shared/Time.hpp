@@ -4,6 +4,8 @@
 #include <iomanip>
 #include "String.hpp"
 
+namespace Shared
+{
 class Time
 {
 public:
@@ -43,4 +45,5 @@ private:
 	std::tm* m_tm;
 	time_t m_time;
 	String m_format = "%F_%H-%M-%S";
+};
 };

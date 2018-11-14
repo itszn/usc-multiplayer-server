@@ -272,7 +272,7 @@ public:
 			Vector2i size(w, h);
 
 			Image screenshot = ImageRes::Screenshot(g_gl, size, { x,y });
-			String screenshotPath = "screenshots/" + Time::Now().ToString() + ".png";
+			String screenshotPath = "screenshots/" + Shared::Time::Now().ToString() + ".png";
 			screenshot->SavePNG(screenshotPath);
 			screenshot.Release();
 
