@@ -318,6 +318,10 @@ bool Application::m_Init()
 	m_OnWindowResized(g_resolution);
 
 	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
+
+	///TODO: check if directory exists already?
+	Path::CreateDir("screenshots");
+
 	return true;
 }
 void Application::m_MainLoop()

@@ -36,3 +36,8 @@ get_capture_rect()
 The region of the screen to be saved in score screenshots.
 
 Has to return ``x,y,w,h`` in pixel coordinates to the game.
+
+screenshot_captured(path)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Called when a screenshot has been captured successfully with ``path`` being the
+path to the saved screenshot.

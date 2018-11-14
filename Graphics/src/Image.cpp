@@ -118,7 +118,7 @@ namespace Graphics
 		{
 			///TODO: Use shared/File.hpp instead?
 			File pngfile;
-			pngfile.OpenWrite(file);
+			pngfile.OpenWrite(Path::Normalize(file));
 
 			png_structp png_ptr = NULL;
 			png_infop info_ptr = NULL;

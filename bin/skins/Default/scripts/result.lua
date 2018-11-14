@@ -16,6 +16,9 @@ local diffNames = {"NOV", "ADV", "EXH", "INF"}
 local backgroundImage = gfx.CreateSkinImage("bg.png", 1);
 game.LoadSkinSample("applause")
 local played = false
+local shotTimer = 0;
+local shotPath = "";
+game.LoadSkinSample("shutter")
 
 
 get_capture_rect = function()
@@ -24,6 +27,29 @@ get_capture_rect = function()
     local w = 500 * scale
     local h = 800 * scale
     return x,y,w,h
+end
+
+screenshot_captured = function(path)
+    shotTimer = 10;
+    shotPath = path;
+    game.PlaySample("shutter")
+end
+
+draw_shotnotif = function(x,y)
+    gfx.Save()
+    gfx.Translate(x,y)
+    gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_TOP)
+    gfx.BeginPath()
+    gfx.Rect(0,0,200,40)
+    gfx.FillColor(30,30,30)
+    gfx.StrokeColor(255,128,0)
+    gfx.Fill()
+    gfx.Stroke()
+    gfx.FillColor(255,255,255)
+    gfx.FontSize(15)
+    gfx.Text("Screenshot saved to:", 3,5)
+    gfx.Text(shotPath, 3,20)
+    gfx.Restore()
 end
 
 draw_stat = function(x,y,w,h, name, value, format,r,g,b)
@@ -184,4 +210,11 @@ render = function(deltaTime, showStats)
 
 
     draw_highscores()
+    
+    gfx.LoadSkinFont("segoeui.ttf")
+    shotTimer = math.max(shotTimer - deltaTime, 0)
+    if shotTimer > 1 then
+        draw_shotnotif(505,755);
+    end
+    
 end

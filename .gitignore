@@ -48,3 +48,6 @@ Makefile
 
 # Document build files
 docs/build
+
+# Game screenshot folder
+bin/screenshots

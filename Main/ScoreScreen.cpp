@@ -272,9 +272,13 @@ public:
 			Vector2i size(w, h);
 
 			Image screenshot = ImageRes::Screenshot(g_gl, size, { x,y });
-			screenshot->SavePNG(Time::Now().ToString() + ".png");
+			String screenshotPath = "screenshots/" + Time::Now().ToString() + ".png";
+			screenshot->SavePNG(screenshotPath);
 			screenshot.Release();
-			g_gameWindow->ShowMessageBox("Screenshot saved", "Screenshot saved", 2);
+
+			lua_getglobal(m_lua, "screenshot_captured");
+			lua_pushstring(m_lua, *screenshotPath);
+			lua_call(m_lua, 1, 0);
 		}
 	}
 	virtual void OnKeyReleased(int32 key) override
