@@ -553,6 +553,7 @@ private:
 					m_PushIntToTable("perfects", score->crit);
 					m_PushIntToTable("goods", score->almost);
 					m_PushIntToTable("misses", score->miss);
+					m_PushIntToTable("timestamp", score->timestamp);
 					m_PushIntToTable("badge", Scoring::CalculateBadge(*score));
 					lua_settable(m_lua, -3);
 				}

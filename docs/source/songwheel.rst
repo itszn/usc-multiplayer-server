@@ -57,6 +57,7 @@ A score contains the following fields:
     int goods
     int misses
     int badge
+    int timestamp //timestamp in POSIX time (seconds since Jan 1 1970 00:00:00 UTC)
     
 Badge
 *****

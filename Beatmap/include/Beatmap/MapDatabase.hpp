@@ -26,6 +26,7 @@ struct ScoreIndex
 	float gauge;
 	uint32 gameflags;
 	Vector<SimpleHitStat> hitStats;
+	uint64 timestamp;
 };
 
 
@@ -85,7 +86,7 @@ public:
 	MapIndex* GetMap(int32 idx);
 
 	void AddSearchPath(const String& path);
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats);
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats, uint64 timestamp);
 	void RemoveSearchPath(const String& path);
 
 	// (mapId, mapIndex)

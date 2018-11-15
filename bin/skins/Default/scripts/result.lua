@@ -102,7 +102,12 @@ draw_highscores = function()
         gfx.LoadSkinFont("NovaMono.ttf")
         gfx.FontSize(60)
         gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_TOP)
-        gfx.Text(string.format("%08d", s.score), 650, ypos + 3)
+        gfx.Text(string.format("%08d", s.score), 650, ypos - 4)
+        gfx.LoadSkinFont("segoeui.ttf")
+        gfx.FontSize(20)
+        if s.timestamp > 0 then
+            gfx.Text(os.date("%Y-%m-%d %H:%M:%S", s.timestamp), 650, ypos + 45)
+        end
     end
 end
 

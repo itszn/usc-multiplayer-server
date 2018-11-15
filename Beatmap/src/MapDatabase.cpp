@@ -64,7 +64,7 @@ public:
 	List<Event> m_pendingChanges;
 	mutex m_pendingChangesLock;
 
-	static const int32 m_version = 9;
+	static const int32 m_version = 10;
 
 public:
 	MapDatabase_Impl(MapDatabase& outer) : m_outer(outer)
@@ -108,9 +108,15 @@ public:
 		else if (update)
 		{
 			///TODO: Make loop for doing iterative upgrades
-			if (gotVersion == 8 && m_version == 9)  //upgrade from 8 to 9
+			if (gotVersion == 8)  //upgrade from 8 to 9
 			{
 				m_database.Exec("ALTER TABLE Scores ADD COLUMN hitstats BLOB");
+				gotVersion = 9;
+			}
+			if (gotVersion == 9)  //upgrade from 9 to 10
+			{
+				m_database.Exec("ALTER TABLE Scores ADD COLUMN timestamp INTEGER");
+				gotVersion = 10;
 			}
 			m_database.Exec(Utility::Sprintf("UPDATE Database SET `version`=%d WHERE `rowid`=1", m_version));
 		}
@@ -448,9 +454,9 @@ public:
 		}
 	}
 
-	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats)
+	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats, uint64 timestamp)
 	{
-		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,gameflags,hitstats,diffid) VALUES(?,?,?,?,?,?,?,?)");
+		DBStatement addScore = m_database.Query("INSERT INTO Scores(score,crit,near,miss,gauge,gameflags,hitstats,timestamp,diffid) VALUES(?,?,?,?,?,?,?,?,?)");
 		Buffer hitstats;
 		MemoryWriter hitstatWriter(hitstats);
 		hitstatWriter.SerializeObject(simpleHitStats);
@@ -464,7 +470,8 @@ public:
 		addScore.BindDouble(5, gauge);
 		addScore.BindInt(6, gameflags);
 		addScore.BindBlob(7, hitstats);
-		addScore.BindInt(8, diff.id);
+		addScore.BindInt64(8, timestamp);
+		addScore.BindInt(9, diff.id);
 
 		addScore.Step();
 		addScore.Rewind();
@@ -501,7 +508,7 @@ private:
 			"FOREIGN KEY(mapid) REFERENCES Maps(rowid))");
 
 		m_database.Exec("CREATE TABLE Scores"
-			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, gameflags INTEGER, diffid INTEGER, hitstats BLOB, "
+			"(score INTEGER, crit INTEGER, near INTEGER, miss INTEGER, gauge REAL, gameflags INTEGER, diffid INTEGER, hitstats BLOB, timestamp INTEGER, "
 			"FOREIGN KEY(diffid) REFERENCES Difficulties(rowid))");
 	}
 	void m_LoadInitialData()
@@ -562,7 +569,7 @@ private:
 		}
 
 		// Select Scores
-		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,gameflags,hitstats,diffid FROM Scores");
+		DBStatement scoreScan = m_database.Query("SELECT rowid,score,crit,near,miss,gauge,gameflags,hitstats,timestamp,diffid FROM Scores");
 		
 		while (scoreScan.StepRow())
 		{
@@ -580,7 +587,8 @@ private:
 			if(hitstats.size() > 0)
 				hitstatreader.SerializeObject(score->hitStats);
 
-			score->diffid = scoreScan.IntColumn(8);
+			score->timestamp = scoreScan.Int64Column(8);
+			score->diffid = scoreScan.IntColumn(9);
 
 			// Add difficulty to map and resort difficulties
 			auto diffIt = m_difficulties.find(score->diffid);
@@ -766,7 +774,7 @@ void MapDatabase::RemoveSearchPath(const String& path)
 {
 	m_impl->RemoveSearchPath(path);
 }
-void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats)
+void MapDatabase::AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats, uint64 timestamp)
 {
-	m_impl->AddScore(diff, score, crit, almost, miss, gauge, gameflags, simpleHitStats);
+	m_impl->AddScore(diff, score, crit, almost, miss, gauge, gameflags, simpleHitStats, timestamp);
 }

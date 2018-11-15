@@ -136,7 +136,8 @@ public:
 				m_categorizedHits[0],
 				m_finalGaugeValue,
 				(uint32)m_flags,
-				m_simpleHitStats);
+				m_simpleHitStats,
+				Shared::Time::Now().Data());
 		}
 
 		// Used for jacket images
@@ -226,6 +227,7 @@ public:
 			m_PushIntToTable("perfects", score->crit);
 			m_PushIntToTable("goods", score->almost);
 			m_PushIntToTable("misses", score->miss);
+			m_PushIntToTable("timestamp", score->timestamp);
 			m_PushIntToTable("badge", Scoring::CalculateBadge(*score));
 			lua_settable(m_lua, -3);
 		}
@@ -279,6 +281,10 @@ public:
 			lua_getglobal(m_lua, "screenshot_captured");
 			lua_pushstring(m_lua, *screenshotPath);
 			lua_call(m_lua, 1, 0);
+		}
+		if (key == SDLK_F9)
+		{
+			g_application->ReloadScript("result", m_lua);
 		}
 	}
 	virtual void OnKeyReleased(int32 key) override
