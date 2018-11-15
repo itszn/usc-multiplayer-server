@@ -501,8 +501,10 @@ public:
 		m_started = false;
 		m_ended = false;
 		m_hideLane = false;
+		m_transitioning = false;
 		m_playback.Reset(m_lastMapTime);
 		m_scoring.Reset();
+		m_scoring.SetInput(&g_input);
 		m_camera.pLaneZoom = m_playback.GetZoom(0);
 		m_camera.pLanePitch = m_playback.GetZoom(1);
 		m_camera.pLaneOffset = m_playback.GetZoom(2);
