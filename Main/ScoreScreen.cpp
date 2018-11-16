@@ -251,7 +251,7 @@ public:
 		{
 			g_application->RemoveTickable(this);
 		}
-		if (key == SDLK_PRINTSCREEN)
+		if (key == SDLK_F12)
 		{
 			auto luaPopInt = [this]
 			{

@@ -1234,6 +1234,9 @@ public:
 	}
 	void m_OnMouseScroll(int32 steps)
 	{
+		if (m_suspended)
+			return;
+
 		if (m_settingsWheel->Active)
 		{
 			m_settingsWheel->AdvanceSelection(steps);

@@ -11,6 +11,8 @@
 bin/songs/*
 maps.db
 bin/Main.cfg
+bin/screenshots
+bin/log*
 
 # Intermediate Files
 x64
@@ -48,6 +50,3 @@ Makefile
 
 # Document build files
 docs/build
-
-# Game screenshot folder
-bin/screenshots
