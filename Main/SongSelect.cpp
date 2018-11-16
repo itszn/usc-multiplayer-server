@@ -363,15 +363,21 @@ public:
 	void AdvancePage(int32 direction)
 	{
 		lua_getglobal(m_lua, "get_page_size");
-		if (lua_pcall(m_lua, 0, 1, 0) != 0)
+		if (lua_isfunction(m_lua, -1))
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
-			assert(false);
+			if (lua_pcall(m_lua, 0, 1, 0) != 0)
+			{
+				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+				g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			}
+			int ret = luaL_checkinteger(m_lua, 0);
+			lua_settop(m_lua, 0);
+			AdvanceSelection(ret * direction);
 		}
-		int ret = luaL_checkinteger(m_lua, 0);
-		lua_settop(m_lua, 0);
-		AdvanceSelection(ret * direction);
+		else
+		{
+			AdvanceSelection(5 * direction);
+		}
 	}
 	void SelectDifficulty(int32 newDiff)
 	{
@@ -495,8 +501,8 @@ private:
 		lua_pushinteger(m_lua, m_currentlySelectedDiff + 1);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			Logf("Lua error on set_diff: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error on set_diff", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 	}
@@ -506,8 +512,8 @@ private:
 		lua_pushinteger(m_lua, m_currentlySelectedLuaMapIndex + 1);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			Logf("Lua error on set_index: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error on set_index", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 	}
@@ -676,8 +682,8 @@ public:
 		lua_pushboolean(m_lua, type == FilterType::Folder);
 		if (lua_pcall(m_lua, 2, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			Logf("Lua error on set_selection: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error on set_selection", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 		m_currentFilters[t] = filter;
@@ -744,8 +750,8 @@ public:
 		lua_pushboolean(m_lua, m_selectingFolders);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			Logf("Lua error on set_mode: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error on set_mode", lua_tostring(m_lua, -1), 0);
 			assert(false);
 		}
 	}

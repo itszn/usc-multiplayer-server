@@ -722,36 +722,49 @@ public:
 		{
 			// Render Lua Intro
 			lua_getglobal(m_lua, "render_intro");
-			lua_pushnumber(m_lua, deltaTime);
-			if (lua_pcall(m_lua, 1, 1, 0) != 0)
+			if (lua_isfunction(m_lua, -1))
 			{
-				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-				g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
-				assert(false);
+				lua_pushnumber(m_lua, deltaTime);
+				if (lua_pcall(m_lua, 1, 1, 0) != 0)
+				{
+					Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+					g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+				}
+				m_introCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
 			}
-			m_introCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
+			else
+			{
+				m_introCompleted = true;
+			}
+			
 			lua_settop(m_lua, 0);
 		}
 		if (m_ended)
 		{
 			// Render Lua Outro
 			lua_getglobal(m_lua, "render_outro");
-			lua_pushnumber(m_lua, deltaTime);
-			lua_pushnumber(m_lua, m_getClearState());
-			if (lua_pcall(m_lua, 2, 2, 0) != 0)
+			if (lua_isfunction(m_lua, -1))
 			{
-				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-				g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
-				assert(false);
+				lua_pushnumber(m_lua, deltaTime);
+				lua_pushnumber(m_lua, m_getClearState());
+				if (lua_pcall(m_lua, 2, 2, 0) != 0)
+				{
+					Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+					g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+				}
+				if (lua_isnumber(m_lua, lua_gettop(m_lua)))
+				{
+					float speed = Math::Clamp((float)lua_tonumber(m_lua, lua_gettop(m_lua)), 0.0f, 1.0f);
+					m_audioPlayback.SetPlaybackSpeed(speed);
+					m_audioPlayback.SetVolume(Math::Clamp(speed * 10.0f, 0.0f, 1.0f));
+				}
+				lua_pop(m_lua, 1);
+				m_outroCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
 			}
-			if (lua_isnumber(m_lua, lua_gettop(m_lua)))
+			else
 			{
-				float speed = Math::Clamp((float)lua_tonumber(m_lua, lua_gettop(m_lua)), 0.0f, 1.0f);
-				m_audioPlayback.SetPlaybackSpeed(speed);
-				m_audioPlayback.SetVolume(Math::Clamp(speed * 10.0f, 0.0f, 1.0f));
+				m_outroCompleted = true;
 			}
-			lua_pop(m_lua, 1);
-			m_outroCompleted = lua_toboolean(m_lua, lua_gettop(m_lua));
 			lua_settop(m_lua, 0);
 		}
 
@@ -1282,8 +1295,7 @@ public:
 				lua_pushboolean(m_lua, late);
 				if (lua_pcall(m_lua, 1, 0, 0) != 0)
 				{
-					Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-					assert(false);
+					Logf("Lua error on calling near_hit: %s", Logger::Error, lua_tostring(m_lua, -1));
 				}
 			}
 
@@ -1315,8 +1327,7 @@ public:
 		lua_pushinteger(m_lua, newCombo);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			assert(false);
+			Logf("Lua error on calling update_combo: %s", Logger::Error, lua_tostring(m_lua, -1));
 		}
 	}
 	void OnScoreChanged(uint32 newScore)
@@ -1325,8 +1336,7 @@ public:
 		lua_pushinteger(m_lua, newScore);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-			assert(false);
+			Logf("Lua error on calling update_score: %s", Logger::Error, lua_tostring(m_lua, -1));
 		}
 	}
 
@@ -1421,8 +1431,7 @@ public:
 			lua_pushboolean(m_lua, object->index == 1);
 			if (lua_pcall(m_lua, 1, 0, 0) != 0)
 			{
-				Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
-				assert(false);
+				Logf("Lua error on calling laser_alert: %s", Logger::Error, lua_tostring(m_lua, -1));
 			}
 		}
 	}
