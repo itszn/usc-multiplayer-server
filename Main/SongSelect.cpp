@@ -1472,6 +1472,7 @@ public:
 	}
 	virtual void OnRestore()
 	{
+		g_application->DiscordPresenceMenu("Song Select");
 		m_suspended = false;
 		m_previewPlayer.Restore();
 		m_mapDatabase.StartSearching();

@@ -17,6 +17,7 @@
 #include "TransitionScreen.hpp"
 #include "AsyncAssetLoader.hpp"
 #include "GameConfig.hpp"
+#include <Shared/Time.hpp>
 
 #ifdef _WIN32
 #include"SDL_keycode.h"
@@ -375,6 +376,11 @@ public:
 		};
 
 		const BeatmapSettings& mapSettings = m_beatmap->GetMapSettings();
+		int64 startTime = Shared::Time::Now().Data();
+		///TODO: Set more accurate endTime
+		int64 endTime = startTime + (m_endTime / 1000) + 5;
+		g_application->DiscordPresenceSong(mapSettings, startTime, endTime);
+
 		String jacketPath = m_mapRootPath + "/" + mapSettings.jacketPath;
 		//Set gameplay table
 		{

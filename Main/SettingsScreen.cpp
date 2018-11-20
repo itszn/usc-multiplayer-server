@@ -510,6 +510,7 @@ public:
 	}
 	virtual void OnRestore()
 	{
+		g_application->DiscordPresenceMenu("Settings");
 		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		//slot->anchor = Anchors::Full;
 	}

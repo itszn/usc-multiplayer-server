@@ -41,6 +41,7 @@ target_link_libraries(usc-game Beatmap)
 target_link_libraries(usc-game nanovg)
 #target_link_libraries(Main nuklear)
 target_link_libraries(usc-game lua)
+target_link_libraries(usc-game discord-rpc)
 
 
 if(WIN32)

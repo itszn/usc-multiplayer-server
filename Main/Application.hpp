@@ -1,6 +1,7 @@
 #pragma once
 #include <Audio/Sample.hpp>
 #include <Shared/Jobs.hpp>
+#define DISCORD_APPLICATION_ID "514489760568573952"
 extern class OpenGL* g_gl;
 extern class GUIState g_guiState;
 extern class Graphics::Window* g_gameWindow;
@@ -80,11 +81,14 @@ public:
 	void ReloadSkin();
 	void DisposeLua(class lua_State* state);
 	void SetGaugeColor(int i, Color c);
+	void DiscordError(int errorCode, const char* message);
+	void DiscordPresenceMenu(String name);
+	void DiscordPresenceSong(const struct BeatmapSettings& song, int64 startTime, int64 endTime);
 
 private:
 	bool m_LoadConfig();
 	void m_SaveConfig();
-
+	void m_InitDiscord();
 	bool m_Init();
 	void m_MainLoop();
 	void m_Tick();

@@ -4,3 +4,6 @@
 [submodule "third_party/nuklear"]
 	path = third_party/nuklear
 	url = https://github.com/vurtun/nuklear.git
+[submodule "third_party/discord-rpc"]
+	path = third_party/discord-rpc
+	url = https://github.com/discordapp/discord-rpc.git

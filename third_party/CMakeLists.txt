@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.4)
 
 add_subdirectory(lua-5.3.5)
+add_subdirectory(discord-rpc)
+target_include_directories(discord-rpc PUBLIC discord-rpc/include)
 if(WIN32)
 	# Use bundled third party libraries on windows
 	add_subdirectory(freetype)

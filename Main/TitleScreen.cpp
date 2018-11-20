@@ -103,6 +103,7 @@ public:
 		g_gameWindow->SetCursorVisible(true);
 		g_application->ReloadSkin();
 		g_application->ReloadScript("titlescreen", m_lua);
+		g_application->DiscordPresenceMenu("Title Screen");
 	}
 
 

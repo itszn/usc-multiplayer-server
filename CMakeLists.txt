@@ -87,6 +87,7 @@ if(MSVC)
 	set_target_properties(SDL2 PROPERTIES FOLDER "Third Party")
     set_target_properties(nanovg PROPERTIES FOLDER "Third Party")
     #set_target_properties(nuklear PROPERTIES FOLDER "Third Party")
+    set_target_properties(discord-rpc PROPERTIES FOLDER "Third Party")
     set_target_properties(lua PROPERTIES FOLDER "Third Party")
 	
 	# My libraries in the libraries folder

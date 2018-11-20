@@ -15,13 +15,9 @@
 #include "Input.hpp"
 #include "TransitionScreen.hpp"
 #include "GUI/HealthGauge.hpp"
-extern "C"
-{
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
+#include "lua.hpp"
 #include "nanovg.h"
+#include "discord_rpc.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "GUI/nanovg_lua.h"
@@ -168,6 +164,47 @@ void Application::m_SaveConfig()
 	}
 }
 
+void __discordError(int errorCode, const char* message)
+{
+	g_application->DiscordError(errorCode, message);
+}
+
+void __discordReady(const DiscordUser* user)
+{
+	Logf("[Discord] Logged in as \"%s\"", Logger::Info, user->username);
+}
+
+void __discordJoinGame(const char * joins)
+{
+}
+
+void __discordSpecGame(const char * specs)
+{
+}
+
+void __discordJoinReq(const DiscordUser * duser)
+{
+}
+
+void __discordDisconnected(int errcode, const char * msg)
+{
+	g_application->DiscordError(errcode, msg);
+}
+
+void Application::m_InitDiscord()
+{
+	ProfilerScope $("Discord RPC Init");
+	DiscordEventHandlers dhe;
+	memset(&dhe, 0, sizeof(dhe));
+	dhe.errored = __discordError;
+	dhe.ready = __discordReady;
+	dhe.joinRequest = __discordJoinReq;
+	dhe.spectateGame = __discordSpecGame;
+	dhe.joinGame = __discordJoinGame;
+	dhe.disconnected = __discordDisconnected;
+	Discord_Initialize(DISCORD_APPLICATION_ID, &dhe, 1, nullptr);
+}
+
 bool Application::m_Init()
 {
 	ProfilerScope $("Application Setup");
@@ -307,6 +344,9 @@ bool Application::m_Init()
 #endif
 		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
+
+	m_InitDiscord();
+
 
 	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
 	m_fontMaterial->opaque = false;	
@@ -523,6 +563,8 @@ void Application::m_Cleanup()
 		delete g_jobSheduler;
 		g_jobSheduler = nullptr;
 	}
+
+	Discord_Shutdown();
 
 	// Finally, save config
 	m_SaveConfig();
@@ -749,6 +791,36 @@ void Application::SetGaugeColor(int i, Color c)
 		m_gauge->upperColor = m_gaugeColors[1];
 	}
 }
+void Application::DiscordError(int errorCode, const char * message)
+{
+	Logf("[Discord] %s", Logger::Warning, message);
+}
+
+void Application::DiscordPresenceMenu(String name)
+{
+	DiscordRichPresence discordPresence;
+	memset(&discordPresence, 0, sizeof(discordPresence));
+	discordPresence.state = "In Menus";
+	discordPresence.details = name.c_str();
+	Discord_UpdatePresence(&discordPresence);
+}
+
+void Application::DiscordPresenceSong(const BeatmapSettings& song, int64 startTime, int64 endTime)
+{
+	Vector<String> diffNames = { "NOV", "ADV", "EXH", "INF" };
+	DiscordRichPresence discordPresence;
+	memset(&discordPresence, 0, sizeof(discordPresence));
+	char bufferState[128] = { 0 };
+	sprintf(bufferState, "Playing [%s %d]", diffNames[song.difficulty].c_str(), song.level);
+	discordPresence.state = bufferState;
+	char bufferDetails[128] = { 0 };
+	sprintf(bufferDetails, "%s - %s", *song.title, *song.artist);
+	discordPresence.details = bufferDetails;
+	discordPresence.startTimestamp = startTime;
+	discordPresence.endTimestamp = endTime;
+	Discord_UpdatePresence(&discordPresence);
+}
+
 void Application::LoadGauge(bool hard)
 {
 	String gaugePath = "gauges/normal/";
