@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.4)
 
 add_subdirectory(lua-5.3.5)
+#discord example program
+option(BUILD_EXAMPLES "Build example apps" OFF)
 add_subdirectory(discord-rpc)
 target_include_directories(discord-rpc PUBLIC discord-rpc/include)
 if(WIN32)
