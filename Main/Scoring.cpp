@@ -138,6 +138,8 @@ void Scoring::Reset()
 	m_bounceGuard = g_gameConfig.GetInt(GameConfigKeys::InputBounceGuard);
 	// Get laser assist level
 	m_assistLevel = g_gameConfig.GetFloat(GameConfigKeys::LaserAssistLevel);
+	m_assistSlamBoost = g_gameConfig.GetFloat(GameConfigKeys::LaserSlamBoost);
+	m_assistPunish = g_gameConfig.GetFloat(GameConfigKeys::LaserPunish);
 	// Recalculate maximum score
 	mapTotals = CalculateMapTotals();
 
@@ -484,6 +486,8 @@ void Scoring::m_CalculateLaserTicks(LaserObjectState* laserRoot, Vector<ScoreTic
 			ScoreTick& t = ticks.Add(ScoreTick(*it));
 			t.time = it->time;
 			t.flags = TickFlags::Laser | TickFlags::Slam;
+			if (!it->prev)
+				t.SetFlag(TickFlags::Start);
 			lastSlam = it;
 			if(it->next)
 			{
@@ -607,7 +611,7 @@ void Scoring::m_UpdateTicks()
 		{
 			ScoreTick* tick = ticks[i];
 			MapTime delta = currentTime - ticks[i]->time;
-			bool shouldMiss = delta > tick->GetHitWindow();
+			bool shouldMiss = abs(delta) > tick->GetHitWindow();
 			bool processed = false;
 			if(delta >= 0)
 			{
@@ -681,24 +685,41 @@ void Scoring::m_UpdateTicks()
 						}
 					}
 				}
-
-				if(delta > Scoring::goodHitTime && !processed)
+			}
+			else if (tick->HasFlag(TickFlags::Slam) && !shouldMiss)
+			{
+				LaserObjectState* laserObject = (LaserObjectState*)tick->object;
+				// Check if slam hit
+				float dirSign = Math::Sign(laserObject->GetDirection());
+				float inputSign = Math::Sign(m_input->GetInputLaserDir(buttonCode - 6));
+				float posDelta = (laserObject->points[1] - laserPositions[buttonCode - 6]) * dirSign;
+				if (dirSign == inputSign && posDelta >= -laserDistanceLeniency)
 				{
-					m_TickMiss(tick, buttonCode, delta);
+					m_TickHit(tick, buttonCode);
+					HitStat* stat = new HitStat(tick->object);
+					stat->time = currentTime;
+					stat->rating = ScoreHitRating::Perfect;
+					hitStats.Add(stat);
 					processed = true;
 				}
+			}
 
-				if(processed)
-				{
-					delete tick;
-					ticks.Remove(tick, false);
-					i--;
-				}
-				else
-				{
-					// No further ticks to process
-					break;
-				}
+			if (delta > Scoring::goodHitTime && !processed)
+			{
+				m_TickMiss(tick, buttonCode, delta);
+				processed = true;
+			}
+
+			if (processed)
+			{
+				delete tick;
+				ticks.Remove(tick, false);
+				i--;
+			}
+			else
+			{
+				// No further ticks to process
+				break;
 			}
 		}
 	}
@@ -708,32 +729,31 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 	MapTime currentTime = m_playback->GetLastTime();
 
 	assert(buttonCode < 8);
-	auto& ticks = m_ticks[buttonCode];
-	for(uint32 i = 0; i < ticks.size(); i++)
-	{
-		ScoreTick* tick = ticks[i];
-		MapTime delta = currentTime - ticks[i]->time + m_inputOffset;
-		ObjectState* hitObject = tick->object;
 
-		if(tick->HasFlag(TickFlags::Laser))
+	if (m_ticks[buttonCode].size() > 0)
+	{
+		ScoreTick* tick = m_ticks[buttonCode].front();
+		MapTime delta = currentTime - tick->time + m_inputOffset;
+		ObjectState* hitObject = tick->object;
+		if (tick->HasFlag(TickFlags::Laser))
 		{
 			// Ignore laser and hold ticks
-			continue;
+			return nullptr;
 		}
 		else if (tick->HasFlag(TickFlags::Hold))
 		{
 			HoldObjectState* hos = (HoldObjectState*)hitObject;
 			hos = hos->GetRoot();
-			if(hos->time - Scoring::goodHitTime <= currentTime + m_inputOffset)
+			if (hos->time - Scoring::goodHitTime <= currentTime + m_inputOffset)
 				m_SetHoldObject(hitObject, buttonCode);
-			continue;
+			return nullptr;
 		}
-		if(abs(delta) <= Scoring::goodHitTime)
+		if (abs(delta) <= Scoring::goodHitTime)
 			m_TickHit(tick, buttonCode, delta);
 		else
 			m_TickMiss(tick, buttonCode, delta);
 		delete tick;
-		ticks.Remove(tick, false);
+		m_ticks[buttonCode].Remove(tick, false);
 
 		return hitObject;
 	}
@@ -792,7 +812,7 @@ void Scoring::m_TickHit(ScoreTick* tick, uint32 index, MapTime delta /*= 0*/)
 			// Set laser pointer position after hitting slam
 			laserTargetPositions[object->index] = object->points[1];
 			laserPositions[object->index] = object->points[1];
-			m_autoLaserTime[object->index] = m_assistTime;
+			m_autoLaserTime[object->index] = m_assistTime * m_assistSlamBoost;
 		}
 
 		currentGauge += tickGaugeGain;
@@ -834,8 +854,11 @@ void Scoring::m_TickMiss(ScoreTick* tick, uint32 index, MapTime delta)
 	{
 		LaserObjectState* obj = (LaserObjectState*)tick->object;
 		
-		if(tick->HasFlag(TickFlags::Slam))
+		if (tick->HasFlag(TickFlags::Slam))
+		{
 			currentGauge -= shortMissDrain;
+			m_autoLaserTime[obj->index] = -1;
+		}
 		else
 			currentGauge -= shortMissDrain / 4.f;
 		m_autoLaserTime[obj->index] = -1.f;
@@ -981,13 +1004,16 @@ void Scoring::m_UpdateLasers(float deltaTime)
 			float inputDir = Math::Sign(input);
 
 			// Always snap laser to start sections if they are completely vertical
-			// Check Yggdrasil_ch.ksh for a part that starts of with vertical lasers and then curve towards the other side (46500 ms in)
 			if (laserDir == 0.0f && currentSegment->prev == nullptr)
+			{
 				laserPositions[i] = laserTargetPositions[i];
+				m_autoLaserTime[i] = m_assistTime;
+			}
 			// Lock lasers on straight parts
 			else if (laserDir == 0.0f && fabs(positionDelta) < laserDistanceLeniency)
 			{
 				laserPositions[i] = laserTargetPositions[i];
+				m_autoLaserTime[i] = m_assistTime;
 			}
 			else if(inputDir != 0.0f)
 			{
@@ -1011,13 +1037,13 @@ void Scoring::m_UpdateLasers(float deltaTime)
 						laserPositions[i] = Math::Max(laserPositions[i] + input, laserTargetPositions[i]);
 				}
 				notAffectingGameplay = false;
-				if (inputDir == moveDir && fabs(positionDelta) < laserDistanceLeniency && m_autoLaserTime[i] < m_assistTime)
+				if (inputDir == moveDir && fabs(positionDelta) < laserDistanceLeniency)
 				{
 					m_autoLaserTime[i] = m_assistTime;
 				}
 				if (inputDir != 0 && inputDir != laserDir)
 				{
-					m_autoLaserTime[i] -=  deltaTime * 1.5f;
+					m_autoLaserTime[i] -=  deltaTime * m_assistPunish;
 					//m_autoLaserTime[i] = Math::Min(m_autoLaserTime[i], m_assistTime * 0.2f);
 				}
 			}
@@ -1026,6 +1052,7 @@ void Scoring::m_UpdateLasers(float deltaTime)
 		else
 		{
 			timeSinceLaserUsed[i] += deltaTime;
+			//laserPositions[i] = laserTargetPositions[i];
 		}
 		if (autoplay || m_autoLaserTime[i] >= 0)
 		{
@@ -1171,6 +1198,7 @@ MapTime ScoreTick::GetHitWindow() const
 	{
 		if(!HasFlag(TickFlags::Start) && !HasFlag(TickFlags::Slam))
 			return 0;
+		return Scoring::perfectHitTime;
 	}
 	return Scoring::missHitTime;
 }

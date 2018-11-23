@@ -274,6 +274,8 @@ private:
 	MapTime m_buttonGuardTime[6] = { 0, 0, 0, 0, 0, 0 };
 	// Max number of ticks to assist
 	float m_assistLevel = 1.5f;
+	float m_assistSlamBoost = 1.5f;
+	float m_assistPunish = 1.5f;
 	float m_assistTime = 0.0f;
 	// Offet to use for calculating judge (ms)
 	uint32 m_inputOffset = 0;
