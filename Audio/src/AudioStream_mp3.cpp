@@ -16,6 +16,9 @@ class AudioStreamMP3_Impl : public AudioStreamBase
 
 	Map<int32, size_t> m_frameIndices;
 	uint32 m_largetsFrameIndex;
+	Vector<float> m_pcm;
+	uint64 m_playPos;
+
 
 	bool m_firstFrame = true;
 
@@ -50,13 +53,14 @@ public:
 	}
 	bool Init(Audio* audio, const String& path, bool preload)
 	{
+		///TODO: Write non-preload functions
 		if(!AudioStreamBase::Init(audio, path, true)) // Always preload for now
 			return false;
+		
 
 		// Always use preloaded data
 		m_mp3dataLength = Reader().GetSize();
 		m_dataSource = m_data.data();
-
 		int32 tagSize = 0;
 
 		String tag = "tag";
@@ -131,14 +135,41 @@ public:
 		m_samplesTotal = sampleOffset;
 
 		m_decoder = (mp3_decoder_t*)mp3_create();
+		m_preloaded = false;
 		int32 r = DecodeData_Internal();
 		if(r <= 0)
 			return false;
+
+		if (preload)
+		{
+			while (r > 0)
+			{
+				for (size_t i = 0; i < r; i++)
+				{
+					m_pcm.Add(m_readBuffer[0][i]);
+					m_pcm.Add(m_readBuffer[1][i]);	
+				}
+				r = DecodeData_Internal();
+			}
+			m_data.clear();
+			m_dataSource = nullptr;
+		}
+		m_preloaded = preload;
+
 
 		return true;
 	}
 	virtual void SetPosition_Internal(int32 pos)
 	{
+		if (m_preloaded)
+		{
+			if (pos < 0)
+				m_playPos = 0;
+			else
+				m_playPos = pos;
+			return;
+		}
+
 		auto it = m_frameIndices.lower_bound(pos);
 		if(it == m_frameIndices.end())
 		{
@@ -152,6 +183,9 @@ public:
 	}
 	virtual int32 GetStreamPosition_Internal()
 	{
+		if (m_preloaded)
+			return m_playPos;
+
 		return m_mp3samplePosition;
 	}
 	virtual int32 GetStreamRate_Internal()
@@ -160,6 +194,26 @@ public:
 	}
 	virtual int32 DecodeData_Internal()
 	{
+		if (m_preloaded)
+		{
+			for (size_t i = 0; i < m_bufferSize; i++)
+			{
+				if (m_playPos >= m_samplesTotal)
+				{
+					m_currentBufferSize = m_bufferSize;
+					m_remainingBufferData = m_bufferSize;
+					m_playing = false;
+					return i;
+				}
+				m_readBuffer[0][i] = m_pcm[m_playPos * 2];
+				m_readBuffer[1][i] = m_pcm[m_playPos * 2 + 1];
+				m_playPos++;
+			}
+			m_currentBufferSize = m_bufferSize;
+			m_remainingBufferData = m_bufferSize;
+			return m_bufferSize;
+		}
+
 		int16 buffer[MP3_MAX_SAMPLES_PER_FRAME];
 		mp3_info_t info;
 		int32 readData = 0;
