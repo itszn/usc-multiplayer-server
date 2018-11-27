@@ -13,7 +13,9 @@ class AudioStreamOGG_Impl : public AudioStreamBase
 		(decltype(ov_callbacks::tell_func))&AudioStreamOGG_Impl::m_Tell,
 	};
 
-	vorbis_info* m_info;
+	vorbis_info m_info;
+	Vector<float> m_pcm;
+	uint64 m_playPos;
 
 public:
 	~AudioStreamOGG_Impl()
@@ -33,35 +35,95 @@ public:
 		}
 
 		vorbis_comment* comments = ov_comment(&m_ovf, 0);
-		m_info = ov_info(&m_ovf, 0);
-		if(!m_info)
+		vorbis_info* infoPtr = ov_info(&m_ovf, 0);
+		if(!infoPtr)
 			return false;
-
+		m_info = *infoPtr;
 		m_samplesTotal = ov_pcm_total(&m_ovf, 0);
-		InitSampling(m_info->rate);
+
+		if (preload)
+		{
+			float** readBuffer;
+			int r;
+			while ((r = ov_read_float(&m_ovf, &readBuffer, 1024, 0)) > 0)
+			{
+				if (m_info.channels == 2)
+				{
+					for (size_t i = 0; i < r; i++)
+					{
+						m_pcm.Add(readBuffer[0][i]);
+						m_pcm.Add(readBuffer[1][i]);
+					}
+				}
+				else if (m_info.channels == 1)
+				{
+					for (size_t i = 0; i < r; i++)
+					{
+						m_pcm.Add(readBuffer[0][i]);
+						m_pcm.Add(readBuffer[0][i]);
+					}
+				}
+			}
+			ov_clear(&m_ovf);
+			m_playPos = 0;
+		}
+
+		InitSampling(m_info.rate);
 
 		return true;
 	}
 
 	virtual void SetPosition_Internal(int32 pos)
 	{
+		if (m_preloaded)
+		{
+			if (pos < 0)
+				m_playPos = 0;
+			else
+				m_playPos = pos;
+			return;
+		}
 		ov_pcm_seek(&m_ovf, pos);
 	}
 	virtual int32 GetStreamPosition_Internal()
 	{
+		if (m_preloaded)
+			return m_playPos;
+
 		return (int32)ov_pcm_tell(&m_ovf);
 	}
 	virtual int32 GetStreamRate_Internal()
 	{
-		return (int32)m_info->rate;
+		return (int32)m_info.rate;
 	}
 	virtual int32 DecodeData_Internal()
 	{
+		if (m_preloaded)
+		{
+			for (size_t i = 0; i < m_bufferSize; i++)
+			{
+				if (m_playPos >= m_samplesTotal)
+				{
+					m_currentBufferSize = m_bufferSize;
+					m_remainingBufferData = m_bufferSize;
+					m_playing = false;
+					return i;
+				}
+				m_readBuffer[0][i] = m_pcm[m_playPos * 2];
+				m_readBuffer[1][i] = m_pcm[m_playPos * 2 + 1];
+				m_playPos++;
+			}
+			m_currentBufferSize = m_bufferSize;
+			m_remainingBufferData = m_bufferSize;
+			return m_bufferSize;
+		}
+
+
 		float** readBuffer;
 		int32 r = ov_read_float(&m_ovf, &readBuffer, m_bufferSize, 0);
 		if(r > 0)
 		{
-			if(m_info->channels == 1)
+			if(m_info.channels == 1)
 			{
 				// Copy mono to read buffer
 				for(int32 i = 0; i < r; i++)

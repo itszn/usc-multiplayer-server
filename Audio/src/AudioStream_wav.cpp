@@ -408,7 +408,7 @@ public:
 				int amountRead = m_fileReader.Serialize(readData.data(), m_format.nBlockAlign);
 				if (amountRead < m_format.nBlockAlign)
 				{
-					m_ended = true;
+					m_playing = false;
 					return 0;
 				}
 				uint32 decodedCount = m_decode_ms_adpcm(readData, &decoded, 0);
