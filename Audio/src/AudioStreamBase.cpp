@@ -109,6 +109,14 @@ void AudioStreamBase::SetPosition(int32 pos)
 	m_ended = false;
 	m_lock.unlock();
 }
+float* AudioStreamBase::GetPCM()
+{
+	return GetPCM_Internal();
+}
+uint32 AudioStreamBase::GetSampleRate() const
+{
+	return GetSampleRate_Internal();
+}
 void AudioStreamBase::RestartTiming()
 {
 	m_streamTimeOffset = SamplesToSeconds(m_samplePos); // Add audio latency to this offset
@@ -176,7 +184,7 @@ void AudioStreamBase::Process(float* out, uint32 numSamples)
 	// Store timing info
 	if(m_samplePos > 0)
 	{
-		m_samplePos = GetStreamPosition_Internal() - m_remainingBufferData;
+		m_samplePos = GetStreamPosition_Internal() - (int64)m_remainingBufferData;
 		if(m_samplePos >= m_samplesTotal)
 		{
 			if(!m_ended)

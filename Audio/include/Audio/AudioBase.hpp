@@ -15,6 +15,8 @@ public:
 	float mix = 1.0f;
 	uint32 priority = 0;
 	uint32 startTime = 0;
+	int32 chartOffset = 0;
+	int32 lastTimingPoint = 0;
 	class AudioBase* audioBase = nullptr;
 	class Audio_Impl* audio = nullptr;
 };
@@ -31,12 +33,19 @@ public:
 	
 	// Gets the playback position in millisecond
 	virtual int32 GetPosition() const = 0;
-	
+
+	// Get the sample rate of this audio stream
+	virtual uint32 GetSampleRate() const = 0;
+
+	// Gets pcm data from a decoded stream, nullptr if not available
+	virtual float* GetPCM() = 0;
+
 	void ProcessDSPs(float*& out, uint32 numSamples);
 	// Adds a signal processor to the audio
 	void AddDSP(DSP* dsp);
 	// Removes a signal processor from the audio
 	void RemoveDSP(DSP* dsp);
+
 
 	void Deregister();
 

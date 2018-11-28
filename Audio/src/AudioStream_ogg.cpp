@@ -15,7 +15,7 @@ class AudioStreamOGG_Impl : public AudioStreamBase
 
 	vorbis_info m_info;
 	Vector<float> m_pcm;
-	uint64 m_playPos;
+	int64 m_playPos;
 
 public:
 	~AudioStreamOGG_Impl()
@@ -77,10 +77,11 @@ public:
 	{
 		if (m_preloaded)
 		{
-			if (pos < 0)
+			if(pos < 0)
 				m_playPos = 0;
 			else
 				m_playPos = pos;
+
 			return;
 		}
 		ov_pcm_seek(&m_ovf, pos);
@@ -96,17 +97,36 @@ public:
 	{
 		return (int32)m_info.rate;
 	}
+
+	float* GetPCM_Internal()
+	{
+		if (m_preloaded)
+			return &m_pcm.front();
+
+		return nullptr;
+	}
+	uint32 GetSampleRate_Internal() const
+	{
+		return m_info.rate;
+	}
+
 	virtual int32 DecodeData_Internal()
 	{
 		if (m_preloaded)
 		{
 			for (size_t i = 0; i < m_bufferSize; i++)
 			{
-				if (m_playPos >= m_samplesTotal)
+				if (m_playPos < 0)
+				{
+					m_readBuffer[0][i] = 0;
+					m_readBuffer[1][i] = 0;
+					m_playPos++;
+					continue;
+				}
+				else if (m_playPos >= m_samplesTotal)
 				{
 					m_currentBufferSize = m_bufferSize;
 					m_remainingBufferData = m_bufferSize;
-					m_playing = false;
 					return i;
 				}
 				m_readBuffer[0][i] = m_pcm[m_playPos * 2];

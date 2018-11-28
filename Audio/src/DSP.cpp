@@ -247,7 +247,6 @@ void TapeStopDSP::Process(float* out, uint32 numSamples)
 			out[i * 2+1] = 0.0f;
 			continue;
 		}
-
 		// Store samples for later
 		m_sampleBuffer.Add(out[i*2]);
 		m_sampleBuffer.Add(out[i*2+1]);
@@ -295,49 +294,43 @@ void RetriggerDSP::SetMaxLength(uint32 length)
 }
 void RetriggerDSP::Process(float* out, uint32 numSamples)
 {
-	int32 startSample = startTime * audio->GetSampleRate() / 1000.0;
-	int32 currentSample = audioBase->GetPosition() * audio->GetSampleRate() / 1000.0;
-	
+	///TODO: Clean up casting
+	int32 startSample = (double)startTime * ((double)audio->GetSampleRate() / 1000.0);
+	int32 nowSample = (double)audioBase->GetPosition() * ((double)audio->GetSampleRate() / 1000.0);
+	float* pcmSource = audioBase->GetPCM();
+	double rateMult = (double)audioBase->GetSampleRate() / audio->GetSampleRate();
+	int32 pcmStartSample = (double)lastTimingPoint * ((double)audioBase->GetSampleRate() / 1000.0);
+	int32 baseStartRepeat = (double)lastTimingPoint * ((double)audio->GetSampleRate() / 1000.0);
 
 	for(uint32 i = 0; i < numSamples; i++)
 	{
-		if(currentSample + i < startSample)
+		if(nowSample + i < startSample)
 		{
 			continue;
 		}
-		if(m_loops == 0)
+
+		int startOffset = 0;
+		if (m_resetDuration > 0)
 		{
-			// Store samples for later
-			if(m_currentSample > m_gateLength) // Additional gating
-			{
-				m_sampleBuffer.Add(0.0f);
-				m_sampleBuffer.Add(0.0f);
-			}
-			else
-			{
-				m_sampleBuffer.Add(out[i * 2]);
-				m_sampleBuffer.Add(out[i * 2 + 1]);
-			}
+			startOffset = (nowSample + i - baseStartRepeat) / (int)m_resetDuration;
+			startOffset = startOffset * m_resetDuration * rateMult;
+		}
+		else
+		{
+			startOffset = (startSample - baseStartRepeat) * rateMult;
 		}
 
+		int pcmSample = pcmStartSample + startOffset + (int)m_currentSample * rateMult;
+		float gating = 1.0f;
+		if (m_currentSample > m_gateLength)
+			gating = 0;
 		// Sample from buffer
-		out[i * 2] = m_sampleBuffer[m_currentSample*2] * mix + out[i * 2] * (1 - mix);
-		out[i * 2 + 1] = m_sampleBuffer[m_currentSample*2+1] * mix + out[i * 2+1] * (1 - mix);
+		out[i * 2] = gating * pcmSource[pcmSample * 2] * mix + out[i * 2] * (1 - mix);
+		out[i * 2 + 1] = gating * pcmSource[pcmSample * 2 + 1] * mix + out[i * 2 + 1] * (1 - mix);
 		
 		// Increase index
-		m_currentSample++;
-		if(m_currentSample > m_length)
-		{
-			m_currentSample -= m_length;
-			m_loops++;
-			if((m_loops * m_length) > m_resetDuration && m_resetDuration != 0)
-			{
-				m_loops = 0;
-				m_currentSample = 0;
-				m_sampleBuffer.resize(0);
-			}
-		}
-		m_currentSample = Math::Clamp(m_currentSample, (uint32_t)0, (uint32_t)m_sampleBuffer.size());
+		m_currentSample = (m_currentSample + 1) % m_length;
+
 	}
 }
 

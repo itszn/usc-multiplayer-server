@@ -58,12 +58,16 @@ public:
 	double GetPositionSeconds(bool allowFreezeSkip = true) const;
 	virtual int32 GetPosition() const override;
 	virtual void SetPosition(int32 pos) override;
+	virtual float* GetPCM() override;
+	virtual uint32 GetSampleRate() const override;
 	void RestartTiming();
 	virtual void Process(float* out, uint32 numSamples) override;
 
 	// Implementation specific set position
 	virtual void SetPosition_Internal(int32 pos) = 0;
 	virtual int32 GetStreamPosition_Internal() = 0;
+	virtual float* GetPCM_Internal() = 0;
+	virtual uint32 GetSampleRate_Internal() const = 0;
 	// Internal sample rate
 	virtual int32 GetStreamRate_Internal() = 0;
 	// Implementation specific decode

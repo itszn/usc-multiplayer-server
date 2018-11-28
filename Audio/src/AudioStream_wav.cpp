@@ -34,7 +34,7 @@ private:
 	WavFormat m_format = { 0 };
 	Vector<float> m_pcm;
 
-	uint64 m_playbackPointer = 0;
+	int64 m_playbackPointer = 0;
 	uint64 m_dataPosition = 0;
 
 	uint32 m_decode_ms_adpcm(const Buffer& encoded, Buffer* decoded, uint64 pos)
@@ -331,10 +331,11 @@ public:
 	}
 	virtual void SetPosition_Internal(int32 pos)
 	{
-		if(pos > 0)
-			m_playbackPointer = pos;
-		else
+		if (pos < 0)
 			m_playbackPointer = 0;
+		else
+			m_playbackPointer = pos;
+
 
 		if (!m_preloaded)
 		{
@@ -434,7 +435,14 @@ public:
 			uint32 samplesPerRead = 128;
 			for (uint32 i = 0; i < samplesPerRead; i++)
 			{
-				if (m_playbackPointer >= m_samplesTotal)
+				if (m_playbackPointer < 0)
+				{
+					m_readBuffer[0][i] = 0;
+					m_readBuffer[1][i] = 0;
+					m_playbackPointer += 2;
+					continue;
+				}
+				else if (m_playbackPointer >= m_samplesTotal)
 				{
 					m_currentBufferSize = samplesPerRead;
 					m_remainingBufferData = samplesPerRead;
@@ -451,7 +459,17 @@ public:
 		}
 		return 0;
 	}
-
+	float* GetPCM_Internal()
+	{
+		if (m_preloaded)
+			return &m_pcm.front();
+		
+		return nullptr;
+	}
+	uint32 GetSampleRate_Internal() const
+	{
+		return m_format.nSampleRate;
+	}
 };
 
 class AudioStreamRes* CreateAudioStream_wav(class Audio* audio, const String& path, bool preload)

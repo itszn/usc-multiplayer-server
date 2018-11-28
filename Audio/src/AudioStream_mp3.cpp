@@ -17,7 +17,7 @@ class AudioStreamMP3_Impl : public AudioStreamBase
 	Map<int32, size_t> m_frameIndices;
 	uint32 m_largetsFrameIndex;
 	Vector<float> m_pcm;
-	uint64 m_playPos;
+	int64 m_playPos;
 
 
 	bool m_firstFrame = true;
@@ -167,6 +167,8 @@ public:
 				m_playPos = 0;
 			else
 				m_playPos = pos;
+
+
 			return;
 		}
 
@@ -192,13 +194,31 @@ public:
 	{
 		return (int32)m_samplingRate;
 	}
+	uint32 GetSampleRate_Internal() const
+	{
+		return m_samplingRate;
+	}
+	float* GetPCM_Internal()
+	{
+		if (m_preloaded)
+			return &m_pcm.front();
+
+		return nullptr;
+	}
 	virtual int32 DecodeData_Internal()
 	{
 		if (m_preloaded)
 		{
 			for (size_t i = 0; i < m_bufferSize; i++)
 			{
-				if (m_playPos >= m_samplesTotal)
+				if (m_playPos < 0)
+				{
+					m_readBuffer[0][i] = 0;
+					m_readBuffer[1][i] = 0;
+					m_playPos++;
+					continue;
+				}
+				else if (m_playPos >= m_samplesTotal)
 				{
 					m_currentBufferSize = m_bufferSize;
 					m_remainingBufferData = m_bufferSize;

@@ -339,6 +339,14 @@ public:
 	{
 		return 0;
 	}
+	float* GetPCM()
+	{
+		return nullptr;
+	}
+	uint32 GetSampleRate() const
+	{
+		return m_format.nSampleRate;
+	}
 
 };
 
