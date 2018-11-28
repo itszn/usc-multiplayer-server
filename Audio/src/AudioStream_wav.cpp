@@ -179,21 +179,21 @@ public:
 					// Read data
 					if (m_format.nFormat == 1)
 					{
-						m_samplesTotal = chunkHdr.nLength / sizeof(short);
+						m_samplesTotal = (chunkHdr.nLength / sizeof(short)) / m_format.nChannels;
 						m_Internaldata.resize(chunkHdr.nLength);
 						m_memoryReader.Serialize(m_Internaldata.data(), chunkHdr.nLength);
 					}
 					else if (m_format.nFormat == 2)
 					{
-						m_samplesTotal = chunkHdr.nLength * 2;
-						m_Internaldata.resize(m_samplesTotal * m_format.nChannels * sizeof(short));
+						m_samplesTotal = chunkHdr.nLength;
+						m_Internaldata.resize(m_samplesTotal);
 						m_memoryReader.Serialize(m_Internaldata.data(), chunkHdr.nLength);
 					}
 
 
 					//Decode to float
 					int pos = 0;
-					m_pcm.resize(m_samplesTotal * sizeof(float));
+					m_pcm.resize(2 * m_samplesTotal * sizeof(float));
 					if (m_format.nFormat == 1)
 					{
 						int16* src = ((int16*)m_Internaldata.data());
@@ -327,7 +327,7 @@ public:
 		if (m_format.nFormat == 2 && !m_preloaded)
 			return m_format.nByteRate;
 		else
-			return m_format.nSampleRate * m_format.nChannels;
+			return m_format.nSampleRate;
 	}
 	virtual void SetPosition_Internal(int32 pos)
 	{
@@ -377,7 +377,7 @@ public:
 
 						m_readBuffer[0][i] = (float)src[i * 2] / (float)0x7FFF;
 						m_readBuffer[1][i] = (float)src[i * 2 + 1] / (float)0x7FFF;
-						m_playbackPointer += 2;
+						m_playbackPointer++;
 					}
 				}
 				else
@@ -439,7 +439,7 @@ public:
 				{
 					m_readBuffer[0][i] = 0;
 					m_readBuffer[1][i] = 0;
-					m_playbackPointer += 2;
+					m_playbackPointer++;
 					continue;
 				}
 				else if (m_playbackPointer >= m_samplesTotal)
@@ -449,9 +449,9 @@ public:
 					return i;
 				}
 
-				m_readBuffer[0][i] = m_pcm[m_playbackPointer];
-				m_readBuffer[1][i] = m_pcm[m_playbackPointer + 1];
-				m_playbackPointer += 2;
+				m_readBuffer[0][i] = m_pcm[m_playbackPointer * 2];
+				m_readBuffer[1][i] = m_pcm[m_playbackPointer * 2 + 1];
+				m_playbackPointer++;
 			}
 			m_currentBufferSize = samplesPerRead;
 			m_remainingBufferData = samplesPerRead;

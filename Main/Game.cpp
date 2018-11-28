@@ -497,10 +497,12 @@ public:
 	{
 		m_camera = Camera();
 
-		bool audioReinit = m_audioPlayback.Init(m_playback, m_mapRootPath);
-		assert(audioReinit);
+		//bool audioReinit = m_audioPlayback.Init(m_playback, m_mapRootPath);
+		//assert(audioReinit);
 
 		// Audio leadin
+		m_audioPlayback.SetEffectEnabled(0, false);
+		m_audioPlayback.SetEffectEnabled(1, false);
 		ApplyAudioLeadin();
 
 		m_paused = false;

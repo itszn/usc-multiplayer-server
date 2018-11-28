@@ -209,7 +209,9 @@ public:
 	{
 		if (m_preloaded)
 		{
-			for (size_t i = 0; i < m_bufferSize; i++)
+			uint32 samplesPerRead = 128;
+
+			for (size_t i = 0; i < samplesPerRead; i++)
 			{
 				if (m_playPos < 0)
 				{
@@ -220,8 +222,8 @@ public:
 				}
 				else if (m_playPos >= m_samplesTotal)
 				{
-					m_currentBufferSize = m_bufferSize;
-					m_remainingBufferData = m_bufferSize;
+					m_currentBufferSize = samplesPerRead;
+					m_remainingBufferData = samplesPerRead;
 					m_playing = false;
 					return i;
 				}
@@ -229,9 +231,9 @@ public:
 				m_readBuffer[1][i] = m_pcm[m_playPos * 2 + 1];
 				m_playPos++;
 			}
-			m_currentBufferSize = m_bufferSize;
-			m_remainingBufferData = m_bufferSize;
-			return m_bufferSize;
+			m_currentBufferSize = samplesPerRead;
+			m_remainingBufferData = samplesPerRead;
+			return samplesPerRead;
 		}
 
 		int16 buffer[MP3_MAX_SAMPLES_PER_FRAME];
