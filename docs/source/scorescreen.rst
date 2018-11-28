@@ -5,6 +5,7 @@ The following fields are available under the ``result`` table:
 .. code-block:: c#
 
     int score
+    int flags //gameplay options such as gauge type, mirror, and random.
     float gauge //value of the gauge at the end of the song
     int misses
     int goods

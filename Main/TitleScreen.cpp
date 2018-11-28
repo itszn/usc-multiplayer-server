@@ -19,8 +19,6 @@
 class TitleScreen_Impl : public TitleScreen
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Canvas> m_canvas;
 	lua_State* m_lua = nullptr;
 
 
@@ -72,7 +70,6 @@ private:
 public:
 	bool Init()
 	{
-		m_guiStyle = g_commonGUIStyle;
 		CheckedLoad(m_lua = g_application->LoadScript("titlescreen"));
 		g_gameWindow->OnMousePressed.Add(this, &TitleScreen_Impl::MousePressed);
 		return true;

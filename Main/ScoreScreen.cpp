@@ -19,9 +19,6 @@
 class ScoreScreen_Impl : public ScoreScreen
 {
 private:
-	//Ref<Panel> m_jacket;
-	Ref<Canvas> m_timingStatsCanvas;
-	//Ref<LayoutBox> m_itemBox;
 	MapDatabase m_mapDatabase;
 	// Things for score screen
 	Graphics::Font m_specialFont;
@@ -182,6 +179,7 @@ public:
 		//set lua table
 		lua_newtable(m_lua);
 		m_PushIntToTable("score", m_score);
+		m_PushIntToTable("flags", (int)m_flags);
 		m_PushFloatToTable("gauge", m_finalGaugeValue);
 		m_PushIntToTable("misses", m_categorizedHits[0]);
 		m_PushIntToTable("goods", m_categorizedHits[1]);
@@ -330,13 +328,10 @@ public:
 
 	virtual void OnSuspend()
 	{
-		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
 	virtual void OnRestore()
 	{
 		g_application->DiscordPresenceMenu("Result Screen");
-		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
-		//slot->anchor = Anchors::Full;
 	}
 
 };

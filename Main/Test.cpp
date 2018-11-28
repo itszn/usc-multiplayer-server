@@ -21,9 +21,6 @@
 class Test_Impl : public Test
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	//Ref<SettingsBar> m_settings;
-
 	WString m_currentText;
 	float a = 0.1f; // 0 - 1
 	float b = 2.0f; // 0 - 10
@@ -48,8 +45,6 @@ public:
 	}
 	bool Init()
 	{
-		m_guiStyle = g_commonGUIStyle;
-
 		m_gamepad = g_gameWindow->OpenGamepad(0);
 		return true;
 	}

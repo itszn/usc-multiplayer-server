@@ -956,10 +956,7 @@ class SongSelect_Impl : public SongSelect
 {
 private:
 	Timer m_dbUpdateTimer;
-	Ref<Canvas> m_canvas;
 	MapDatabase m_mapDatabase;
-
-	Ref<CommonGUIStyle> m_commonGUIStyle;
 
 	// Map selection wheel
 	Ref<SelectionWheel> m_selectionWheel;
@@ -969,10 +966,6 @@ private:
 	Ref<GameSettingsWheel> m_settingsWheel;
 	// Search text logic object
 	Ref<TextInput> m_searchInput;
-
-
-	// Score list canvas
-	Ref<Canvas> m_scoreCanvas;
 
 	// Player of preview music
 	PreviewPlayer m_previewPlayer;
@@ -998,7 +991,6 @@ private:
 public:
 	bool Init() override
 	{
-		m_commonGUIStyle = g_commonGUIStyle;
 		CheckedLoad(m_lua = g_application->LoadScript("songselect/background"));
 		g_input.OnButtonPressed.Add(this, &SongSelect_Impl::m_OnButtonPressed);
 		g_input.OnButtonReleased.Add(this, &SongSelect_Impl::m_OnButtonReleased);

@@ -34,10 +34,6 @@ Application* g_application = nullptr;
 JobSheduler* g_jobSheduler = nullptr;
 Input g_input;
 
-GUIRenderer* g_guiRenderer = nullptr;
-Ref<Canvas> g_rootCanvas;
-Ref<class CommonGUIStyle> g_commonGUIStyle;
-
 // Tickable queue
 static Vector<IApplicationTickable*> g_tickables;
 

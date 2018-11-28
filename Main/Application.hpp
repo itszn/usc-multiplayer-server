@@ -11,11 +11,6 @@ extern class Application* g_application;
 extern class JobSheduler* g_jobSheduler;
 extern class Input g_input;
 
-// GUI
-extern class GUIRenderer* g_guiRenderer;
-extern Ref<class Canvas> g_rootCanvas;
-extern Ref<class CommonGUIStyle> g_commonGUIStyle;
-
 class Application
 {
 public:

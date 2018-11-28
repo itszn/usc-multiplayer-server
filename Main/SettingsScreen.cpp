@@ -42,11 +42,6 @@
 class SettingsScreen_Impl : public SettingsScreen
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Canvas> m_canvas;
-	//Ref<SettingsBar> m_settings;
-	//SettingBarSetting* m_sensSetting;
-
 	nk_context* m_nctx;
 	nk_font_atlas m_nfonts;
 
@@ -268,8 +263,6 @@ public:
 	//TODO: Controller support and the rest of the options and better layout
 	bool Init()
 	{
-		m_guiStyle = g_commonGUIStyle;
-		//m_canvas = Utility::MakeRef(new Canvas());
 		m_gamePads = g_gameWindow->GetGamepadDeviceNames();	
 		m_skins = Path::GetSubDirs("./skins/");
 
@@ -525,8 +518,6 @@ SettingsScreen* SettingsScreen::Create()
 class ButtonBindingScreen_Impl : public ButtonBindingScreen
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Canvas> m_canvas;
 	Ref<Gamepad> m_gamepad;
 	//Label* m_prompt;
 	GameConfigKeys m_key;
@@ -702,8 +693,6 @@ ButtonBindingScreen* ButtonBindingScreen::Create(GameConfigKeys key, bool gamepa
 class LaserSensCalibrationScreen_Impl : public LaserSensCalibrationScreen
 {
 private:
-	Ref<CommonGUIStyle> m_guiStyle;
-	Ref<Canvas> m_canvas;
 	Ref<Gamepad> m_gamepad;
 	//Label* m_prompt;
 	bool m_state = false;
@@ -723,8 +712,6 @@ public:
 
 	bool Init()
 	{
-		m_guiStyle = g_commonGUIStyle;
-
 		g_input.GetInputLaserDir(0); //poll because there might be something idk
 
 		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Controller)

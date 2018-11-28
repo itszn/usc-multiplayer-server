@@ -6,7 +6,6 @@
 
 class TransitionScreen_Impl : public TransitionScreen
 {
-	Ref<Canvas> m_loadingOverlay;
 	IAsyncLoadableApplicationTickable* m_tickableToLoad;
 	Job m_loadingJob;
 
