@@ -151,7 +151,24 @@ drawGauge = function(deltaTime)
         posy = posy - 30
         posx = resx - width * (1 - math.max(introTimer - 1, 0))
     end
-    gfx.DrawGauge(gameplay.gauge, posx, posy, width, height, deltaTime);
+    gfx.DrawGauge(gameplay.gauge, posx, posy, width, height, deltaTime)
+
+	--draw gauge % label
+	posx = posx / scale
+	posx = posx + (100 * 0.35) 
+	height = 880 * 0.35
+	posy = posy / scale
+	posy = posy + (70 * 0.35) + height - height * gameplay.gauge
+
+	gfx.BeginPath()
+	gfx.Rect(posx-35, posy-10, 40, 20)
+	gfx.FillColor(0,0,0,200)
+	gfx.Fill()
+	gfx.FillColor(255,255,255)
+	gfx.TextAlign(gfx.TEXT_ALIGN_RIGHT + gfx.TEXT_ALIGN_MIDDLE)
+	gfx.FontSize(20)
+	gfx.Text(string.format("%d%%", math.floor(gameplay.gauge * 100)), posx, posy )
+
 end
 
 drawCombo = function(deltaTime)
