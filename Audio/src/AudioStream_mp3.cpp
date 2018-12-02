@@ -68,10 +68,21 @@ public:
 		{
 			tag[i] = m_dataSource[i];
 		}
-		if (tag == "ID3")
+		while (tag == "ID3")
 		{
-			/// TODO: Check if tag has footer and add another 10 to the size
-			tagSize = m_unsynchsafe(m_toLittleEndian(*(int32*)(m_dataSource + 6))) + 10;
+			tagSize += m_unsynchsafe(m_toLittleEndian(*(int32*)(m_dataSource + 6 + tagSize))) + 10;
+			for (size_t i = 0; i < 3; i++)
+			{
+				tag[i] = m_dataSource[i + tagSize];
+			}
+			if (tag == "3DI")
+			{
+				tagSize += 10;
+			}
+			for (size_t i = 0; i < 3; i++)
+			{
+				tag[i] = m_dataSource[i + tagSize];
+			}
 		}
 		// Scan MP3 frame offsets
 		uint32 sampleOffset = 0;
@@ -129,19 +140,20 @@ public:
 			return false;
 		}
 
-		SetPosition_Internal(0);
 
 		// Total sample
 		m_samplesTotal = sampleOffset;
 
 		m_decoder = (mp3_decoder_t*)mp3_create();
 		m_preloaded = false;
+		SetPosition_Internal(-400000);
 		int32 r = DecodeData_Internal();
 		if(r <= 0)
 			return false;
 
 		if (preload)
 		{
+			int totalSamples = 0;
 			while (r > 0)
 			{
 				for (size_t i = 0; i < r; i++)
@@ -149,12 +161,15 @@ public:
 					m_pcm.Add(m_readBuffer[0][i]);
 					m_pcm.Add(m_readBuffer[1][i]);	
 				}
+				totalSamples += r;
 				r = DecodeData_Internal();
 			}
 			m_data.clear();
 			m_dataSource = nullptr;
+			m_samplesTotal = totalSamples;
 		}
 		m_preloaded = preload;
+		m_playPos = 0;
 
 
 		return true;
