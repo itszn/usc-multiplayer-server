@@ -89,6 +89,8 @@ public:
 	void AddScore(const DifficultyIndex& diff, int score, int crit, int almost, int miss, float gauge, uint32 gameflags, Vector<SimpleHitStat> simpleHitStats, uint64 timestamp);
 	void RemoveSearchPath(const String& path);
 
+
+	Delegate<String> OnSearchStatusUpdated;
 	// (mapId, mapIndex)
 	Delegate<Vector<MapIndex*>> OnMapsRemoved;
 	// (mapId, mapIndex)

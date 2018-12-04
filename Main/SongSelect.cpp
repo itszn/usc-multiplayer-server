@@ -17,6 +17,8 @@
 #endif
 #include "lua.hpp"
 #include <iterator>
+#include <mutex>
+
 
 class TextInput
 {
@@ -207,6 +209,9 @@ class SelectionWheel
 
 	// Style to use for everything song select related
 	lua_State* m_lua = nullptr;
+	String m_lastStatus = "";
+	std::mutex m_lock;
+	
 
 public:
 	SelectionWheel()
@@ -228,6 +233,14 @@ public:
 	}
 	virtual void Render(float deltaTime)
 	{
+		m_lock.lock();
+		lua_getglobal(m_lua, "songwheel");
+		lua_pushstring(m_lua, "searchStatus");
+		lua_pushstring(m_lua, *m_lastStatus);
+		lua_settable(m_lua, -3);
+		lua_setglobal(m_lua, "songwheel");
+		m_lock.unlock();
+
 		lua_getglobal(m_lua, "render");
 		lua_pushnumber(m_lua, deltaTime);
 		if (lua_pcall(m_lua, 1, 0, 0) != 0)
@@ -293,6 +306,12 @@ public:
 			//AdvanceSelection(0);
 			m_SetLuaMaps();
 		}
+	}
+	void OnSearchStatusUpdated(String status)
+	{
+		m_lock.lock();
+		m_lastStatus = status;
+		m_lock.unlock();
 	}
 	void SelectRandom()
 	{
@@ -1014,6 +1033,7 @@ public:
 		m_mapDatabase.OnMapsAdded.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsAdded);
 		m_mapDatabase.OnMapsUpdated.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsUpdated);
 		m_mapDatabase.OnMapsCleared.Add(m_selectionWheel.GetData(), &SelectionWheel::OnMapsCleared);
+		m_mapDatabase.OnSearchStatusUpdated.Add(m_selectionWheel.GetData(), &SelectionWheel::OnSearchStatusUpdated);
 		m_mapDatabase.StartSearching();
 
 		m_filterSelection->SetFiltersByIndex(g_gameConfig.GetInt(GameConfigKeys::LevelFilter), g_gameConfig.GetInt(GameConfigKeys::FolderFilter));

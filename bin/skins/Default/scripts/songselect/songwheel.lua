@@ -487,6 +487,13 @@ render = function(deltaTime)
     ioffset = ioffset * 0.9
     doffset = doffset * 0.9
     soffset = soffset * 0.8
+	if songwheel.searchStatus then
+		gfx.BeginPath()
+		gfx.FillColor(255,255,255)
+		gfx.FontSize(20);
+		gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_TOP)
+		gfx.Text(songwheel.searchStatus, 3, 3)
+	end
     gfx.LoadSkinFont("segoeui.ttf");
     gfx.ResetTransform()
     gfx.ForceRender()

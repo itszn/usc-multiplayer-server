@@ -627,7 +627,8 @@ private:
 		Map<String, FileInfo> fileList;
 
 		{
-			ProfilerScope $("Map Database - Enumerate Files and Folders");
+			ProfilerScope $("Chart Database - Enumerate Files and Folders");
+			m_outer.OnSearchStatusUpdated.Call("[START] Chart Database - Enumerate Files and Folders");
 			for(String rootSearchPath : m_searchPaths)
 			{
 				Vector<FileInfo> files = Files::ScanFilesRecursive(rootSearchPath, "ksh", &m_interruptSearch);
@@ -638,11 +639,12 @@ private:
 					fileList.Add(fi.fullPath, fi);
 				}
 			}
+			m_outer.OnSearchStatusUpdated.Call("[END] Chart Database - Enumerate Files and Folders");
 		}
 
 		{
-			ProfilerScope $("Map Database - Process Removed Files");
-
+			ProfilerScope $("Chart Database - Process Removed Files");
+			m_outer.OnSearchStatusUpdated.Call("[START] Chart Database - Process Removed Files");
 			// Process scanned files
 			for(auto f : m_searchState.difficulties)
 			{
@@ -655,11 +657,12 @@ private:
 					AddChange(evt);
 				}
 			}
+			m_outer.OnSearchStatusUpdated.Call("[END] Chart Database - Process Removed Files");
 		}
 
 		{
-			ProfilerScope $("Map Database - Process New Files");
-
+			ProfilerScope $("Chart Database - Process New Files");
+			m_outer.OnSearchStatusUpdated.Call("[START] Chart Database - Process New Files");
 			// Process scanned files
 			for(auto f : fileList)
 			{
@@ -691,8 +694,8 @@ private:
 					evt.action = Event::Added;
 				}
 
-				Logf("Discovered Map [%s]", Logger::Info, f.first);
-
+				Logf("Discovered Chart [%s]", Logger::Info, f.first);
+				m_outer.OnSearchStatusUpdated.Call(Utility::Sprintf("Discovered Chart [%s]", f.first));
 				// Try to read map metadata
 				bool mapValid = false;
 				File fileStream;
@@ -715,7 +718,8 @@ private:
 				{
 					if(!existing) // Never added
 					{
-						Logf("Skipping corrupted map [%s]", Logger::Warning, f.first);
+						Logf("Skipping corrupted chart [%s]", Logger::Warning, f.first);
+						m_outer.OnSearchStatusUpdated.Call(Utility::Sprintf("Skipping corrupted chart [%s]", f.first));
 						continue;
 					}
 					// Invalid maps get removed from the database
@@ -725,7 +729,9 @@ private:
 				AddChange(evt);
 				continue;
 			}
+			m_outer.OnSearchStatusUpdated.Call("[END] Chart Database - Process New Files");
 		}
+		m_outer.OnSearchStatusUpdated.Call("");
 		m_searching = false;
 	}
 };

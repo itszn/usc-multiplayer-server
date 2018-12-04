@@ -3,6 +3,8 @@ Song Wheel
 ============
 Contains a list of songs accessed by ``songwheel.songs``
 
+The current song database status is available in ``songwheel.searchStatus``
+
 Example for loading the jacket of the first diff for every song:
 
 .. code-block:: lua
