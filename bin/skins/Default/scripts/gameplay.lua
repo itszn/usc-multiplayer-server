@@ -158,8 +158,11 @@ drawGauge = function(deltaTime)
 	posx = posx + (100 * 0.35) 
 	height = 880 * 0.35
 	posy = posy / scale
-	posy = posy + (70 * 0.35) + height - height * gameplay.gauge
+	if portrait then
+		height = height * 0.8;
+	end
 
+	posy = posy + (70 * 0.35) + height - height * gameplay.gauge
 	gfx.BeginPath()
 	gfx.Rect(posx-35, posy-10, 40, 20)
 	gfx.FillColor(0,0,0,200)
@@ -175,7 +178,7 @@ drawCombo = function(deltaTime)
     if combo == 0 then return end
     local posx = desw / 2
     local posy = desh * critLinePos[1] - 100
-    if portrait then posy = desh * critLinePos[2] - 100 end
+    if portrait then posy = desh * critLinePos[2] - 150 end
     gfx.BeginPath()
     gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE)
     if gameplay.comboState == 2 then
