@@ -199,7 +199,7 @@ public:
 						int16* src = ((int16*)m_Internaldata.data());
 						if (m_format.nChannels == 2)
 						{
-							while (2 * pos < m_samplesTotal)
+							while (pos < m_samplesTotal)
 							{
 								m_pcm[pos * 2] = (float)src[pos * 2] / (float)0x7FFF;
 								m_pcm[pos * 2 + 1] = (float)src[pos * 2 + 1] / (float)0x7FFF;
