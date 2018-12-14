@@ -18,6 +18,7 @@
 #include "lua.hpp"
 #include "nanovg.h"
 #include "discord_rpc.h"
+#include "cpr/cpr.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "GUI/nanovg_lua.h"
@@ -339,6 +340,17 @@ bool Application::m_Init()
 		g_guiState.vg = nvgCreateGL3(0);
 #endif
 		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
+	}
+
+	{
+		ProfilerScope $1("Check for updates");
+		cpr::Response r = cpr::Get(cpr::Url{ "https://api.github.com/repos/drewol/unnamed-sdvx-clone/releases/latest" }/*, cpr::VerifySsl{ false }*/);
+
+		Logf("Update check status code: %d", Logger::Normal, r.status_code);
+		if (r.error.code != cpr::ErrorCode::OK)
+		{
+			Logf("Failed to get update information: %s", Logger::Error, r.error.message.c_str());
+		}
 	}
 
 	m_InitDiscord();

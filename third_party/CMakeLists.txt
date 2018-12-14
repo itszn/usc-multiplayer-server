@@ -2,6 +2,18 @@
 cmake_minimum_required(VERSION 3.4)
 
 add_subdirectory(lua-5.3.5)
+
+#cpr test programs
+option(BUILD_CPR_TESTS "Set to ON to build cpr tests." OFF)
+if(WIN32)
+	option(CMAKE_USE_OPENSSL "Use OpenSSL code. Experimental" OFF)
+	option(CMAKE_USE_WINSSL "enable Windows native SSL/TLS" ON)
+endif(WIN32)
+set(SSL_ENABLED ON)
+
+add_subdirectory(cpr)
+target_include_directories(cpr PUBLIC ${CPR_INCLUDE_DIRS})
+
 #discord example program
 option(BUILD_EXAMPLES "Build example apps" OFF)
 add_subdirectory(discord-rpc)
