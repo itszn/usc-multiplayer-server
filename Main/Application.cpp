@@ -19,6 +19,7 @@
 #include "nanovg.h"
 #include "discord_rpc.h"
 #include "cpr/cpr.h"
+#include "jansson.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "GUI/nanovg_lua.h"
@@ -350,6 +351,53 @@ bool Application::m_Init()
 		if (r.error.code != cpr::ErrorCode::OK)
 		{
 			Logf("Failed to get update information: %s", Logger::Error, r.error.message.c_str());
+		}
+		else
+		{
+			json_error_t jsonError;
+			json_t* latestInfo = json_loads(r.text.c_str(), 0, &jsonError);
+			if (latestInfo && json_is_object(latestInfo))
+			{
+				json_t* version = json_object_get(latestInfo, "tag_name");
+				//tag_name should always be "vX.Y.Z" so we remove the 'v'
+				String tagname = json_string_value(version) + 1;
+				bool outdated = false;
+				Vector<String> versionStrings = tagname.Explode(".");
+				int major = 0, minor = 0, patch = 0;
+				major = std::stoi(versionStrings[0]);
+				if (versionStrings.size() > 1)
+					minor = std::stoi(versionStrings[1]);
+				if (versionStrings.size() > 2)
+					patch = std::stoi(versionStrings[2]);
+
+				outdated = major > VERSION_MAJOR || minor > VERSION_MINOR || patch > VERSION_PATCH;
+
+				if (outdated)
+				{
+					String messageString = Utility::Sprintf("Version %s is now available for download!", tagname);
+					SDL_MessageBoxData msgData;
+					SDL_MessageBoxButtonData msgButtData[2];
+					msgButtData[0].buttonid = 0;
+					msgButtData[0].text = "Later";
+					msgButtData[1].buttonid = 1;
+					msgButtData[1].text = "Download";
+					msgData.buttons = msgButtData;
+					msgData.numbuttons = 2;
+					msgData.message = *messageString;
+					msgData.title = "USC - New Version Available";
+					msgData.window = (SDL_Window*)g_gameWindow->Handle();
+					msgData.colorScheme = NULL;
+
+					int pressedButton;
+					SDL_ShowMessageBox(&msgData, &pressedButton);
+					if (pressedButton)
+					{
+						json_t* urlObj = json_object_get(latestInfo, "html_url");
+						Path::ShowInFileBrowser(json_string_value(urlObj));
+					}
+				}
+				
+			}
 		}
 	}
 

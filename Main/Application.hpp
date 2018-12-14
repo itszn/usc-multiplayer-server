@@ -11,6 +11,10 @@ extern class Application* g_application;
 extern class JobSheduler* g_jobSheduler;
 extern class Input g_input;
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 3
+#define VERSION_PATCH 0
+
 class Application
 {
 public:
