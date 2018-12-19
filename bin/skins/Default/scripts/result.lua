@@ -121,9 +121,21 @@ draw_graph = function(x,y,w,h)
     for i = 2, #result.gaugeSamples do
         gfx.LineTo(x + i * w / #result.gaugeSamples,y + h - h * result.gaugeSamples[i])
     end
-    gfx.StrokeWidth(2.0)
-    gfx.StrokeColor(0,180,255)
-    gfx.Stroke()
+	if result.flags & 1 ~= 0 then
+		gfx.StrokeWidth(2.0)
+		gfx.StrokeColor(255,80,0)
+		gfx.Stroke()
+	else
+		gfx.StrokeWidth(2.0)
+		gfx.StrokeColor(0,180,255)
+		gfx.Scissor(x, y + h * 0.3, w, h * 0.7)
+		gfx.Stroke()
+		gfx.ResetScissor()
+		gfx.Scissor(x,y,w,h*0.3)
+		gfx.StrokeColor(255,0,255)
+		gfx.Stroke()
+		gfx.ResetScissor()
+	end
 end
 
 render = function(deltaTime, showStats)
