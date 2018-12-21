@@ -138,6 +138,22 @@ int32 Application::Run()
 	return 0;
 }
 
+void Application::SetUpdateAvailable(const String& version, const String& url)
+{
+	m_updateVersion = version;
+	m_updateUrl = url;
+	m_hasUpdate = true;
+}
+
+Vector<String> Application::GetUpdateAvailable()
+{
+	if (m_hasUpdate) {
+		return Vector<String> {m_updateUrl, m_updateVersion};
+	}
+
+	return Vector<String>();	
+}
+
 bool Application::m_LoadConfig()
 {
 	File configFile;
@@ -222,27 +238,9 @@ void __updateChecker()
 
 			if (outdated)
 			{
-				String messageString = Utility::Sprintf("Version %s is now available for download!", tagname);
-				SDL_MessageBoxData msgData;
-				SDL_MessageBoxButtonData msgButtData[2];
-				msgButtData[0].buttonid = 0;
-				msgButtData[0].text = "Later";
-				msgButtData[1].buttonid = 1;
-				msgButtData[1].text = "Download";
-				msgData.buttons = msgButtData;
-				msgData.numbuttons = 2;
-				msgData.message = *messageString;
-				msgData.title = "USC - New Version Available";
-				msgData.window = (SDL_Window *)g_gameWindow->Handle();
-				msgData.colorScheme = NULL;
-
-				int pressedButton = 0;
-				SDL_ShowMessageBox(&msgData, &pressedButton);
-				if (pressedButton)
-				{
-					json_t *urlObj = json_object_get(latestInfo, "html_url");
-					Path::ShowInFileBrowser(json_string_value(urlObj));
-				}
+				json_t* urlObj = json_object_get(latestInfo, "html_url");
+				String updateUrl = json_string_value(urlObj);				
+				g_application->SetUpdateAvailable(tagname, updateUrl);
 			}
 		}
 	}
@@ -622,6 +620,8 @@ void Application::m_Cleanup()
 	}
 
 	Discord_Shutdown();
+
+	m_updateThread.join();
 
 	// Finally, save config
 	m_SaveConfig();
@@ -1085,6 +1085,18 @@ static int lGetKnob(lua_State* L /* int knob */)
 	lua_pushnumber(L, g_input.GetAbsoluteLaser(knob));
 	return 1;
 }
+static int lGetUpdateAvailable(lua_State* L)
+{
+	Vector<String> info = g_application->GetUpdateAvailable();
+	if(info.empty())
+	{
+		return 0;
+	}
+
+	lua_pushstring(L, *info[0]);
+	lua_pushstring(L, *info[1]);
+	return 2;
+}
 
 static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags */)
 {
@@ -1294,6 +1306,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GetLaserColor", lGetLaserColor);
 		pushFuncToTable("GetButton", lGetButton);
 		pushFuncToTable("GetKnob", lGetKnob);
+		pushFuncToTable("UpdateAvailable", lGetUpdateAvailable);
 
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);

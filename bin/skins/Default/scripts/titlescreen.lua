@@ -62,8 +62,25 @@ render = function(deltaTime)
     end
     gfx.TextAlign(gfx.TEXT_ALIGN_CENTER + gfx.TEXT_ALIGN_MIDDLE);
     gfx.DrawLabel(label, resx / 2, resy / 2 - 200, resx-40);
+    updateUrl, updateVersion = game.UpdateAvailable()
+    if updateUrl then
+       gfx.BeginPath()
+       gfx.TextAlign(gfx.TEXT_ALIGN_BOTTOM + gfx.TEXT_ALIGN_LEFT)
+       gfx.FontSize(30)
+       gfx.Text(string.format("Version %s is now available", updateVersion), 5, resy - buttonHeight - 10)
+       draw_button("View", buttonWidth / 2 + 5, resy - buttonHeight / 2 - 5, 4);
+    end
 end;
 
 mouse_pressed = function(button)
+    if hovered == 4 then
+        if package.config:sub(1,1) == '\\' then --windown
+            updateUrl, updateVersion = game.UpdateAvailable()
+            os.execute("open " .. updateUrl)
+        else --unix
+             --TODO: Mac solution
+             os.execute("xdg-open " .. updateUrl)
+        end
+    end
     return hovered;
 end;

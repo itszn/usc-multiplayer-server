@@ -92,3 +92,8 @@ Returns the absolute rotation of a knob with the parameter ``knob`` being ``0 = 
 and ``1 = Right``.
 
 The returned value ranges from 0 to 2*pi.
+
+UpdateAvailable()
+*****************
+Return nothing if there is no update. If there is an update available then ``(url, version)``
+is returned.

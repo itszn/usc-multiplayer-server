@@ -84,6 +84,11 @@ public:
 	void DiscordError(int errorCode, const char* message);
 	void DiscordPresenceMenu(String name);
 	void DiscordPresenceSong(const struct BeatmapSettings& song, int64 startTime, int64 endTime);
+	void SetUpdateAvailable(const String& version, const String& url);
+
+	//if empty: no update avaiable
+	//else: index 0 = url, index 1 = version
+	Vector<String> GetUpdateAvailable();
 
 private:
 	bool m_LoadConfig();
@@ -114,6 +119,10 @@ private:
 	float m_lastRenderTime;
 	float m_deltaTime;
 	bool m_allowMapConversion;
+	bool m_hasUpdate = false;
+	String m_updateUrl;
+	String m_updateVersion;
+	String m_currentVersion;
 	String m_skin;
 	Timer m_jobTimer;
 	//gauge colors, 0 = normal fail, 1 = normal clear, 2 = hard lower, 3 = hard upper
