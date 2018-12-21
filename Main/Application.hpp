@@ -1,6 +1,7 @@
 #pragma once
 #include <Audio/Sample.hpp>
 #include <Shared/Jobs.hpp>
+#include <Shared/Thread.hpp>
 #define DISCORD_APPLICATION_ID "514489760568573952"
 extern class OpenGL* g_gl;
 extern class GUIState g_guiState;
@@ -107,6 +108,7 @@ private:
 	class HealthGauge* m_gauge;
 	Map<String, CachedJacketImage*> m_jacketImages;
 	String m_lastMapPath;
+	Thread m_updateThread;
 	class Beatmap* m_currentMap = nullptr;
 
 	float m_lastRenderTime;

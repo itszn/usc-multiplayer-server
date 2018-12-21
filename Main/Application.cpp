@@ -189,6 +189,65 @@ void __discordDisconnected(int errcode, const char * msg)
 	g_application->DiscordError(errcode, msg);
 }
 
+void __updateChecker()
+{
+
+	ProfilerScope $1("Check for updates");
+	auto r = cpr::Get(cpr::Url{ "https://api.github.com/repos/drewol/unnamed-sdvx-clone/releases/latest" });	
+
+	Logf("Update check status code: %d", Logger::Normal, r.status_code);
+	if (r.error.code != cpr::ErrorCode::OK)
+	{
+		Logf("Failed to get update information: %s", Logger::Error, r.error.message.c_str());
+	}
+	else
+	{
+		json_error_t jsonError;
+		json_t *latestInfo = json_loads(r.text.c_str(), 0, &jsonError);
+		if (latestInfo && json_is_object(latestInfo))
+		{
+			json_t *version = json_object_get(latestInfo, "tag_name");
+			//tag_name should always be "vX.Y.Z" so we remove the 'v'
+			String tagname = json_string_value(version) + 1;
+			bool outdated = false;
+			Vector<String> versionStrings = tagname.Explode(".");
+			int major = 0, minor = 0, patch = 0;
+			major = std::stoi(versionStrings[0]);
+			if (versionStrings.size() > 1)
+				minor = std::stoi(versionStrings[1]);
+			if (versionStrings.size() > 2)
+				patch = std::stoi(versionStrings[2]);
+
+			outdated = major > VERSION_MAJOR || minor > VERSION_MINOR || patch > VERSION_PATCH;
+
+			if (outdated)
+			{
+				String messageString = Utility::Sprintf("Version %s is now available for download!", tagname);
+				SDL_MessageBoxData msgData;
+				SDL_MessageBoxButtonData msgButtData[2];
+				msgButtData[0].buttonid = 0;
+				msgButtData[0].text = "Later";
+				msgButtData[1].buttonid = 1;
+				msgButtData[1].text = "Download";
+				msgData.buttons = msgButtData;
+				msgData.numbuttons = 2;
+				msgData.message = *messageString;
+				msgData.title = "USC - New Version Available";
+				msgData.window = (SDL_Window *)g_gameWindow->Handle();
+				msgData.colorScheme = NULL;
+
+				int pressedButton = 0;
+				SDL_ShowMessageBox(&msgData, &pressedButton);
+				if (pressedButton)
+				{
+					json_t *urlObj = json_object_get(latestInfo, "html_url");
+					Path::ShowInFileBrowser(json_string_value(urlObj));
+				}
+			}
+		}
+	}
+}
+
 void Application::m_InitDiscord()
 {
 	ProfilerScope $("Discord RPC Init");
@@ -342,65 +401,7 @@ bool Application::m_Init()
 #endif
 		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
-
-	{
-		ProfilerScope $1("Check for updates");
-		cpr::Response r = cpr::Get(cpr::Url{ "https://api.github.com/repos/drewol/unnamed-sdvx-clone/releases/latest" }/*, cpr::VerifySsl{ false }*/);
-
-		Logf("Update check status code: %d", Logger::Normal, r.status_code);
-		if (r.error.code != cpr::ErrorCode::OK)
-		{
-			Logf("Failed to get update information: %s", Logger::Error, r.error.message.c_str());
-		}
-		else
-		{
-			json_error_t jsonError;
-			json_t* latestInfo = json_loads(r.text.c_str(), 0, &jsonError);
-			if (latestInfo && json_is_object(latestInfo))
-			{
-				json_t* version = json_object_get(latestInfo, "tag_name");
-				//tag_name should always be "vX.Y.Z" so we remove the 'v'
-				String tagname = json_string_value(version) + 1;
-				bool outdated = false;
-				Vector<String> versionStrings = tagname.Explode(".");
-				int major = 0, minor = 0, patch = 0;
-				major = std::stoi(versionStrings[0]);
-				if (versionStrings.size() > 1)
-					minor = std::stoi(versionStrings[1]);
-				if (versionStrings.size() > 2)
-					patch = std::stoi(versionStrings[2]);
-
-				outdated = major > VERSION_MAJOR || minor > VERSION_MINOR || patch > VERSION_PATCH;
-
-				if (outdated)
-				{
-					String messageString = Utility::Sprintf("Version %s is now available for download!", tagname);
-					SDL_MessageBoxData msgData;
-					SDL_MessageBoxButtonData msgButtData[2];
-					msgButtData[0].buttonid = 0;
-					msgButtData[0].text = "Later";
-					msgButtData[1].buttonid = 1;
-					msgButtData[1].text = "Download";
-					msgData.buttons = msgButtData;
-					msgData.numbuttons = 2;
-					msgData.message = *messageString;
-					msgData.title = "USC - New Version Available";
-					msgData.window = (SDL_Window*)g_gameWindow->Handle();
-					msgData.colorScheme = NULL;
-
-					int pressedButton;
-					SDL_ShowMessageBox(&msgData, &pressedButton);
-					if (pressedButton)
-					{
-						json_t* urlObj = json_object_get(latestInfo, "html_url");
-						Path::ShowInFileBrowser(json_string_value(urlObj));
-					}
-				}
-				
-			}
-		}
-	}
-
+	m_updateThread = Thread(__updateChecker);
 	m_InitDiscord();
 
 
