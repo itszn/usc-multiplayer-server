@@ -103,4 +103,6 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::EditorPath, "PathToEditor");
 	Set(GameConfigKeys::EditorParamsFormat, "%s");
 	Set(GameConfigKeys::WASAPI_Exclusive, false);
+
+	Set(GameConfigKeys::CheckForUpdates, true);
 }

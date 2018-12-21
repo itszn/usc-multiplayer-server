@@ -87,7 +87,9 @@ DefineEnum(GameConfigKeys,
 	EditorPath,
 	EditorParamsFormat,
 
-	WASAPI_Exclusive
+	WASAPI_Exclusive,
+
+	CheckForUpdates
 	);
 
 // Config for game settings

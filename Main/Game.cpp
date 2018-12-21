@@ -540,7 +540,7 @@ public:
 
 		m_track->ClearEffects();
 		m_particleSystem->Reset();
-		//m_audioPlayback.SetPlaybackSpeed(0.2f);
+		m_audioPlayback.SetPlaybackSpeed(1.0f);
 	}
 	virtual void Tick(float deltaTime) override
 	{

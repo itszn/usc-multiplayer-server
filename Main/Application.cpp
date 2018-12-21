@@ -399,9 +399,13 @@ bool Application::m_Init()
 #endif
 		nvgCreateFont(g_guiState.vg, "fallback", "fonts/fallbackfont.otf");
 	}
-	m_updateThread = Thread(__updateChecker);
-	m_InitDiscord();
 
+	if(g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates))
+	{
+		m_updateThread = Thread(__updateChecker);
+	}
+
+	m_InitDiscord();
 
 	CheckedLoad(m_fontMaterial = LoadMaterial("font"));
 	m_fontMaterial->opaque = false;	
@@ -621,7 +625,8 @@ void Application::m_Cleanup()
 
 	Discord_Shutdown();
 
-	m_updateThread.join();
+	if(m_updateThread.joinable())
+		m_updateThread.join();
 
 	// Finally, save config
 	m_SaveConfig();

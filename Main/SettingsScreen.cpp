@@ -110,6 +110,7 @@ private:
 	char m_songsPath[1024];
 	int m_pathlen = 0;
 	int m_wasapi = 1;
+	int m_update = 1;
 
 	std::queue<SDL_Event> eventQueue;
 
@@ -212,6 +213,7 @@ private:
 		g_gameConfig.Set(GameConfigKeys::Controller_DeviceID, m_selectedGamepad);
 		g_gameConfig.Set(GameConfigKeys::GlobalOffset, m_globalOffset);
 		g_gameConfig.Set(GameConfigKeys::WASAPI_Exclusive, m_wasapi == 0);
+		g_gameConfig.Set(GameConfigKeys::CheckForUpdates, m_update == 0);
 		g_gameConfig.Set(GameConfigKeys::InputOffset, m_inputOffset);
 		g_gameConfig.Set(GameConfigKeys::InputBounceGuard, m_bounceGuard);
 
@@ -333,6 +335,7 @@ public:
 		m_inputOffset = g_gameConfig.GetInt(GameConfigKeys::InputOffset);
 		m_bounceGuard = g_gameConfig.GetInt(GameConfigKeys::InputBounceGuard);
 		m_wasapi = g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive) ? 0 : 1;
+		m_update = g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates) ? 0 : 1;
 
 		String songspath = g_gameConfig.GetString(GameConfigKeys::SongFolder);
 		strcpy(m_songsPath, songspath.c_str());
@@ -488,6 +491,8 @@ public:
 #ifdef _WIN32
 			nk_checkbox_label(m_nctx, "WASAPI Exclusive Mode (requires restart)", &m_wasapi);
 #endif // _WIN32
+			nk_checkbox_label(m_nctx, "Check for updates on startup", &m_update);
+
 			nk_label(m_nctx, "Songs folder path:", nk_text_alignment::NK_TEXT_LEFT);
 			nk_edit_string(m_nctx, NK_EDIT_FIELD, m_songsPath, &m_pathlen, 1024, nk_filter_default);
 			nk_spacing(m_nctx, 1);
