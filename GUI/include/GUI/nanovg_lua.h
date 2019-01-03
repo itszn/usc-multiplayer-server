@@ -747,3 +747,15 @@ static int DisposeGUI(lua_State* state)
 	}
 	return 0;
 }
+
+static int lArc(lua_State* L /* float cx, float cy, float r, float a0, float a1, int dir */)
+{
+	float cx = luaL_checknumber(L, 1);
+	float cy = luaL_checknumber(L, 2);
+	float r = luaL_checknumber(L, 3);
+	float a0 = luaL_checknumber(L, 4);
+	float a1 = luaL_checknumber(L, 5);
+	int dir = luaL_checkinteger(L, 6);
+	nvgArc(g_guiState.vg, cx, cy, r, a0, a1, dir);
+	return 0;
+}

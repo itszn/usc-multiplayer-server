@@ -7,7 +7,7 @@ Licenses:
 unnamed-sdvx-clone
 ------------------
 Copyright 2016-2018 Guus Waals (guus_waals@live.nl)
-Copyright 2016-2018 Emil Draws (https://github.com/Drewol)
+Copyright 2016-2019 Emil Draws (https://github.com/Drewol)
 
 -------------
 THIRD PARTIES

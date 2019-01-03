@@ -435,3 +435,10 @@ Returns ``w,h`` for a ``gfx.FastText`` text.
 ImageSize(int image)
 ********************
 Returns ``w,h`` for the given image.
+
+Arc(float cx, float cy, float r, float a0, float a1, int dir)
+*************************************************************
+nanovg.h:488_
+
+.. _nanovg.h:488: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L488
+
