@@ -83,6 +83,10 @@ void Audio_Impl::Mix(void* data, uint32& numSamples)
 			{
 				m_sampleBuffer[i * 2 + 0] *= globalVolume;
 				m_sampleBuffer[i * 2 + 1] *= globalVolume;
+				// Safety clamp to [-1, 1] that should help protect speakers a bit in case of corruption
+				// this will clip, but so will values outside [-1, 1] anyway
+				m_sampleBuffer[i * 2 + 0] = fmin(fmax(m_sampleBuffer[i * 2 + 0], -1.f), 1.f);
+				m_sampleBuffer[i * 2 + 1] = fmin(fmax(m_sampleBuffer[i * 2 + 1], -1.f), 1.f);
 			}
 
 			// Set new remaining buffer data
