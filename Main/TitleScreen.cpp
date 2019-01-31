@@ -15,16 +15,23 @@
 #include "ScoreScreen.hpp"
 #include "Shared/Enum.hpp"
 #include "lua.hpp"
+#include "Shared/LuaBindable.hpp"
 
 class TitleScreen_Impl : public TitleScreen
 {
 private:
 	lua_State* m_lua = nullptr;
-
+	LuaBindable* m_luaBinds;
 
 	void Exit()
 	{
 		g_application->Shutdown();
+	}
+
+	int lExit(lua_State* L)
+	{
+		Exit();
+		return 0;
 	}
 
 	void Start()
@@ -32,9 +39,21 @@ private:
 		g_application->AddTickable(SongSelect::Create());
 	}
 
+	int lStart(lua_State* L)
+	{
+		Start();
+		return 0;
+	}
+
 	void Settings()
 	{
 		g_application->AddTickable(SettingsScreen::Create());
+	}
+
+	int lSettings(lua_State* L)
+	{
+		Settings();
+		return 0;
 	}
 
 	void MousePressed(MouseButton button)
@@ -71,6 +90,12 @@ public:
 	bool Init()
 	{
 		CheckedLoad(m_lua = g_application->LoadScript("titlescreen"));
+		m_luaBinds = new LuaBindable(m_lua, "Menu");
+		m_luaBinds->AddFunction("Exit", this, &TitleScreen_Impl::lExit);
+		m_luaBinds->AddFunction("Settings", this, &TitleScreen_Impl::lSettings);
+		m_luaBinds->AddFunction("Start", this, &TitleScreen_Impl::lStart);
+		m_luaBinds->Push();
+		lua_settop(m_lua, 0);
 		g_gameWindow->OnMousePressed.Add(this, &TitleScreen_Impl::MousePressed);
 		return true;
 	}
@@ -100,6 +125,8 @@ public:
 		g_gameWindow->SetCursorVisible(true);
 		g_application->ReloadSkin();
 		g_application->ReloadScript("titlescreen", m_lua);
+		m_luaBinds->Push();
+		lua_settop(m_lua, 0);
 		g_application->DiscordPresenceMenu("Title Screen");
 	}
 

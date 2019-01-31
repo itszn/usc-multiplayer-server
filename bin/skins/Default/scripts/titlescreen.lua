@@ -1,6 +1,6 @@
 local mposx = 0;
 local mposy = 0;
-local hovered = 0;
+local hovered = nil;
 local buttonWidth = 250;
 local buttonHeight = 75;
 local buttonBorder = 2;
@@ -47,13 +47,13 @@ render = function(deltaTime)
     gfx.ResetTransform()
     gfx.BeginPath()
     buttonY = resy / 2;
-    hovered = 0;
+    hovered = nil;
     gfx.LoadSkinFont("segoeui.ttf");
-    draw_button("Start", resx / 2, buttonY, 1);
+    draw_button("Start", resx / 2, buttonY, Menu.Start);
     buttonY = buttonY + 100;
-    draw_button("Settings", resx / 2, buttonY, 2);
+    draw_button("Settings", resx / 2, buttonY, Menu.Settings);
     buttonY = buttonY + 100;
-    draw_button("Exit", resx / 2, buttonY, 3);
+    draw_button("Exit", resx / 2, buttonY, Menu.Exit);
     gfx.BeginPath();
     gfx.FillColor(255,255,255);
     gfx.FontSize(120);
@@ -73,14 +73,8 @@ render = function(deltaTime)
 end;
 
 mouse_pressed = function(button)
-    if hovered == 4 then
-        if package.config:sub(1,1) == '\\' then --windown
-            updateUrl, updateVersion = game.UpdateAvailable()
-            os.execute("open " .. updateUrl)
-        else --unix
-             --TODO: Mac solution
-             os.execute("xdg-open " .. updateUrl)
-        end
+    if hovered then
+        hovered()
     end
-    return hovered;
-end;
+    return 0
+end
