@@ -336,7 +336,7 @@ namespace Graphics
 				{
 					if(evt.window.windowID == SDL_GetWindowID(m_window))
 					{
-						if(evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED)
+						if(evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED)
 						{
 							Vector2i newSize(evt.window.data1, evt.window.data2);
 							outer.OnResized.Call(newSize);
@@ -365,21 +365,39 @@ namespace Graphics
 			return !m_closed;
 		}
 
-		void SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID)
+		void SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID, bool windowedFullscreen)
 		{
+			if (monitorID == (uint32)-1)
+			{
+				monitorID = SDL_GetWindowDisplayIndex(m_window);
+			}
+
 			if(m_fullscreen)
 			{
 				SDL_SetWindowFullscreen(m_window, 0);
+				SDL_RestoreWindow(m_window);
 				SDL_SetWindowSize(m_window, w, h);
+				SDL_SetWindowResizable(m_window, SDL_TRUE);
+				SDL_SetWindowBordered(m_window, SDL_TRUE);
+				SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED_DISPLAY(monitorID), SDL_WINDOWPOS_CENTERED_DISPLAY(monitorID));
 				m_fullscreen = false;
+			}
+			else if (windowedFullscreen)
+			{
+				SDL_DisplayMode dm;
+				SDL_GetDesktopDisplayMode(monitorID, &dm);
+				SDL_Rect bounds;
+				SDL_GetDisplayBounds(monitorID, &bounds);
+
+				SDL_RestoreWindow(m_window);
+				SDL_SetWindowSize(m_window, dm.w, dm.h);
+				SDL_SetWindowPosition(m_window, bounds.x, bounds.y);
+				SDL_SetWindowResizable(m_window, SDL_FALSE);
+				m_fullscreen = true;
+
 			}
 			else
 			{
-				if (monitorID == (uint32)-1)
-				{
-					monitorID = SDL_GetWindowDisplayIndex(m_window);
-				}
-
 				SDL_DisplayMode dm;
 				SDL_GetDesktopDisplayMode(monitorID, &dm);
 				if (fsw != -1){
@@ -500,9 +518,9 @@ namespace Graphics
 	{
 		m_impl->SetWindowSize(size);
 	}
-	void Window::SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID)
+	void Window::SwitchFullscreen(int w, int h, int fsw, int fsh, uint32 monitorID, bool windowedFullscreen)
 	{
-		m_impl->SwitchFullscreen(w, h, fsw, fsh, monitorID);
+		m_impl->SwitchFullscreen(w, h, fsw, fsh, monitorID, windowedFullscreen);
 	}
 	bool Window::IsFullscreen() const
 	{

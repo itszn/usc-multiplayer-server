@@ -338,7 +338,7 @@ bool Application::m_Init()
 		g_gameWindow->SwitchFullscreen(
 			g_gameConfig.GetInt(GameConfigKeys::ScreenWidth), g_gameConfig.GetInt(GameConfigKeys::ScreenHeight),
 			g_gameConfig.GetInt(GameConfigKeys::FullScreenWidth), g_gameConfig.GetInt(GameConfigKeys::FullScreenHeight),
-			fullscreenMonitor
+			fullscreenMonitor, g_gameConfig.GetBool(GameConfigKeys::WindowedFullscreen)
 		);
 
 	// Set render state variables
@@ -955,9 +955,11 @@ void Application::m_OnKeyPressed(int32 key)
 		{
 			g_gameWindow->SwitchFullscreen(
 				g_gameConfig.GetInt(GameConfigKeys::ScreenWidth), g_gameConfig.GetInt(GameConfigKeys::ScreenHeight),
-				g_gameConfig.GetInt(GameConfigKeys::FullScreenWidth), g_gameConfig.GetInt(GameConfigKeys::FullScreenHeight)
+				g_gameConfig.GetInt(GameConfigKeys::FullScreenWidth), g_gameConfig.GetInt(GameConfigKeys::FullScreenHeight),
+				-1, g_gameConfig.GetBool(GameConfigKeys::WindowedFullscreen)
 			);
 			g_gameConfig.Set(GameConfigKeys::Fullscreen, g_gameWindow->IsFullscreen());
+			//m_OnWindowResized(g_gameWindow->GetWindowSize());
 			return;
 		}
 	}

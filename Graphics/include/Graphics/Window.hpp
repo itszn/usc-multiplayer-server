@@ -73,7 +73,7 @@ namespace Graphics
 		bool IsActive() const;
 		// Set window client area size
 		void SetWindowSize(const Vector2i& size);
-		void SwitchFullscreen(int w, int h, int fsw = -1, int fsh = -1, uint32 monitorID = -1);
+		void SwitchFullscreen(int w, int h, int fsw = -1, int fsh = -1, uint32 monitorID = -1, bool windowedFullscreen = false);
 		bool IsFullscreen() const;
 
 		int GetDisplayIndex() const;
