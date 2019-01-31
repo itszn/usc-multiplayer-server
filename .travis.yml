@@ -36,8 +36,8 @@ matrix:
         - make
         - sudo make install
         - cd ..
-        #SDL-2.0.4  
-        - SDL_URL="https://www.libsdl.org/release/SDL2-2.0.4.tar.gz"
+        #SDL-2.0.9
+        - SDL_URL="https://www.libsdl.org/release/SDL2-2.0.9.tar.gz"
         - mkdir sdl && travis_retry wget --no-check-certificate --quiet -O - ${SDL_URL} | tar --strip-components=1 -xz -C sdl
         - cd sdl
         - ./configure
