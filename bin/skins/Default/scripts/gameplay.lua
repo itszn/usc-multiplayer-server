@@ -20,11 +20,20 @@ local artist = nil
 local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
 local bottomFill = gfx.CreateSkinImage("fill_bottom.png",0)
 local topFill = gfx.CreateSkinImage("fill_top.png",0)
+local critLine = gfx.CreateSkinImage("scorebar.png",0)
+local laserCursor = gfx.CreateSkinImage("pointer.png",0)
+local laserCursorOverlay = gfx.CreateSkinImage("pointer_overlay.png",0)
 local diffNames = {"NOV", "ADV", "EXH", "INF"}
 local introTimer = 2
 local outroTimer = 0
 local clearTexts = {"TRACK FAILED", "TRACK COMPLETE", "TRACK COMPLETE", "FULL COMBO", "PERFECT" }
 local yshift = 0
+local critWidth = resx
+local clw, clh = gfx.ImageSize(critLine)
+local critHeight = critWidth * (clh / clw)
+local cursorWidth = 40 * scale
+local cw, ch = gfx.ImageSize(laserCursor)
+local cursorHeight = cursorWidth * (ch / cw)
 
 draw_stat = function(x,y,w,h, name, value, format,r,g,b)
   gfx.Save()
@@ -213,13 +222,12 @@ drawEarlate = function(deltaTime)
     end
 end
 
-
-
 drawFill = function(deltaTime)
     bw,bh = gfx.ImageSize(bottomFill)
     bottomAspect = bh/bw
     bottomHeight = desw * bottomAspect
     gfx.Translate(0, (bottomHeight + 100) * math.max(introTimer - 1, 0))
+    gfx.BeginPath()
     gfx.Rect(0, desh * critLinePos[2] + bottomHeight - 20, desw, 100)
     gfx.ImageRect(0, desh * critLinePos[2],  desw, bottomHeight, bottomFill, 1,0)
     gfx.Translate(0, (bottomHeight + 100) * -math.max(introTimer - 1, 0))
@@ -299,6 +307,54 @@ drawAlerts = function(deltaTime)
         gfx.Text("R",0,0)
         gfx.Restore()
     end
+end
+
+setupCritTransform = function()
+    gfx.Translate(gameplay.critLine.x, gameplay.critLine.y)
+    gfx.Rotate(-gameplay.critLine.rotation)
+end
+
+render_crit_base = function(deltaTime)
+    gfx.Save()
+
+    setupCritTransform()
+    
+    gfx.BeginPath()
+    gfx.Rect(-resx, 0, resx * 2, resy)
+    gfx.FillColor(0, 0, 0, 225)
+    gfx.Fill()
+
+    gfx.BeginPath()
+    gfx.FillColor(255, 255, 255, 255)
+    gfx.ImageRect(-critWidth / 2 - gameplay.critLine.rotation * critWidth * 0.75, -critHeight / 2, critWidth, critHeight, critLine, 1, 0)
+
+    gfx.Restore()
+end
+
+render_crit_overlay = function(deltaTime)
+    gfx.Save()
+
+    setupCritTransform()
+
+    local drawCursor = function(i)
+        local cursor = gameplay.critLine.cursors[i]
+        local r, g, b = game.GetLaserColor(i)
+        local pos, skew = cursor.pos, cursor.skew
+
+        gfx.BeginPath()
+        gfx.SkewX(skew)
+        gfx.SetImageTint(r, g, b)
+        gfx.ImageRect(pos - cursorWidth / 2, -cursorHeight / 2, cursorWidth, cursorHeight, laserCursor, cursor.alpha, 0)
+        gfx.SetImageTint(255, 255, 255)
+        gfx.ImageRect(pos - cursorWidth / 2, -cursorHeight / 2, cursorWidth, cursorHeight, laserCursorOverlay, cursor.alpha, 0)
+        gfx.SkewX(-skew)
+    end
+
+    drawCursor(0)
+    drawCursor(1)
+
+    gfx.SetImageTint(255, 255, 255)
+    gfx.Restore()
 end
 
 render = function(deltaTime)

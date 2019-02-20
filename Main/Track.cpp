@@ -465,12 +465,6 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 }
 void Track::DrawOverlays(class RenderQueue& rq)
 {
-	/// TODO: Move crit line and maybe cursors to UI layer 
-	Vector2 barSize = Vector2(trackWidth * 1.4f, 1.0f);
-	barSize.y = scoreBarTexture->CalculateHeight(barSize.x);
-
-	DrawSprite(rq, Vector3(0.0f, 0.0f, 0.0f), barSize, scoreBarTexture, Color::White, 0.0f);
-
 	// Draw button hit effect sprites
 	for(auto& hfx : m_hitEffects)
 	{
@@ -478,19 +472,6 @@ void Track::DrawOverlays(class RenderQueue& rq)
 	}
 	if(timedHitEffect->time > 0.0f)
 		timedHitEffect->Draw(rq);
-
-	// Draw laser pointers
-	for(uint32 i = 0; i < 2; i++)
-	{
-		float pos = laserPositions[i];
-		if (lasersAreExtend[i])
-			pos = pos * 2.0f - 0.5f;
-		Vector2 objectSize = Vector2(buttonWidth * 0.7f, 0.0f);
-		objectSize.y = laserPointerTexture->CalculateHeight(objectSize.x);
-		DrawSprite(rq, Vector3(pos - trackWidth * 0.5f, 0.0f, 0.0f), objectSize, laserPointerTexture, laserColors[i].WithAlpha(laserPointerOpacity[i]));
-		/// TODO: Draw alerts on HUD instead of in game world.
-		// DrawSprite(rq, Vector3(-trackWidth + trackWidth * i * 2.0f, 0.1f, 0.0f), objectSize * 3, laserAlertTextures[i], laserColors[i].WithAlpha(laserAlertOpacity[i]), 0.0f);
-	}
 }
 void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffset /*= 0.05f*/, float widthScale /*= 1.0f*/)
 {
@@ -500,16 +481,6 @@ void Track::DrawTrackOverlay(RenderQueue& rq, Texture texture, float heightOffse
 	transform *= Transform::Scale({ widthScale, 1.0f, 1.0f });
 	transform *= Transform::Translation({ 0.0f, heightOffset, 0.0f });
 	rq.Draw(transform, trackMesh, trackOverlay, params);
-}
-void Track::DrawDarkTrack(RenderQueue & rq)
-{
-	// Base
-	MaterialParameterSet params;
-	Transform transform = trackOrigin;
-	//transform *= Transform::Translation({ 0.0f, 0.0f, 0.1f });
-	params.SetParameter("mainTex", trackDarkTexture);
-	params.SetParameter("hasSample", false);
-	rq.Draw(transform, trackDarkMesh, buttonMaterial, params);
 }
 void Track::DrawSprite(RenderQueue& rq, Vector3 pos, Vector2 size, Texture tex, Color color /*= Color::White*/, float tilt /*= 0.0f*/)
 {

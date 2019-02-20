@@ -393,6 +393,19 @@ public:
 			lua_pushstring(m_lua, "scoreReplays");
 			lua_newtable(m_lua);
 			lua_settable(m_lua, -3);
+			lua_pushstring(m_lua, "critLine");
+			lua_newtable(m_lua);
+			lua_pushstring(m_lua, "cursors");
+			lua_newtable(m_lua);
+			{
+				lua_newtable(m_lua);
+				lua_seti(m_lua, -2, 0);
+
+				lua_newtable(m_lua);
+				lua_seti(m_lua, -2, 1);
+			}
+			lua_settable(m_lua, -3); // cursors -> critLine
+			lua_settable(m_lua, -3); // critLine -> gameplay
 			lua_setglobal(m_lua, "gameplay");
 		}
 
@@ -632,8 +645,6 @@ public:
 			m_track->DrawObjectState(renderQueue, m_playback, object, m_scoring.IsObjectHeld(object));
 		}
 
-		m_track->DrawDarkTrack(renderQueue);
-
 		// Use new camera for scoring overlay
 		//	this is because otherwise some of the scoring elements would get clipped to
 		//	the track's near and far planes
@@ -711,10 +722,47 @@ public:
 
 		}
 
+		// IF YOU INCLUDE nanovg.h YOU CAN DO
+		/* THIS WHICH IS FROM Application.cpp, lForceRender
+		nvgEndFrame(g_guiState.vg);
+		g_application->GetRenderQueueBase()->Process();
+		nvgBeginFrame(g_guiState.vg, g_resolution.x, g_resolution.y, 1);
+		*/
+		// BUT OTHERWISE HERE DOES THE SAME THING BUT WITH LUA
+#define NVG_FLUSH() do { \
+		lua_getglobal(m_lua, "gfx"); \
+		lua_getfield(m_lua, -1, "ForceRender"); \
+		if (lua_pcall(m_lua, 0, 0, 0) != 0) { \
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1)); \
+			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0); \
+			assert(false); \
+		} \
+		lua_pop(m_lua, 1); \
+		} while (0)
+
+		// Render Critical Line Base
+		lua_getglobal(m_lua, "render_crit_base");
+		lua_pushnumber(m_lua, deltaTime);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error", lua_tostring(m_lua, -1), 0);
+			assert(false);
+		}
+		// flush NVG
+		NVG_FLUSH();
+
 		// Render particle effects last
 		RenderParticles(rs, deltaTime);
-
 		glFlush();
+
+		// Render Critical Line Overlay
+		lua_getglobal(m_lua, "render_crit_overlay");
+		lua_pushnumber(m_lua, deltaTime);
+		// only flush if the overlay exists. overlay isn't required, only one crit function is required.
+		if (lua_pcall(m_lua, 1, 0, 0) == 0)
+			NVG_FLUSH();
+
 		// Render foreground
 		m_foreground->Render(deltaTime);
 
@@ -1035,6 +1083,64 @@ public:
 		lua_pushstring(m_lua, "comboState");
 		lua_pushnumber(m_lua, m_scoring.comboState);
 		lua_settable(m_lua, -3);
+		//critLine
+		{
+			lua_getfield(m_lua, -1, "critLine");
+
+			Vector2 critPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(0, 0, 0)));
+			Vector2 leftPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(-1, 0, 0)));
+			Vector2 rightPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(1, 0, 0)));
+			Vector2 line = rightPos - leftPos;
+
+			lua_pushstring(m_lua, "x"); // x screen position
+			lua_pushnumber(m_lua, critPos.x);
+			lua_settable(m_lua, -3);
+
+			lua_pushstring(m_lua, "y"); // y screen position
+			lua_pushnumber(m_lua, critPos.y);
+			lua_settable(m_lua, -3);
+
+			lua_pushstring(m_lua, "rotation"); // rotation based on laser roll
+			lua_pushnumber(m_lua, -atan2f(line.y, line.x));
+			lua_settable(m_lua, -3);
+
+			auto setCursorData = [&](int ci)
+			{
+				lua_geti(m_lua, -1, ci);
+
+#define TPOINT(name, y) Vector2 name = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3((m_scoring.laserPositions[ci] - Track::trackWidth * 0.5f) * (5.0f / 6), y, 0)))
+				TPOINT(cPos, 0);
+				TPOINT(cPosUp, 1);
+				TPOINT(cPosDown, -1);
+#undef TPOINT
+
+				Vector2 cursorAngleVector = cPosUp - cPosDown;
+				float distFromCritCenter = (critPos - cPos).Length() * (m_scoring.laserPositions[ci] < 0.5 ? -1 : 1);
+
+				float skewAngle = -atan2f(cursorAngleVector.y, cursorAngleVector.x) + 3.1415 / 2;
+				float alpha = (1.0f - Math::Clamp<float>(m_scoring.timeSinceLaserUsed[ci] / 0.5f - 1.0f, 0, 1));
+
+				lua_pushstring(m_lua, "pos");
+				lua_pushnumber(m_lua, distFromCritCenter * (m_scoring.lasersAreExtend[ci] ? 2 : 1));
+				lua_settable(m_lua, -3);
+
+				lua_pushstring(m_lua, "alpha");
+				lua_pushnumber(m_lua, alpha);
+				lua_settable(m_lua, -3);
+
+				lua_pushstring(m_lua, "skew");
+				lua_pushnumber(m_lua, skewAngle);
+				lua_settable(m_lua, -3);
+
+				lua_pop(m_lua, 1);
+			};
+
+			lua_getfield(m_lua, -1, "cursors");
+			setCursorData(0);
+			setCursorData(1);
+
+			lua_pop(m_lua, 2); // cursors, critLine
+		}
 
 		lua_setglobal(m_lua, "gameplay");
 
