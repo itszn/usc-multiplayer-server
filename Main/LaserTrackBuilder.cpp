@@ -307,7 +307,7 @@ void LaserTrackBuilder::m_RecalculateConstants()
 	invTextureBorder = 1.0f - textureBorder;
 
 	// The the size of the laser with compensation added for the border
-	actualLaserWidth = m_laserWidth * 2.0f;
+	actualLaserWidth = m_laserWidth;
 
 	// The width of the laser without the border
 	laserWidthNoBorder = actualLaserWidth * laserCenterAmount;
@@ -315,7 +315,7 @@ void LaserTrackBuilder::m_RecalculateConstants()
 	realBorderSize = (actualLaserWidth - laserWidthNoBorder) * 0.5f;
 
 	// The length of the horizontal slam segments
-	slamDuration = 70;
+	slamDuration = 50;
 
 	// The effective area in which the center point of the laser can move
 	effectiveWidth = m_trackWidth - m_laserWidth;

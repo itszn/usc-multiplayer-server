@@ -9,7 +9,7 @@ uniform sampler2D mainTex;
 void main()
 {	
     float x = fsTex.x;
-    float laserSize = 0.8; //0.0 to 1.0
+    float laserSize = 1.0; //0.0 to 1.0
     x -= 0.5;
     x /= laserSize;
     x += 0.5;

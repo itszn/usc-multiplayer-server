@@ -10,7 +10,7 @@
 
 const float Track::trackWidth = 1.0f;
 const float Track::buttonWidth = 1.0f / 6;
-const float Track::laserWidth = buttonWidth * 0.7f;
+const float Track::laserWidth = buttonWidth;
 const float Track::fxbuttonWidth = buttonWidth * 2;
 const float Track::buttonTrackWidth = buttonWidth * 4;
 
