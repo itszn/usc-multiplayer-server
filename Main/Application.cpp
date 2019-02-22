@@ -1120,6 +1120,29 @@ static int lCreateSkinImage(lua_State* L /*const char* filename, int imageflags 
 	return 0;
 }
 
+static int lLoadSkinAnimation(lua_State* L)
+{
+	const char* p;
+	float frametime;
+	int loopcount = 0;
+
+	p = luaL_checkstring(L, 1);
+	frametime = luaL_checknumber(L, 2);
+	if (lua_gettop(L) == 3)
+	{
+		loopcount = luaL_checkinteger(L, 3);
+	}
+
+	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + p;
+
+	int result = LoadAnimation(*path, frametime, loopcount);
+	if (result == -1)
+		return 0;
+
+	lua_pushnumber(L, result);
+	return 1;
+}
+
 static int lLoadSkinFont(lua_State* L /*const char* name */)
 {
 	const char* name = luaL_checkstring(L, 1);
@@ -1273,6 +1296,10 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("ImageSize", lImageSize);
 		pushFuncToTable("Arc", lArc);
 		pushFuncToTable("SetImageTint", lSetImageTint);
+		pushFuncToTable("LoadAnimation", lLoadAnimation);
+		pushFuncToTable("LoadSkinAnimation", lLoadSkinAnimation);
+		pushFuncToTable("TickAnimation", lTickAnimation);
+		pushFuncToTable("ResetAnimation", lResetAnimation);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
