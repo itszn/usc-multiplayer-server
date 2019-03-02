@@ -774,3 +774,28 @@ static int lArc(lua_State* L /* float cx, float cy, float r, float a0, float a1,
 	nvgArc(g_guiState.vg, cx, cy, r, a0, a1, dir);
 	return 0;
 }
+
+static int lGlobalCompositeOperation(lua_State* L /* int op */)
+{
+	int op = luaL_checkinteger(L, 1);
+	nvgGlobalCompositeOperation(g_guiState.vg, op);
+	return 0;
+}
+
+static int lGlobalCompositeBlendFunc(lua_State* L /* int sfactor, int dfactor */)
+{
+	int sfactor = luaL_checkinteger(L, 1);
+	int dfactor = luaL_checkinteger(L, 2);
+	nvgGlobalCompositeBlendFunc(g_guiState.vg, sfactor, dfactor);
+	return 0;
+}
+
+static int lGlobalCompositeBlendFuncSeparate(lua_State* L /* int srcRGB, int dstRGB, int srcAlpha, int dstAlpha */)
+{
+	int srcRGB = luaL_checkinteger(L, 1);
+	int dstRGB = luaL_checkinteger(L, 2);
+	int srcAlpha = luaL_checkinteger(L, 3);
+	int dstAlpha = luaL_checkinteger(L, 4);
+	nvgGlobalCompositeBlendFuncSeparate(g_guiState.vg, srcRGB, dstRGB, srcAlpha, dstAlpha);
+	return 0;
+}

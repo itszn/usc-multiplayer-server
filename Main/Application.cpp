@@ -1273,6 +1273,9 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("ImageSize", lImageSize);
 		pushFuncToTable("Arc", lArc);
 		pushFuncToTable("SetImageTint", lSetImageTint);
+		pushFuncToTable("GlobalCompositeOperation", lGlobalCompositeOperation);
+		pushFuncToTable("GlobalCompositeBlendFunc", lGlobalCompositeBlendFunc);
+		pushFuncToTable("GlobalCompositeBlendFuncSeparate", lGlobalCompositeBlendFuncSeparate);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
@@ -1295,10 +1298,30 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushIntToTable("IMAGE_FLIPY",				NVGimageFlags::NVG_IMAGE_FLIPY);
 		pushIntToTable("IMAGE_PREMULTIPLIED",		NVGimageFlags::NVG_IMAGE_PREMULTIPLIED);
 		pushIntToTable("IMAGE_NEAREST",				NVGimageFlags::NVG_IMAGE_NEAREST);
-
-
-
-
+		//Blend flags
+		pushIntToTable("BLEND_ZERO,", NVGblendFactor::NVG_ZERO);
+		pushIntToTable("BLEND_ONE,", NVGblendFactor::NVG_ONE);
+		pushIntToTable("BLEND_SRC_COLOR", NVGblendFactor::NVG_SRC_COLOR);
+		pushIntToTable("BLEND_ONE_MINUS_SRC_COLOR", NVGblendFactor::NVG_ONE_MINUS_SRC_COLOR);
+		pushIntToTable("BLEND_DST_COLOR", NVGblendFactor::NVG_DST_COLOR);
+		pushIntToTable("BLEND_ONE_MINUS_DST_COLOR", NVGblendFactor::NVG_ONE_MINUS_DST_COLOR);
+		pushIntToTable("BLEND_SRC_ALPHA", NVGblendFactor::NVG_SRC_ALPHA);
+		pushIntToTable("BLEND_ONE_MINUS_SRC_ALPHA", NVGblendFactor::NVG_ONE_MINUS_SRC_ALPHA);
+		pushIntToTable("BLEND_DST_ALPHA", NVGblendFactor::NVG_DST_ALPHA);
+		pushIntToTable("BLEND_ONE_MINUS_DST_ALPHA", NVGblendFactor::NVG_ONE_MINUS_DST_ALPHA);
+		pushIntToTable("BLEND_SRC_ALPHA_SATURATE", NVGblendFactor::NVG_SRC_ALPHA_SATURATE);
+		//Blend operations
+		pushIntToTable("BLEND_OP_SOURCE_OVER", NVGcompositeOperation::NVG_SOURCE_OVER); //<<<<< default
+		pushIntToTable("BLEND_OP_SOURCE_IN", NVGcompositeOperation::NVG_SOURCE_IN);
+		pushIntToTable("BLEND_OP_SOURCE_OUT", NVGcompositeOperation::NVG_SOURCE_OUT);
+		pushIntToTable("BLEND_OP_ATOP", NVGcompositeOperation::NVG_ATOP);
+		pushIntToTable("BLEND_OP_DESTINATION_OVER", NVGcompositeOperation::NVG_DESTINATION_OVER);
+		pushIntToTable("BLEND_OP_DESTINATION_IN", NVGcompositeOperation::NVG_DESTINATION_IN);
+		pushIntToTable("BLEND_OP_DESTINATION_OUT", NVGcompositeOperation::NVG_DESTINATION_OUT);
+		pushIntToTable("BLEND_OP_DESTINATION_ATOP", NVGcompositeOperation::NVG_DESTINATION_ATOP);
+		pushIntToTable("BLEND_OP_LIGHTER", NVGcompositeOperation::NVG_LIGHTER);
+		pushIntToTable("BLEND_OP_COPY", NVGcompositeOperation::NVG_COPY);
+		pushIntToTable("BLEND_OP_XOR", NVGcompositeOperation::NVG_XOR);
 
 		lua_setglobal(state, "gfx");
 	}
