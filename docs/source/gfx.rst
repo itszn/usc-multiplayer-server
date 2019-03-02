@@ -452,9 +452,9 @@ GlobalCompositeOperation(int op)
 ********************************
 nanovg.h:171_
 
-The available `op` are:
+The available ``op`` are:
 
-..
+::
 	gfx.BLEND_OP_SOURCE_OVER <--- default
 	gfx.BLEND_OP_SOURCE_IN
 	gfx.BLEND_OP_SOURCE_OUT
@@ -477,7 +477,7 @@ nanovg.h:174_
 
 The available blend factors are:
 
-..
+::
 	gfx.BLEND_ZERO = 1<<0
 	gfx.BLEND_ONE = 1<<1
 	gfx.BLEND_SRC_COLOR = 1<<2
