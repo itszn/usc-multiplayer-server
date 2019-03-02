@@ -42,7 +42,7 @@ static void Spin(float time, float &roll, float &bgAngle, float dir)
 static Transform GetOriginTransform(float pitch, float offs, float roll)
 {
 	auto origin = Transform::Rotation({ 0, 0, roll });
-	auto anchor = Transform::Translation({ offs, -0.9f, 0 })
+	auto anchor = Transform::Translation({ offs, -0.725f, 0 })
 		* Transform::Rotation({ 1.5f, 0, 0 });
 	auto contnr = Transform::Translation({ 0, 0, -0.9f })
 		* Transform::Rotation({ -90 + pitch, 0, 0, });

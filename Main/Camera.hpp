@@ -71,7 +71,7 @@ public:
 	float baseRadius[2] = { 0.3f, 0.275f };
 
 	float pitchOffsets[2] = { 0.05f, 0.27f }; // how far from the bottom of the screen should the crit line be
-	float fovs[2] = { 60.f, 90.f };
+	float fovs[2] = { 60.f, 90.0f };
 
 	Transform worldNormal;
 	Transform worldNoRoll;
