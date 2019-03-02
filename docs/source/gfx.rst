@@ -454,7 +454,8 @@ nanovg.h:171_
 
 The available ``op`` are:
 
-::
+.. code-block:: lua
+
 	gfx.BLEND_OP_SOURCE_OVER <--- default
 	gfx.BLEND_OP_SOURCE_IN
 	gfx.BLEND_OP_SOURCE_OUT
@@ -477,7 +478,8 @@ nanovg.h:174_
 
 The available blend factors are:
 
-::
+.. code-block:: c
+
 	gfx.BLEND_ZERO = 1<<0
 	gfx.BLEND_ONE = 1<<1
 	gfx.BLEND_SRC_COLOR = 1<<2
@@ -489,8 +491,6 @@ The available blend factors are:
 	gfx.BLEND_DST_ALPHA = 1<<8
 	gfx.BLEND_ONE_MINUS_DST_ALPHA = 1<<9
 	gfx.BLEND_SRC_ALPHA_SATURATE = 1<<10
-
-
 
 
 .. _nanovg.h:174: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L174
