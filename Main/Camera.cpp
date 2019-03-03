@@ -99,7 +99,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 	}
 
 	m_totalRoll = pLaneBaseRoll + m_spinRoll + m_laserRoll;
-	m_totalOffset = pLaneOffset / 2.0f + m_spinBounceOffset;
+	m_totalOffset = (pLaneOffset * (5 * 100) / (6 * 116)) / 2.0f + m_spinBounceOffset;
 
 	if (!rollKeep)
 	{
