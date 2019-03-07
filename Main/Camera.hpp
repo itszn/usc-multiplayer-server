@@ -13,6 +13,9 @@ struct CameraShake
 	float time = 0.0f;
 };
 
+static const float KSM_PITCH_UNIT_PRE_168 = 7.0f;
+static const float KSM_PITCH_UNIT_POST_168 = 180.0f / 12;
+
 /*
 	Camera that hovers above the playfield track and can process camera shake and tilt effects
 */
@@ -60,7 +63,7 @@ public:
 	float pLanePitch = 0.0f;
 	float pLaneBaseRoll = 0.0f;
 
-	float pitchUnit = 7.0f;
+	float pitchUnit = KSM_PITCH_UNIT_POST_168;
 
 	float cameraShakeX = 0.0f;
 	float cameraShakeY = 0.4f;
