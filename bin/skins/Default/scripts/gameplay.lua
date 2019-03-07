@@ -1,3 +1,11 @@
+-- The following code slightly simplifies the render/update code, making it easier to explain in the comments
+-- It replaces a few of the functions built into USC and changes behaviour slightly
+-- Ideally, this should be in the common.lua file, but the rest of the skin does not support it
+-- I'll be further refactoring and documenting the default skin and making it more easy to
+--  modify for those who either don't know how to skin well or just want to change a few images
+--  or behaviours of the default to better suit them.
+-- Skinning should be easy and fun!
+
 local RECT_FILL = "fill"
 local RECT_STROKE = "stroke"
 local RECT_FILL_STROKE = RECT_FILL .. RECT_STROKE
@@ -8,7 +16,7 @@ gfx._FillColor = gfx.FillColor
 gfx._StrokeColor = gfx.StrokeColor
 gfx._SetImageTint = gfx.SetImageTint
 
--- we aren't even gonna overwrite it, it's just dead to us
+-- we aren't even gonna overwrite it here, it's just dead to us
 gfx.SetImageTint = nil
 
 function gfx.FillColor(r, g, b, a)
@@ -67,9 +75,11 @@ function UpdateButtonStatesAfterProcessed()
     end
 end
 
-game.GetButtonPressed = function(button)
+function game.GetButtonPressed(button)
     return game.GetButton(button) and not buttonStates[button]
 end
+
+-- The actual gameplay script starts here!
 
 -- -------------------------------------------------------------------------- --
 -- Global data used by many things:                                           --
@@ -77,7 +87,8 @@ local resx, resy -- The resolution of the window
 local portrait -- whether the window is in portrait orientation
 local desw, desh -- The resolution of the deisign
 local scale -- the scale to get from design to actual units
-
+-- -------------------------------------------------------------------------- --
+-- All images used by the script:                                             --
 local jacketFallback = gfx.CreateSkinImage("song_select/loading.png", 0)
 local bottomFill = gfx.CreateSkinImage("console/console.png", 0)
 local topFill = gfx.CreateSkinImage("fill_top.png", 0)
@@ -104,7 +115,8 @@ local consoleAnimImages = {
     gfx.CreateSkinImage("console/glow_voll.png", 0),
     gfx.CreateSkinImage("console/glow_volr.png", 0),
 }
-
+-- -------------------------------------------------------------------------- --
+-- Timers, used for animations:                                               --
 local introTimer = 2
 local outroTimer = 0
 
@@ -117,7 +129,8 @@ local critAnimTimer = 0
 
 local consoleAnimSpeed = 10
 local consoleAnimTimers = { 0, 0, 0, 0, 0, 0, 0, 0 }
-
+-- -------------------------------------------------------------------------- --
+-- Miscelaneous, currently unsorted:                                          --
 local score = 0
 local combo = 0
 local jacket = nil
@@ -186,7 +199,7 @@ function render(deltaTime)
     -- In portrait, we draw a banner across the top.
     -- The rest of the UI needs to be drawn below that banner.
     -- TODO: this isn't how it'll work in the long run, I don't think.
-    if portrait then yshift = DrawBanner(deltaTime) end
+    if portrait then yshift = draw_banner(deltaTime) end
 
     gfx.Translate(0, yshift - 150 * math.max(introTimer - 1, 0))
     drawSongInfo(deltaTime)
@@ -318,7 +331,7 @@ end
 -- Use this to render laser cursors or an IO Console in portrait mode!        --
 -- This call resets the graphics transform, it's up to the caller to          --
 --  save the transform if needed.                                             --
-render_crit_overlay = function(deltaTime)
+function render_crit_overlay(deltaTime)
     SetUpCritTransform()
 
     -- Figure out how to offset the center of the crit line to remain
@@ -408,8 +421,10 @@ render_crit_overlay = function(deltaTime)
     gfx.FillColor(255, 255, 255)
     gfx.ResetTransform()
 end
-
-function DrawBanner(deltaTime)
+-- -------------------------------------------------------------------------- --
+-- draw_banner:                                                               --
+-- Renders the banner across the top of the screen in portrait.               --
+function draw_banner(deltaTime)
     local bannerWidth, bannerHeight = gfx.ImageSize(topFill)
     local actualHeight = desw * (bannerHeight / bannerWidth)
 
