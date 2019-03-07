@@ -762,6 +762,17 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 				{
 					evt->data.rollVal = evt->data.rollVal | TrackRollBehaviour::Biggest;
 				}
+				else
+				{
+					evt->data.rollVal = TrackRollBehaviour::Zero;
+
+					ZoomControlPoint* point = new ZoomControlPoint();
+					point->time = mapTime;
+					point->index = 3;
+					point->zoom = atof(*p.second) / -25.70f;
+					m_zoomControlPoints.Add(point);
+					CHECK_FIRST;
+				}
 
 				m_objectStates.Add(*evt);
 			}
