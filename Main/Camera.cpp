@@ -65,7 +65,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
 
-	LerpTo(m_laserRoll, m_targetLaserRoll, m_targetLaserRoll != 0.0f ? 8 : 3);
+	LerpTo(m_laserRoll, m_targetLaserRoll, m_targetLaserRoll != 0.0f ? 13 : 4);
 
 	float actualTargetRoll;
 	if (pManualTiltEnabled)
@@ -271,6 +271,11 @@ float Camera::GetRoll() const
 float Camera::GetLaserRoll() const
 {
 	return m_laserRoll;
+}
+
+float Camera::GetActualRoll() const
+{
+	return m_actualRoll;
 }
 
 float Camera::GetHorizonHeight()
