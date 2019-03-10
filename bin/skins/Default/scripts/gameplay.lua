@@ -545,7 +545,7 @@ function draw_song_info(deltaTime)
     -- Shows the current hispeed values
     if game.GetButton(game.BUTTON_STA) then
         gfx.FillColor(20, 20, 20, 200);
-        gfx.DrawRect(100, 100, songInfoWidth - 100, 20)
+        gfx.DrawRect(RECT_FILL, 100, 100, songInfoWidth - 100, 20)
 
         gfx.FillColor(255, 255, 255)
         gfx.Text(string.format("HiSpeed: %.0f x %.1f = %.0f",
