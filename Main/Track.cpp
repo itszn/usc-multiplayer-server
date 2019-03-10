@@ -251,6 +251,10 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 	uint32 numBeats = playback.CountBeats(m_lastMapTime, currentTime - m_lastMapTime, startBeat, 4);
 	objectGlowState = currentTime % 100 < 50 ? 0 : 1;
 	m_lastMapTime = currentTime;
+
+	objectGlow = fabs((currentTime % 100) / 50.0 - 1) * 0.5 + 0.5;
+
+	/*
 	if(numBeats > 0)
 	{
 		objectGlow = 1.0f;
@@ -261,6 +265,7 @@ void Track::Tick(class BeatmapPlayback& playback, float deltaTime)
 		if(objectGlow < 0.0f)
 			objectGlow = 0.0f;
 	}
+	*/
 
 	// Perform laser track cache cleanup, etc.
 	for(uint32 i = 0; i < 2; i++)
@@ -347,7 +352,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		float width;
 		float xposition;
 		float length;
-		float currentObjectGlow = active ? objectGlow : 0.0f;
+		float currentObjectGlow = active ? objectGlow : 0.3f;
 		int currentObjectGlowState = active ? 2 + objectGlowState : 0;
 		if(mobj->button.index < 4) // Normal button
 		{
@@ -411,7 +416,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			}
 			else
 			{
-				laserParams.SetParameter("objectGlow", active ? objectGlow : 0.0f);
+				laserParams.SetParameter("objectGlow", active ? objectGlow : 0.3f);
 				laserParams.SetParameter("hitState", active ? 2 + objectGlowState : 0);
 			}
 			laserParams.SetParameter("mainTex", texture);
