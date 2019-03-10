@@ -65,7 +65,15 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
 
-	LerpTo(m_laserRoll, m_targetRoll, m_targetRoll != 0.0f ? 8 : 3);
+	LerpTo(m_laserRoll, m_targetLaserRoll, m_targetLaserRoll != 0.0f ? 8 : 3);
+
+	float actualTargetRoll;
+	if (pManualTiltEnabled)
+		actualTargetRoll = pLaneTilt;
+	else actualTargetRoll = m_laserRoll;
+
+	//LerpTo(m_actualRoll, actualTargetRoll, 8);
+	m_actualRoll = actualTargetRoll;
 
 	m_spinProgress = (float)(playback.GetLastTime() - m_spinStart) / m_spinDuration;
 	// Calculate camera spin
@@ -98,13 +106,13 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 		m_spinProgress = 0.0f;
 	}
 
-	m_totalRoll = pLaneBaseRoll + m_spinRoll + m_laserRoll;
+	m_totalRoll = m_spinRoll + m_actualRoll;
 	m_totalOffset = (pLaneOffset * (5 * 100) / (6 * 116)) / 2.0f + m_spinBounceOffset;
 
 	if (!rollKeep)
 	{
 		m_targetRollSet = false;
-		m_targetRoll = 0.0f;
+		m_targetLaserRoll = 0.0f;
 	}
 
 	// Update camera shake effects
@@ -141,7 +149,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	track->trackOrigin = GetZoomedTransform(worldNormal);
 
-	critOrigin = GetZoomedTransform(GetOriginTransform(lanePitch, m_totalOffset, m_laserRoll * 360.0f + sin(m_spinRoll * Math::pi * 2) * 20));
+	critOrigin = GetZoomedTransform(GetOriginTransform(lanePitch, m_totalOffset, m_actualRoll * 360.0f + sin(m_spinRoll * Math::pi * 2) * 20));
 }
 void Camera::AddCameraShake(CameraShake cameraShake)
 {
@@ -207,19 +215,19 @@ void Camera::SetTargetRoll(float target)
 	float actualTarget = target * m_rollIntensity;
 	if(!rollKeep)
 	{
-		m_targetRoll = actualTarget;
+		m_targetLaserRoll = actualTarget;
 		m_targetRollSet = true;
 	}
 	else
 	{
-		if (m_targetRoll == 0.0f || Math::Sign(m_targetRoll) == Math::Sign(actualTarget))
+		if (m_targetLaserRoll == 0.0f || Math::Sign(m_targetLaserRoll) == Math::Sign(actualTarget))
 		{
-			if (m_targetRoll == 0)
-				m_targetRoll = actualTarget;
-			if (m_targetRoll < 0 && actualTarget < m_targetRoll)
-				m_targetRoll = actualTarget;
-			else if (m_targetRoll > 0 && actualTarget > m_targetRoll)
-				m_targetRoll = actualTarget;
+			if (m_targetLaserRoll == 0)
+				m_targetLaserRoll = actualTarget;
+			if (m_targetLaserRoll < 0 && actualTarget < m_targetLaserRoll)
+				m_targetLaserRoll = actualTarget;
+			else if (m_targetLaserRoll > 0 && actualTarget > m_targetLaserRoll)
+				m_targetLaserRoll = actualTarget;
 		}
 		m_targetRollSet = true;
 	}

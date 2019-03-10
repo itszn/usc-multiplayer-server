@@ -61,7 +61,8 @@ public:
 	float pLaneOffset = 0.0f;
 	float pLaneZoom = 0.0f;
 	float pLanePitch = 0.0f;
-	float pLaneBaseRoll = 0.0f;
+	float pLaneTilt = 0.0f;
+	bool pManualTiltEnabled = false;
 
 	float pitchUnit = KSM_PITCH_UNIT_POST_168;
 
@@ -88,8 +89,9 @@ private:
 	// roll value
 	float m_totalRoll = 0.0f;
 	float m_laserRoll = 0.0f;
+	float m_actualRoll = 0.0f;
 	// Target to roll towards
-	float m_targetRoll = 0.0f;
+	float m_targetLaserRoll = 0.0f;
 	bool m_targetRollSet = false;
 	bool m_lasersActive = false;
 	// Roll force

@@ -140,8 +140,8 @@ private:
 	Sample* m_fxSamples;
 
 	// Roll intensity, default = 1
-	const float m_rollIntensityBase = 0.03f;
-	float m_rollIntensity = m_rollIntensityBase;
+	float m_rollIntensity = 14 / 360.0;
+	bool m_manualTiltEnabled = false;
 
 	// Particle effects
 	Material particleMaterial;
@@ -529,7 +529,7 @@ public:
 		m_camera.pLaneZoom = m_playback.GetZoom(0);
 		m_camera.pLanePitch = m_playback.GetZoom(1);
 		m_camera.pLaneOffset = m_playback.GetZoom(2);
-		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
+		m_camera.pLaneTilt = m_playback.GetZoom(3);
 
 		for(uint32 i = 0; i < 2; i++)
 		{
@@ -597,7 +597,8 @@ public:
 		m_camera.pLaneZoom = m_playback.GetZoom(0);
 		m_camera.pLanePitch = m_playback.GetZoom(1);
 		m_camera.pLaneOffset = m_playback.GetZoom(2);
-		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
+		m_camera.pLaneTilt = m_playback.GetZoom(3);
+		m_camera.pManualTiltEnabled = m_manualTiltEnabled;
 		m_camera.track = m_track;
 		m_camera.Tick(deltaTime,m_playback);
 		m_track->Tick(m_playback, deltaTime);
@@ -902,7 +903,7 @@ public:
 		m_camera.pLaneZoom = m_playback.GetZoom(0);
 		m_camera.pLanePitch = m_playback.GetZoom(1);
 		m_camera.pLaneOffset = m_playback.GetZoom(2);
-		m_camera.pLaneBaseRoll = m_playback.GetZoom(3);
+		m_camera.pLaneTilt = m_playback.GetZoom(3);
 
         // If c-mod is used
 		if (m_usecMod)
@@ -1506,12 +1507,20 @@ public:
 		else if(key == EventKey::TrackRollBehaviour)
 		{
 			m_camera.rollKeep = (data.rollVal & TrackRollBehaviour::Keep) == TrackRollBehaviour::Keep;
-			int32 i = (uint8)data.rollVal & 0x3;
-			if(i == 0)
+			int32 i = (uint8)data.rollVal & 0x7;
+
+			m_manualTiltEnabled = false;
+			if (i == (uint8)TrackRollBehaviour::Manual)
+			{
+				// switch to manual tilt mode
+				m_manualTiltEnabled = true;
+			}
+			else if (i == 0)
 				m_rollIntensity = 0;
 			else
 			{
-				m_rollIntensity = m_rollIntensityBase + (float)(i - 1) * 0.0125f;
+				//m_rollIntensity = m_rollIntensityBase + (float)(i - 1) * 0.0125f;
+				m_rollIntensity = (14 * (1.0 + 0.5 * (i - 1))) / 360.0;
 			}
 		}
 		else if(key == EventKey::SlamVolume)
