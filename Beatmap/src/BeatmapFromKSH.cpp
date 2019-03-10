@@ -704,10 +704,52 @@ bool Beatmap::m_ProcessKShootMap(BinaryStream& input, bool metadataOnly)
 			}
 			else if (p.first == "zoom_top")
 			{
+				auto ScaleFunc = [](float input)
+				{
+					//const long KSM_CONTROL_NEGATIVE = -400;
+					//const long KSM_CONTROL_NEGATIVE = 559;
+
+					//const long USC_CONTROL_NEGATIVE = -263;
+					//const long USC_CONTROL_NEGATIVE = 517;
+
+					// 799 / 937
+
+					int rot = 0, dir = input < 0 ? -1 : 1;
+					if (dir == -1)
+					{
+						while (input < -12.00)
+						{
+							input += 24.00;
+							rot++;
+						}
+					}
+					else
+					{
+						while (input > 12.00)
+						{
+							input -= 24.00;
+							rot++;
+						}
+					}
+
+					double scaled = input;
+					if (input < -4.00)
+						scaled = -(-(input + 4) / 8) * (12 - 2.63) - 2.63;
+					else if (input < 0.00)
+						scaled = (input / 4.00) * 2.63;
+					else if (input < 5.59)
+						scaled = (input / 5.59) * 5.17;
+					else scaled = ((input - 5.59) / (12 - 5.59)) * (12 - 5.17) + 5.17;
+
+					return rot * dir * 24.00 + scaled;
+				};
+
+				double value = atol(*p.second) / 100.0;
+
 				ZoomControlPoint* point = new ZoomControlPoint();
 				point->time = mapTime;
 				point->index = 1;
-				point->zoom = (float)atol(*p.second) / 100.0f;
+				point->zoom = (float)ScaleFunc(value);
 				m_zoomControlPoints.Add(point);
 				CHECK_FIRST;
 			}
