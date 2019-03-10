@@ -267,7 +267,8 @@ float Camera::GetLaserRoll() const
 
 float Camera::GetHorizonHeight()
 {
-	return (0.5 + (-(m_actualCameraPitch + pLanePitch * pitchUnit) / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
+	float angle = fmodf(m_actualCameraPitch + pLanePitch * pitchUnit, 360.0f);
+	return (0.5 + (-angle / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
 Vector2i Camera::GetScreenCenter()
