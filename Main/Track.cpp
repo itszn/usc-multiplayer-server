@@ -80,11 +80,14 @@ bool Track::AsyncLoad()
 	loader->AddTexture(fxbuttonHoldTexture, "fxbuttonhold.png");
 
 	// Load Laser object
-	loader->AddTexture(laserTexture, "laser.png");
+	loader->AddTexture(laserTextures[0], "laser_l.png");
+	loader->AddTexture(laserTextures[1], "laser_r.png");
 
 	// Entry and exit textures for laser
-	loader->AddTexture(laserTailTextures[0], "laser_entry.png");
-	loader->AddTexture(laserTailTextures[1], "laser_exit.png");
+	loader->AddTexture(laserTailTextures[0], "laser_entry_l.png");
+	loader->AddTexture(laserTailTextures[1], "laser_entry_r.png");
+	loader->AddTexture(laserTailTextures[2], "laser_exit_l.png");
+	loader->AddTexture(laserTailTextures[3], "laser_exit_r.png");
 
 	// Track materials
 	loader->AddMaterial(trackMaterial, "track");
@@ -107,6 +110,7 @@ bool Track::AsyncFinalize()
 	// Set Texture states
 	trackTexture->SetMipmaps(false);
 	trackTexture->SetFilter(true, true, 16.0f);
+	trackTexture->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
 	trackTickTexture->SetMipmaps(true);
 	trackTickTexture->SetFilter(true, true, 16.0f);
 	trackTickTexture->SetWrap(TextureWrap::Repeat, TextureWrap::Clamp);
@@ -131,11 +135,14 @@ bool Track::AsyncFinalize()
 	holdButtonMaterial->opaque = false;
 	holdButtonMaterial->blendMode = MaterialBlendMode::Additive;
 
-	laserTexture->SetMipmaps(true);
-	laserTexture->SetFilter(true, true, 16.0f);
-	laserTexture->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
+	for (uint32 i = 0; i < 4; i++)
+	{
+		laserTextures[i]->SetMipmaps(true);
+		laserTextures[i]->SetFilter(true, true, 16.0f);
+		laserTextures[i]->SetWrap(TextureWrap::Clamp, TextureWrap::Repeat);
+	}
 
-	for(uint32 i = 0; i < 2; i++)
+	for(uint32 i = 0; i < 4; i++)
 	{
 		laserTailTextures[i]->SetMipmaps(true);
 		laserTailTextures[i]->SetFilter(true, true, 16.0f);
@@ -298,7 +305,7 @@ void Track::DrawLaserBase(RenderQueue& rq, class BeatmapPlayback& playback, cons
 			Mesh laserMesh = m_laserTrackBuilder[laser->index]->GenerateTrackMesh(playback, laser);
 
 			MaterialParameterSet laserParams;
-			laserParams.SetParameter("mainTex", laserTexture);
+			laserParams.SetParameter("mainTex", laserTextures[laser->index]);
 
 			// Get the length of this laser segment
 			Transform laserTransform = trackOrigin;
@@ -411,12 +418,12 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 			// Make not yet hittable lasers slightly glowing
 			if (laser->GetRoot()->time > playback.GetLastTime())
 			{
-				laserParams.SetParameter("objectGlow", 0.4f);
+				laserParams.SetParameter("objectGlow", 0.6f);
 				laserParams.SetParameter("hitState", 1);
 			}
 			else
 			{
-				laserParams.SetParameter("objectGlow", active ? objectGlow : 0.3f);
+				laserParams.SetParameter("objectGlow", active ? objectGlow : 0.4f);
 				laserParams.SetParameter("hitState", active ? 2 + objectGlowState : 0);
 			}
 			laserParams.SetParameter("mainTex", texture);
@@ -439,18 +446,18 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		if(!laser->prev)
 		{
 			Mesh laserTail = m_laserTrackBuilder[laser->index]->GenerateTrackEntry(playback, laser);
-			DrawSegment(laserTail, laserTailTextures[0]);
+			DrawSegment(laserTail, laserTailTextures[laser->index]);
 		}
 
 		// Body
 		Mesh laserMesh = m_laserTrackBuilder[laser->index]->GenerateTrackMesh(playback, laser);
-		DrawSegment(laserMesh, laserTexture);
+		DrawSegment(laserMesh, laserTextures[laser->index]);
 
 		// Draw exit?
 		if(!laser->next && (laser->flags & LaserObjectState::flag_Instant) != 0) // Only draw exit on slams
 		{
 			Mesh laserTail = m_laserTrackBuilder[laser->index]->GenerateTrackExit(playback, laser);
-			DrawSegment(laserTail, laserTailTextures[1]);
+			DrawSegment(laserTail, laserTailTextures[2 + laser->index]);
 		}
 	}
 }

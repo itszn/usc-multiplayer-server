@@ -21,5 +21,5 @@ void main()
 	vec4 mainColor = texture(mainTex, vec2(x,fsTex.y));
 	target = mainColor * color;
 	float brightness = (target.x + target.y + target.z) / 3;
-	target.xyz = target.xyz * (0 + objectGlow);
+	target.xyz = target.xyz * (0 + objectGlow * 1.2);
 }
