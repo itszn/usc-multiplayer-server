@@ -97,3 +97,7 @@ UpdateAvailable()
 *****************
 Return nothing if there is no update. If there is an update available then ``(url, version)``
 is returned.
+
+GetSkin()
+*********
+Returns the name of the current skin.

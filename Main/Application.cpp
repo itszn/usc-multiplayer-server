@@ -791,6 +791,24 @@ lua_State* Application::LoadScript(const String & name)
 {
 	lua_State* s = luaL_newstate();
 	luaL_openlibs(s);
+
+	//Set path for 'require' (https://stackoverflow.com/questions/4125971/setting-the-global-lua-path-variable-from-c-c?lq=1)
+	{
+		String lua_path = Path::Normalize(
+			"./skins/" + m_skin + "/scripts/?.lua;"
+			+ "./skins/" + m_skin + "/scripts/?");
+
+		lua_getglobal(s, "package");
+		lua_getfield(s, -1, "path"); // get field "path" from table at top of stack (-1)
+		std::string cur_path = lua_tostring(s, -1); // grab path string from top of stack
+		cur_path.append(";"); // do your path magic here
+		cur_path.append(lua_path.c_str());
+		lua_pop(s, 1); // get rid of the string on the stack we just pushed on line 5
+		lua_pushstring(s, cur_path.c_str()); // push the new one
+		lua_setfield(s, -2, "path"); // set the field "path" in table at -2 with value at top of stack
+		lua_pop(s, 1); // get rid of package table from top of stack
+	}
+
 	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
 	String commonPath = "skins/" + m_skin + "/scripts/" + "common.lua";
 	m_SetNvgLuaBindings(s);
@@ -1199,6 +1217,12 @@ static int lSetGaugeColor(lua_State* L /*int colorIndex, int r, int g, int b*/)
 	return 0;
 }
 
+static int lGetSkin(lua_State* L)
+{
+	lua_pushstring(L, *g_application->GetCurrentSkin());
+	return 1;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -1349,6 +1373,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GetButton", lGetButton);
 		pushFuncToTable("GetKnob", lGetKnob);
 		pushFuncToTable("UpdateAvailable", lGetUpdateAvailable);
+		pushFuncToTable("GetSkin", lGetSkin);
 
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);
