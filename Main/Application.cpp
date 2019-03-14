@@ -876,7 +876,17 @@ void Application::DiscordPresenceSong(const BeatmapSettings& song, int64 startTi
 	sprintf(bufferState, "Playing [%s %d]", diffNames[song.difficulty].c_str(), song.level);
 	discordPresence.state = bufferState;
 	char bufferDetails[128] = { 0 };
-	sprintf(bufferDetails, "%s - %s", *song.title, *song.artist);
+	int titleLength = snprintf(bufferDetails, 128, "%s - %s", *song.title, *song.artist);
+	if (titleLength >= 128 || titleLength < 0)
+	{
+		memset(bufferDetails, 0, 128);
+		titleLength = snprintf(bufferDetails, 128, "%s", *song.title);
+	}
+	if (titleLength >= 128 || titleLength < 0)
+	{
+		memset(bufferDetails, 0, 128);
+		strcpy(bufferDetails, "[title too long]");
+	}
 	discordPresence.details = bufferDetails;
 	discordPresence.startTimestamp = startTime;
 	discordPresence.endTimestamp = endTime;
