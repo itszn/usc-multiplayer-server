@@ -41,8 +41,50 @@ static void Spin(float time, float &roll, float &bgAngle, float dir)
 
 static Transform GetOriginTransform(float pitch, float offs, float roll)
 {
+	// PORTRAIT: -4, -2.63, 5.59, 5.17
+	auto ScaleFunc = [](float input, float kLower, float uLower, float kUpper, float uUpper)
+	{
+		//const long KSM_CONTROL_NEGATIVE = -400;
+		//const long KSM_CONTROL_NEGATIVE = 559;
+
+		//const long USC_CONTROL_NEGATIVE = -263;
+		//const long USC_CONTROL_NEGATIVE = 517;
+
+		// 799 / 937
+
+		int rot = 0, dir = input < 0 ? -1 : 1;
+		if (dir == -1)
+		{
+			while (input < -12.00)
+			{
+				input += 24.00;
+				rot++;
+			}
+		}
+		else
+		{
+			while (input > 12.00)
+			{
+				input -= 24.00;
+				rot++;
+			}
+		}
+
+		double scaled = input;
+		if (input < kLower)
+			scaled = -(-(input - kLower) / (12 + kLower)) * (12  + uLower) + uLower;
+		else if (input < 0.00)
+			scaled = (input / kLower) * uLower;
+		else if (input < kUpper)
+			scaled = (input / kUpper) * uUpper;
+		else scaled = ((input - kUpper) / (12 - kUpper)) * (12 - uUpper) + uUpper;
+
+		return rot * dir * 24.00 + scaled;
+	};
+
 	if (g_aspectRatio < 1.0f)
 	{
+		pitch = ScaleFunc(pitch, -4, -2.63f, 5.59f, 5.17f);
 		auto origin = Transform::Rotation({ 0, 0, roll });
 		auto anchor = Transform::Translation({ offs, -0.725f, 0 })
 			* Transform::Rotation({ 1.5f, 0, 0 });
@@ -52,6 +94,7 @@ static Transform GetOriginTransform(float pitch, float offs, float roll)
 	}
 	else
 	{
+		pitch = ScaleFunc(pitch, -4, -2.63f, 5.59f, 5.17f);
 		auto origin = Transform::Rotation({ 0, 0, roll });
 		auto anchor = Transform::Translation({ offs, -0.9f, 0 })
 			* Transform::Rotation({ 1.5f, 0, 0 });
