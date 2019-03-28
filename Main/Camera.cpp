@@ -38,53 +38,57 @@ static void Spin(float time, float &roll, float &bgAngle, float dir)
 	}
 }
 
-
-static Transform GetOriginTransform(float pitch, float offs, float roll)
+static float PitchScaleFunc(float input)
 {
-	// PORTRAIT: -4, -2.63, 5.59, 5.17
-	auto ScaleFunc = [](float input, float kLower, float uLower, float kUpper, float uUpper)
-	{
-		//const long KSM_CONTROL_NEGATIVE = -400;
-		//const long KSM_CONTROL_NEGATIVE = 559;
-
-		//const long USC_CONTROL_NEGATIVE = -263;
-		//const long USC_CONTROL_NEGATIVE = 517;
-
-		// 799 / 937
-
-		int rot = 0, dir = input < 0 ? -1 : 1;
-		if (dir == -1)
-		{
-			while (input < -12.00)
-			{
-				input += 24.00;
-				rot++;
-			}
-		}
-		else
-		{
-			while (input > 12.00)
-			{
-				input -= 24.00;
-				rot++;
-			}
-		}
-
-		double scaled = input;
-		if (input < kLower)
-			scaled = -(-(input - kLower) / (12 + kLower)) * (12  + uLower) + uLower;
-		else if (input < 0.00)
-			scaled = (input / kLower) * uLower;
-		else if (input < kUpper)
-			scaled = (input / kUpper) * uUpper;
-		else scaled = ((input - kUpper) / (12 - kUpper)) * (12 - uUpper) + uUpper;
-
-		return rot * dir * 24.00 + scaled;
-	};
+	float kLower = -4, uLower;
+	float kUpper = 5.59, uUpper;
 
 	if (g_aspectRatio < 1.0f)
 	{
-		pitch = ScaleFunc(pitch, -4, -2.63f, 5.59f, 5.17f);
+		uLower = -2.63f;
+		uUpper = 5.17f;
+	}
+	else
+	{
+		uLower = -3.05f;
+		uUpper = 4.75f;
+	}
+
+	int rot = 0, dir = input < 0 ? -1 : 1;
+	if (dir == -1)
+	{
+		while (input < -12.00)
+		{
+			input += 24.00;
+			rot++;
+		}
+	}
+	else
+	{
+		while (input > 12.00)
+		{
+			input -= 24.00;
+			rot++;
+		}
+	}
+
+	double scaled = input;
+	if (input < kLower)
+		scaled = -(-(input - kLower) / (12 + kLower)) * (12 + uLower) + uLower;
+	else if (input < 0.00)
+		scaled = (input / kLower) * uLower;
+	else if (input < kUpper)
+		scaled = (input / kUpper) * uUpper;
+	else scaled = ((input - kUpper) / (12 - kUpper)) * (12 - uUpper) + uUpper;
+
+	return rot * dir * 24.00 + scaled;
+};
+
+
+static Transform GetOriginTransform(float pitch, float offs, float roll)
+{
+	if (g_aspectRatio < 1.0f)
+	{
 		auto origin = Transform::Rotation({ 0, 0, roll });
 		auto anchor = Transform::Translation({ offs, -0.725f, 0 })
 			* Transform::Rotation({ 1.5f, 0, 0 });
@@ -94,7 +98,6 @@ static Transform GetOriginTransform(float pitch, float offs, float roll)
 	}
 	else
 	{
-		pitch = ScaleFunc(pitch, -4, -2.63f, 5.59f, 5.17f);
 		auto origin = Transform::Rotation({ 0, 0, roll });
 		auto anchor = Transform::Translation({ offs, -0.9f, 0 })
 			* Transform::Rotation({ 1.5f, 0, 0 });
@@ -184,7 +187,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 		m_shakeOffset += shakeVec;
 	}
 
-	float lanePitch = pLanePitch * pitchUnit;
+	float lanePitch = PitchScaleFunc(pLanePitch) * pitchUnit;
 
 	worldNormal = GetOriginTransform(lanePitch, m_totalOffset, m_totalRoll * 360.0f);
 	worldNoRoll = GetOriginTransform(lanePitch, 0, 0);
@@ -335,7 +338,7 @@ float Camera::GetActualRoll() const
 
 float Camera::GetHorizonHeight()
 {
-	float angle = fmodf(m_actualCameraPitch + pLanePitch * pitchUnit, 360.0f);
+	float angle = fmodf(m_actualCameraPitch + PitchScaleFunc(pLanePitch) * pitchUnit, 360.0f);
 	return (0.5 + (-angle / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
