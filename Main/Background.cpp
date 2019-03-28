@@ -89,7 +89,7 @@ class TestBackground : public FullscreenBackground
 
 
 		CheckedLoad(fullscreenMaterial = LoadBackgroundMaterial(matPath));
-		fullscreenMaterial->opaque = !foreground;
+		fullscreenMaterial->opaque = false;
 
 		return true;
 	}

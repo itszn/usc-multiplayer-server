@@ -45,25 +45,36 @@ public:
 		{
 			float** readBuffer;
 			int r;
-			while ((r = ov_read_float(&m_ovf, &readBuffer, 1024, 0)) > 0)
+			int totalRead = 0;
+			while (true)
 			{
-				if (m_info.channels == 2)
+				r = ov_read_float(&m_ovf, &readBuffer, 1024, 0);
+				if (r < 0)
+					continue;
+				if (r == 0)
+					break;
+				else
 				{
-					for (size_t i = 0; i < r; i++)
+					if (m_info.channels == 2)
 					{
-						m_pcm.Add(readBuffer[0][i]);
-						m_pcm.Add(readBuffer[1][i]);
+						for (size_t i = 0; i < r; i++)
+						{
+							m_pcm.Add(readBuffer[0][i]);
+							m_pcm.Add(readBuffer[1][i]);
+						}
 					}
-				}
-				else if (m_info.channels == 1)
-				{
-					for (size_t i = 0; i < r; i++)
+					else if (m_info.channels == 1)
 					{
-						m_pcm.Add(readBuffer[0][i]);
-						m_pcm.Add(readBuffer[0][i]);
+						for (size_t i = 0; i < r; i++)
+						{
+							m_pcm.Add(readBuffer[0][i]);
+							m_pcm.Add(readBuffer[0][i]);
+						}
 					}
+					totalRead += r;
 				}
 			}
+			m_samplesTotal = totalRead;
 			ov_clear(&m_ovf);
 			m_playPos = 0;
 		}
