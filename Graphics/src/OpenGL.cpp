@@ -10,7 +10,6 @@
 #include "Shader.hpp"
 #include "Font.hpp"
 #include "Material.hpp"
-#include "Framebuffer.hpp"
 #include "ParticleSystem.hpp"
 #include "Window.hpp"
 #include <Shared/Thread.hpp>
@@ -38,7 +37,6 @@ namespace Graphics
 			ResourceManagers::DestroyResourceManager<ResourceType::Shader>();
 			ResourceManagers::DestroyResourceManager<ResourceType::Font>();
 			ResourceManagers::DestroyResourceManager<ResourceType::Material>();
-			ResourceManagers::DestroyResourceManager<ResourceType::Framebuffer>();
 			ResourceManagers::DestroyResourceManager<ResourceType::ParticleSystem>();
 
 			if(glBindProgramPipeline)
@@ -58,7 +56,6 @@ namespace Graphics
 		ResourceManagers::CreateResourceManager<ResourceType::Shader>();
 		ResourceManagers::CreateResourceManager<ResourceType::Font>();
 		ResourceManagers::CreateResourceManager<ResourceType::Material>();
-		ResourceManagers::CreateResourceManager<ResourceType::Framebuffer>();
 		ResourceManagers::CreateResourceManager<ResourceType::ParticleSystem>();
 	}
 	bool OpenGL::Init(Window& window, uint32 antialiasing)
@@ -130,24 +127,9 @@ namespace Graphics
 		glEnable(GL_MULTISAMPLE);
 		glEnable(GL_BLEND);
 		glEnable(GL_STENCIL_TEST);
-		int samples = 0;
-		glGetIntegerv(GL_MAX_SAMPLES, &samples);
-		samples -= 1;
-		if (antialiasing > 0)
-		{
-			m_boundFramebuffer = FramebufferRes::CreateMultisample(this, 1 << antialiasing);
-		}
-
 		return true;
 	}
 
-	void OpenGL::UnbindFramebuffer()
-	{
-		if(m_boundFramebuffer)
-		{
-			m_boundFramebuffer->Unbind();
-		}
-	}
 
 	Recti OpenGL::GetViewport() const
 	{
@@ -157,34 +139,17 @@ namespace Graphics
 	}
 	uint32 OpenGL::GetFramebufferHandle()
 	{
-		if (m_boundFramebuffer)
-			return m_boundFramebuffer->Handle();
-		else
-			return GL_BACK;
+		return GL_BACK;
 	}
-	uint32 OpenGL::GetFramebufferTextureHandle()
-	{
-		if (m_boundFramebuffer)
-			return m_boundFramebuffer->TextureHandle();
-		else
-			return 0;
-	}
-	void OpenGL::BlitFramebuffer()
-	{
-		if (m_boundFramebuffer)
-			m_boundFramebuffer->Display();
-	}
+
 	void OpenGL::SetViewport(Recti vp)
 	{
 		glViewport(vp.pos.x, vp.pos.y, vp.size.x, vp.size.y);
 	}
 	void OpenGL::SetViewport(Vector2i size)
 	{
-		if(m_boundFramebuffer)
-			m_boundFramebuffer->Resize(size);
 		glViewport(0, 0, size.x, size.y);
 	}
-
 	bool OpenGL::IsOpenGLThread() const
 	{
 		return m_impl->threadId == std::this_thread::get_id();
@@ -192,8 +157,6 @@ namespace Graphics
 
 	void OpenGL::SwapBuffers()
 	{
-		if(m_boundFramebuffer)
-			m_boundFramebuffer->Display();
 		glFlush();
 		SDL_Window* sdlWnd = (SDL_Window*)m_window->Handle();
 		SDL_GL_SwapWindow(sdlWnd);

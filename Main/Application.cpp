@@ -317,7 +317,10 @@ bool Application::m_Init()
 		g_gameConfig.GetInt(GameConfigKeys::ScreenWidth),
 		g_gameConfig.GetInt(GameConfigKeys::ScreenHeight));
 	g_aspectRatio = (float)g_resolution.x / (float)g_resolution.y;
-	g_gameWindow = new Graphics::Window(g_resolution);
+	int samplecount = g_gameConfig.GetInt(GameConfigKeys::AntiAliasing);
+	if (samplecount > 0)
+		samplecount = 1 << samplecount;
+	g_gameWindow = new Graphics::Window(g_resolution, samplecount);
 	g_gameWindow->Show();
 
 	g_gameWindow->OnKeyPressed.Add(this, &Application::m_OnKeyPressed);
