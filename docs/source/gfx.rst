@@ -503,3 +503,18 @@ nanovg.h:177_
 Uses the same parameter values as ``GlobalCompositeBlendFunc``
 
 .. _nanovg.h:177: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L177
+
+LoadAnimation(char* path, float frametime, int loopcount = 0)
+*************************************************************
+Loads all the images in a specified folder as an animation. ``frametime`` is used for the speed of the animation
+and if ``loopcount`` is set to something that isn't 0 then the animation will stop after playing that many times.
+
+Returns a numer that is used the same way a regular image is used.
+
+LoadSkinAnimation(char* path, float frametime, int loopcount = 0)
+*****************************************************************
+Same as LoadAnimation but prepends ``"skins/[skinfolder]/textures/"`` to the path.
+
+TickAnimation(int animation, float deltaTime)
+*********************************************
+Progresses the given animation.
