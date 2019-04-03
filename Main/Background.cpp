@@ -89,7 +89,7 @@ class TestBackground : public FullscreenBackground
 
 
 		CheckedLoad(fullscreenMaterial = LoadBackgroundMaterial(matPath));
-		fullscreenMaterial->opaque = !foreground;
+		fullscreenMaterial->opaque = false;
 
 		return true;
 	}
@@ -126,7 +126,7 @@ class TestBackground : public FullscreenBackground
 		
 
 
-		float tilt = game->GetCamera().GetLaserRoll() + game->GetCamera().GetBackgroundSpin();
+		float tilt = game->GetCamera().GetActualRoll() + game->GetCamera().GetBackgroundSpin();
 		fullscreenMaterialParams.SetParameter("clearTransition", clearTransition);
 		fullscreenMaterialParams.SetParameter("tilt", tilt);
 		fullscreenMaterialParams.SetParameter("mainTex", backgroundTexture);

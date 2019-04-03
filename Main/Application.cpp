@@ -317,7 +317,10 @@ bool Application::m_Init()
 		g_gameConfig.GetInt(GameConfigKeys::ScreenWidth),
 		g_gameConfig.GetInt(GameConfigKeys::ScreenHeight));
 	g_aspectRatio = (float)g_resolution.x / (float)g_resolution.y;
-	g_gameWindow = new Graphics::Window(g_resolution);
+	int samplecount = g_gameConfig.GetInt(GameConfigKeys::AntiAliasing);
+	if (samplecount > 0)
+		samplecount = 1 << samplecount;
+	g_gameWindow = new Graphics::Window(g_resolution, samplecount);
 	g_gameWindow->Show();
 
 	g_gameWindow->OnKeyPressed.Add(this, &Application::m_OnKeyPressed);
@@ -791,6 +794,24 @@ lua_State* Application::LoadScript(const String & name)
 {
 	lua_State* s = luaL_newstate();
 	luaL_openlibs(s);
+
+	//Set path for 'require' (https://stackoverflow.com/questions/4125971/setting-the-global-lua-path-variable-from-c-c?lq=1)
+	{
+		String lua_path = Path::Normalize(
+			"./skins/" + m_skin + "/scripts/?.lua;"
+			+ "./skins/" + m_skin + "/scripts/?");
+
+		lua_getglobal(s, "package");
+		lua_getfield(s, -1, "path"); // get field "path" from table at top of stack (-1)
+		std::string cur_path = lua_tostring(s, -1); // grab path string from top of stack
+		cur_path.append(";"); // do your path magic here
+		cur_path.append(lua_path.c_str());
+		lua_pop(s, 1); // get rid of the string on the stack we just pushed on line 5
+		lua_pushstring(s, cur_path.c_str()); // push the new one
+		lua_setfield(s, -2, "path"); // set the field "path" in table at -2 with value at top of stack
+		lua_pop(s, 1); // get rid of package table from top of stack
+	}
+
 	String path = "skins/" + m_skin + "/scripts/" + name + ".lua";
 	String commonPath = "skins/" + m_skin + "/scripts/" + "common.lua";
 	m_SetNvgLuaBindings(s);
@@ -876,7 +897,17 @@ void Application::DiscordPresenceSong(const BeatmapSettings& song, int64 startTi
 	sprintf(bufferState, "Playing [%s %d]", diffNames[song.difficulty].c_str(), song.level);
 	discordPresence.state = bufferState;
 	char bufferDetails[128] = { 0 };
-	sprintf(bufferDetails, "%s - %s", *song.title, *song.artist);
+	int titleLength = snprintf(bufferDetails, 128, "%s - %s", *song.title, *song.artist);
+	if (titleLength >= 128 || titleLength < 0)
+	{
+		memset(bufferDetails, 0, 128);
+		titleLength = snprintf(bufferDetails, 128, "%s", *song.title);
+	}
+	if (titleLength >= 128 || titleLength < 0)
+	{
+		memset(bufferDetails, 0, 128);
+		strcpy(bufferDetails, "[title too long]");
+	}
 	discordPresence.details = bufferDetails;
 	discordPresence.startTimestamp = startTime;
 	discordPresence.endTimestamp = endTime;
@@ -1212,6 +1243,12 @@ static int lSetGaugeColor(lua_State* L /*int colorIndex, int r, int g, int b*/)
 	return 0;
 }
 
+static int lGetSkin(lua_State* L)
+{
+	lua_pushstring(L, *g_application->GetCurrentSkin());
+	return 1;
+}
+
 void Application::m_SetNvgLuaBindings(lua_State * state)
 {
 	auto pushFuncToTable = [&](const char* name, int (*func)(lua_State*))
@@ -1300,6 +1337,9 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("LoadSkinAnimation", lLoadSkinAnimation);
 		pushFuncToTable("TickAnimation", lTickAnimation);
 		pushFuncToTable("ResetAnimation", lResetAnimation);
+		pushFuncToTable("GlobalCompositeOperation", lGlobalCompositeOperation);
+		pushFuncToTable("GlobalCompositeBlendFunc", lGlobalCompositeBlendFunc);
+		pushFuncToTable("GlobalCompositeBlendFuncSeparate", lGlobalCompositeBlendFuncSeparate);
 		//constants
 		//Text align
 		pushIntToTable("TEXT_ALIGN_BASELINE",	NVGalign::NVG_ALIGN_BASELINE);
@@ -1322,10 +1362,30 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushIntToTable("IMAGE_FLIPY",				NVGimageFlags::NVG_IMAGE_FLIPY);
 		pushIntToTable("IMAGE_PREMULTIPLIED",		NVGimageFlags::NVG_IMAGE_PREMULTIPLIED);
 		pushIntToTable("IMAGE_NEAREST",				NVGimageFlags::NVG_IMAGE_NEAREST);
-
-
-
-
+		//Blend flags
+		pushIntToTable("BLEND_ZERO,", NVGblendFactor::NVG_ZERO);
+		pushIntToTable("BLEND_ONE,", NVGblendFactor::NVG_ONE);
+		pushIntToTable("BLEND_SRC_COLOR", NVGblendFactor::NVG_SRC_COLOR);
+		pushIntToTable("BLEND_ONE_MINUS_SRC_COLOR", NVGblendFactor::NVG_ONE_MINUS_SRC_COLOR);
+		pushIntToTable("BLEND_DST_COLOR", NVGblendFactor::NVG_DST_COLOR);
+		pushIntToTable("BLEND_ONE_MINUS_DST_COLOR", NVGblendFactor::NVG_ONE_MINUS_DST_COLOR);
+		pushIntToTable("BLEND_SRC_ALPHA", NVGblendFactor::NVG_SRC_ALPHA);
+		pushIntToTable("BLEND_ONE_MINUS_SRC_ALPHA", NVGblendFactor::NVG_ONE_MINUS_SRC_ALPHA);
+		pushIntToTable("BLEND_DST_ALPHA", NVGblendFactor::NVG_DST_ALPHA);
+		pushIntToTable("BLEND_ONE_MINUS_DST_ALPHA", NVGblendFactor::NVG_ONE_MINUS_DST_ALPHA);
+		pushIntToTable("BLEND_SRC_ALPHA_SATURATE", NVGblendFactor::NVG_SRC_ALPHA_SATURATE);
+		//Blend operations
+		pushIntToTable("BLEND_OP_SOURCE_OVER", NVGcompositeOperation::NVG_SOURCE_OVER); //<<<<< default
+		pushIntToTable("BLEND_OP_SOURCE_IN", NVGcompositeOperation::NVG_SOURCE_IN);
+		pushIntToTable("BLEND_OP_SOURCE_OUT", NVGcompositeOperation::NVG_SOURCE_OUT);
+		pushIntToTable("BLEND_OP_ATOP", NVGcompositeOperation::NVG_ATOP);
+		pushIntToTable("BLEND_OP_DESTINATION_OVER", NVGcompositeOperation::NVG_DESTINATION_OVER);
+		pushIntToTable("BLEND_OP_DESTINATION_IN", NVGcompositeOperation::NVG_DESTINATION_IN);
+		pushIntToTable("BLEND_OP_DESTINATION_OUT", NVGcompositeOperation::NVG_DESTINATION_OUT);
+		pushIntToTable("BLEND_OP_DESTINATION_ATOP", NVGcompositeOperation::NVG_DESTINATION_ATOP);
+		pushIntToTable("BLEND_OP_LIGHTER", NVGcompositeOperation::NVG_LIGHTER);
+		pushIntToTable("BLEND_OP_COPY", NVGcompositeOperation::NVG_COPY);
+		pushIntToTable("BLEND_OP_XOR", NVGcompositeOperation::NVG_XOR);
 
 		lua_setglobal(state, "gfx");
 	}
@@ -1343,6 +1403,7 @@ void Application::m_SetNvgLuaBindings(lua_State * state)
 		pushFuncToTable("GetButton", lGetButton);
 		pushFuncToTable("GetKnob", lGetKnob);
 		pushFuncToTable("UpdateAvailable", lGetUpdateAvailable);
+		pushFuncToTable("GetSkin", lGetSkin);
 
 		//constants
 		pushIntToTable("LOGGER_INFO", Logger::Severity::Info);

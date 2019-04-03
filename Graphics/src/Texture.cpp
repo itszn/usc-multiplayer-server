@@ -72,7 +72,6 @@ namespace Graphics
 		}
 		virtual void SetFromFrameBuffer(Vector2i pos = { 0, 0 })
 		{
-			m_gl->BlitFramebuffer();
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glReadBuffer(GL_BACK);
 			glBindTexture(GL_TEXTURE_2D, m_texture);

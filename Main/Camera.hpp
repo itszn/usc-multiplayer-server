@@ -13,6 +13,9 @@ struct CameraShake
 	float time = 0.0f;
 };
 
+static const float KSM_PITCH_UNIT_PRE_168 = 7.0f;
+static const float KSM_PITCH_UNIT_POST_168 = 180.0f / 12;
+
 /*
 	Camera that hovers above the playfield track and can process camera shake and tilt effects
 */
@@ -36,6 +39,7 @@ public:
 	void SetXOffsetBounce(float direction, uint32 duration, uint32 amplitude, uint32 frequency, float decay, class BeatmapPlayback &playback);
 	float GetRoll() const;
 	float GetLaserRoll() const;
+	float GetActualRoll() const;
 	float GetHorizonHeight();
 	Vector2i GetScreenCenter();
 	Vector3 GetShakeOffset();
@@ -58,9 +62,10 @@ public:
 	float pLaneOffset = 0.0f;
 	float pLaneZoom = 0.0f;
 	float pLanePitch = 0.0f;
-	float pLaneBaseRoll = 0.0f;
+	float pLaneTilt = 0.0f;
+	bool pManualTiltEnabled = false;
 
-	float pitchUnit = 7.0f;
+	float pitchUnit = KSM_PITCH_UNIT_POST_168;
 
 	float cameraShakeX = 0.0f;
 	float cameraShakeY = 0.4f;
@@ -70,8 +75,8 @@ public:
 	float basePitch[2] = { 0.f, 0.f };
 	float baseRadius[2] = { 0.3f, 0.275f };
 
-	float pitchOffsets[2] = { 0.05f, 0.27f }; // how far from the bottom of the screen should the crit line be
-	float fovs[2] = { 60.f, 90.f };
+	float pitchOffsets[2] = { 0.05f, 0.25f }; // how far from the bottom of the screen should the crit line be
+	float fovs[2] = { 60.f, 90.0f };
 
 	Transform worldNormal;
 	Transform worldNoRoll;
@@ -85,8 +90,9 @@ private:
 	// roll value
 	float m_totalRoll = 0.0f;
 	float m_laserRoll = 0.0f;
+	float m_actualRoll = 0.0f;
 	// Target to roll towards
-	float m_targetRoll = 0.0f;
+	float m_targetLaserRoll = 0.0f;
 	bool m_targetRollSet = false;
 	bool m_lasersActive = false;
 	// Roll force

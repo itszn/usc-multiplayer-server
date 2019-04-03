@@ -30,7 +30,7 @@ namespace Graphics
 	class Window : Unique
 	{
 	public:
-		Window(Vector2i size = Vector2i(800, 600));
+		Window(Vector2i size = Vector2i(800, 600), uint8 samplecount = 0);
 		~Window();
 		// Show the window
 		void Show();

@@ -85,7 +85,6 @@ namespace Graphics
 			}
 
 			//Set texture from buffer
-			gl->BlitFramebuffer();
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glReadBuffer(GL_BACK);
 			glBindTexture(GL_TEXTURE_2D, texture);

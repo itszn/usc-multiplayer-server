@@ -41,7 +41,7 @@ private:
 	float invTextureBorder;
 
 	// The the size of the laser with compensation added for the border
-	float actualLaserWidth;
+	float actualLaserWidth, actualLaserHeight;
 
 	// The width of the laser without the border
 	float laserWidthNoBorder;
