@@ -1135,7 +1135,7 @@ static int lLoadSkinAnimation(lua_State* L)
 
 	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + p;
 
-	int result = LoadAnimation(*path, frametime, loopcount);
+	int result = LoadAnimation(L, *path, frametime, loopcount);
 	if (result == -1)
 		return 0;
 

@@ -22,6 +22,7 @@ struct ImageAnimation
 	bool LoadComplete;
 	Vector<Graphics::Image> Frames;
 	Thread* Thread;
+	lua_State* State;
 };
 
 struct GUIState
@@ -118,7 +119,7 @@ static int lTickAnimation(lua_State* L)
 	ia->Timer += deltatime;
 	if (ia->Timer >= ia->SecondsPerFrame)
 	{
-		if (ia->LoopCounter < ia->TimesToLoop || ia->LoopCounter == 0)
+		if (ia->LoopCounter < ia->TimesToLoop || ia->TimesToLoop == 0)
 		{
 			ia->Timer = fmodf(ia->Timer, ia->SecondsPerFrame);
 
@@ -135,7 +136,7 @@ static int lTickAnimation(lua_State* L)
 	return 0;
 }
 
-static int LoadAnimation(const char* path, float frametime, int loopcount)
+static int LoadAnimation(lua_State* L, const char* path, float frametime, int loopcount)
 {
 	Vector<FileInfo> files = Files::ScanFiles(path);
 	if (files.empty())
@@ -147,6 +148,7 @@ static int LoadAnimation(const char* path, float frametime, int loopcount)
 	ia->LoopCounter = 0;
 	ia->SecondsPerFrame = frametime;
 	ia->LoadComplete = false;
+	ia->State = L;
 	ia->Thread = new Thread(AnimationLoader, files, ia);
 	g_guiState.animations[key] = ia;
 
@@ -177,7 +179,7 @@ static int lLoadAnimation(lua_State* L)
 		loopcount = luaL_checkinteger(L, 3);
 	}
 
-	int result = LoadAnimation(path, frametime, loopcount);
+	int result = LoadAnimation(L, path, frametime, loopcount);
 	if (result == -1)
 		return 0;
 
@@ -869,11 +871,31 @@ static int DisposeGUI(lua_State* state)
 	g_guiState.textCache.erase(state);
 	g_guiState.paintCache[state].clear();
 	g_guiState.paintCache.erase(state);
+
 	
 	for(auto&& i : g_guiState.vgImages[state])
 	{
 		nvgDeleteImage(g_guiState.vg, i);
 	}
+
+
+	Vector<int> keysToDelete;
+	for (auto anim : g_guiState.animations)
+	{
+		if (anim.second->State != state)
+			continue;
+
+		if(anim.second->Thread && anim.second->Thread->joinable())
+			anim.second->Thread->join();
+		anim.second->Frames.clear();
+		nvgDeleteImage(g_guiState.vg, anim.first);
+	}
+	for (int k : keysToDelete)
+	{
+		delete g_guiState.animations[k];
+		g_guiState.animations.erase(k);
+	}
+
 	return 0;
 }
 
