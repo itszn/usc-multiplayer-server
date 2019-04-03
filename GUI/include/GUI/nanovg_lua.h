@@ -21,7 +21,7 @@ struct ImageAnimation
 	float Timer;
 	bool LoadComplete;
 	Vector<Graphics::Image> Frames;
-	Thread* Thread;
+	Thread* JobThread;
 	lua_State* State;
 };
 
@@ -149,7 +149,7 @@ static int LoadAnimation(lua_State* L, const char* path, float frametime, int lo
 	ia->SecondsPerFrame = frametime;
 	ia->LoadComplete = false;
 	ia->State = L;
-	ia->Thread = new Thread(AnimationLoader, files, ia);
+	ia->JobThread = new Thread(AnimationLoader, files, ia);
 	g_guiState.animations[key] = ia;
 
 	return key;
@@ -885,8 +885,8 @@ static int DisposeGUI(lua_State* state)
 		if (anim.second->State != state)
 			continue;
 
-		if(anim.second->Thread && anim.second->Thread->joinable())
-			anim.second->Thread->join();
+		if(anim.second->JobThread && anim.second->JobThread->joinable())
+			anim.second->JobThread->join();
 		anim.second->Frames.clear();
 		nvgDeleteImage(g_guiState.vg, anim.first);
 	}
