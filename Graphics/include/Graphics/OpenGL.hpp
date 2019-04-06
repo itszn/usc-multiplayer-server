@@ -19,13 +19,11 @@ namespace Graphics
 		uint32 m_mainProgramPipeline;
 		class OpenGL_Impl* m_impl;
 		Window* m_window;
-		Ref<class FramebufferRes> m_boundFramebuffer;
 
 		friend class ShaderRes;
 		friend class TextureRes;
 		friend class MeshRes;
 		friend class Shader_Impl;
-		friend class Framebuffer_Impl;
 		friend class RenderQueue;
 
 	public:
@@ -33,12 +31,9 @@ namespace Graphics
 		~OpenGL();
 		void InitResourceManagers();
 		bool Init(Window& window, uint32 antialiasing);
-		void UnbindFramebuffer();
 
 		Recti GetViewport() const;
 		uint32 GetFramebufferHandle();
-		uint32 GetFramebufferTextureHandle();
-		void BlitFramebuffer();
 		void SetViewport(Vector2i size);
 		void SetViewport(Recti vp);
 

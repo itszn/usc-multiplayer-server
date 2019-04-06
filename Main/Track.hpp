@@ -97,8 +97,8 @@ public:
 	Texture fxbuttonHoldTexture;
 	Material holdButtonMaterial;
 	Material buttonMaterial;
-	Texture laserTexture;
-	Texture laserTailTextures[2]; // Entry and exit textures
+	Texture laserTextures[2];
+	Texture laserTailTextures[4]; // Entry and exit textures, both sides
 	Material laserMaterial;
 	Material blackLaserMaterial;
 	Texture laserAlertTextures[2];

@@ -38,25 +38,82 @@ static void Spin(float time, float &roll, float &bgAngle, float dir)
 	}
 }
 
+static float PitchScaleFunc(float input)
+{
+	float kLower = -4, uLower;
+	float kUpper = 5.59, uUpper;
+
+	if (g_aspectRatio < 1.0f)
+	{
+		uLower = -2.8195f;
+		uUpper = 4.675f;
+	}
+	else
+	{
+		uLower = -3.05f;
+		uUpper = 4.75f;
+	}
+
+	int rot = 0, dir = input < 0 ? -1 : 1;
+	if (dir == -1)
+	{
+		while (input < -12.00)
+		{
+			input += 24.00;
+			rot++;
+		}
+	}
+	else
+	{
+		while (input > 12.00)
+		{
+			input -= 24.00;
+			rot++;
+		}
+	}
+
+	double scaled = input;
+	if (input < kLower)
+		scaled = -(-(input - kLower) / (12 + kLower)) * (12 + uLower) + uLower;
+	else if (input < 0.00)
+		scaled = (input / kLower) * uLower;
+	else if (input < kUpper)
+		scaled = (input / kUpper) * uUpper;
+	else scaled = ((input - kUpper) / (12 - kUpper)) * (12 - uUpper) + uUpper;
+
+	return rot * dir * 24.00 + scaled;
+};
+
 
 static Transform GetOriginTransform(float pitch, float offs, float roll)
 {
-	auto origin = Transform::Rotation({ 0, 0, roll });
-	auto anchor = Transform::Translation({ offs, -0.9f, 0 })
-		* Transform::Rotation({ 1.5f, 0, 0 });
-	auto contnr = Transform::Translation({ 0, 0, -0.9f })
-		* Transform::Rotation({ -90 + pitch, 0, 0, });
+	if (g_aspectRatio < 1.0f)
+	{
+		auto origin = Transform::Rotation({ 0, 0, roll });
+		auto anchor = Transform::Translation({ offs, -0.8f, 0 })
+			* Transform::Rotation({ 1.5f, 0, 0 });
+		auto contnr = Transform::Translation({ 0, 0, -0.9f })
+			* Transform::Rotation({ -90 + pitch, 0, 0, });
+		return origin * anchor * contnr;
+	}
+	else
+	{
+		auto origin = Transform::Rotation({ 0, 0, roll });
+		auto anchor = Transform::Translation({ offs, -0.9f, 0 })
+			* Transform::Rotation({ 1.5f, 0, 0 });
+		auto contnr = Transform::Translation({ 0, 0, -0.9f })
+			* Transform::Rotation({ -90 + pitch, 0, 0, });
+		return origin * anchor * contnr;
+	}
 
-	return origin * anchor * contnr;
 };
 
 void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 {
-	auto LerpTo = [&](float &value, float target, float speed = 10)
+	auto LerpTo = [&](float &value, float target, float speed = 0.5f)
 	{
 		float diff = abs(target - value);
-		float change = diff * deltaTime * speed;
-		change = Math::Min(deltaTime * speed * 0.05f, change);
+		float change = deltaTime * speed;
 
 		if (target < value)
 			value = Math::Max(value - change, target);
@@ -64,8 +121,17 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 	};
 
 	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
+	float speedlimit = m_rollIntensity * 3;
 
-	LerpTo(m_laserRoll, m_targetRoll, m_targetRoll != 0.0f ? 8 : 3);
+	LerpTo(m_laserRoll, m_targetLaserRoll, m_targetLaserRoll != 0.0f ? speedlimit : speedlimit / 2.f);
+
+	float actualTargetRoll;
+	if (pManualTiltEnabled)
+		actualTargetRoll = pLaneTilt;
+	else actualTargetRoll = m_laserRoll;
+
+	//LerpTo(m_actualRoll, actualTargetRoll, 8);
+	m_actualRoll = actualTargetRoll;
 
 	m_spinProgress = (float)(playback.GetLastTime() - m_spinStart) / m_spinDuration;
 	// Calculate camera spin
@@ -98,13 +164,13 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 		m_spinProgress = 0.0f;
 	}
 
-	m_totalRoll = pLaneBaseRoll + m_spinRoll + m_laserRoll;
-	m_totalOffset = pLaneOffset / 2.0f + m_spinBounceOffset;
+	m_totalRoll = m_spinRoll + m_actualRoll;
+	m_totalOffset = (pLaneOffset * (5 * 100) / (6 * 116)) / 2.0f + m_spinBounceOffset;
 
 	if (!rollKeep)
 	{
 		m_targetRollSet = false;
-		m_targetRoll = 0.0f;
+		m_targetLaserRoll = 0.0f;
 	}
 
 	// Update camera shake effects
@@ -121,7 +187,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 		m_shakeOffset += shakeVec;
 	}
 
-	float lanePitch = pLanePitch * pitchUnit;
+	float lanePitch = PitchScaleFunc(pLanePitch) * pitchUnit;
 
 	worldNormal = GetOriginTransform(lanePitch, m_totalOffset, m_totalRoll * 360.0f);
 	worldNoRoll = GetOriginTransform(lanePitch, 0, 0);
@@ -141,7 +207,7 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	track->trackOrigin = GetZoomedTransform(worldNormal);
 
-	critOrigin = GetZoomedTransform(GetOriginTransform(lanePitch, m_totalOffset, m_laserRoll * 360.0f + sin(m_spinRoll * Math::pi * 2) * 20));
+	critOrigin = GetZoomedTransform(GetOriginTransform(lanePitch, m_totalOffset, m_actualRoll * 360.0f + sin(m_spinRoll * Math::pi * 2) * 20));
 }
 void Camera::AddCameraShake(CameraShake cameraShake)
 {
@@ -207,19 +273,19 @@ void Camera::SetTargetRoll(float target)
 	float actualTarget = target * m_rollIntensity;
 	if(!rollKeep)
 	{
-		m_targetRoll = actualTarget;
+		m_targetLaserRoll = actualTarget;
 		m_targetRollSet = true;
 	}
 	else
 	{
-		if (m_targetRoll == 0.0f || Math::Sign(m_targetRoll) == Math::Sign(actualTarget))
+		if (m_targetLaserRoll == 0.0f || Math::Sign(m_targetLaserRoll) == Math::Sign(actualTarget))
 		{
-			if (m_targetRoll == 0)
-				m_targetRoll = actualTarget;
-			if (m_targetRoll < 0 && actualTarget < m_targetRoll)
-				m_targetRoll = actualTarget;
-			else if (m_targetRoll > 0 && actualTarget > m_targetRoll)
-				m_targetRoll = actualTarget;
+			if (m_targetLaserRoll == 0)
+				m_targetLaserRoll = actualTarget;
+			if (m_targetLaserRoll < 0 && actualTarget < m_targetLaserRoll)
+				m_targetLaserRoll = actualTarget;
+			else if (m_targetLaserRoll > 0 && actualTarget > m_targetLaserRoll)
+				m_targetLaserRoll = actualTarget;
 		}
 		m_targetRollSet = true;
 	}
@@ -265,9 +331,15 @@ float Camera::GetLaserRoll() const
 	return m_laserRoll;
 }
 
+float Camera::GetActualRoll() const
+{
+	return m_actualRoll;
+}
+
 float Camera::GetHorizonHeight()
 {
-	return (0.5 + (-(m_actualCameraPitch + pLanePitch * pitchUnit) / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
+	float angle = fmodf(m_actualCameraPitch + PitchScaleFunc(pLanePitch) * pitchUnit, 360.0f);
+	return (0.5 + (-angle / fovs[g_aspectRatio > 1.0f ? 0 : 1])) * m_rsLast.viewportSize.y;
 }
 
 Vector2i Camera::GetScreenCenter()

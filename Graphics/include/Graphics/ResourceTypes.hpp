@@ -15,7 +15,6 @@ template<> struct ResourceManagerTypes<ResourceType::_EnumMember>\
 		Image = 0,
 		SpriteMap,
 		Texture,
-		Framebuffer,
 		Font,
 		Mesh,
 		Shader,

@@ -39,36 +39,18 @@ namespace Graphics
 		// Handle to outer class to send delegates
 		Window& outer;
 	public:
-		Window_Impl(Window& outer, Vector2i size) : outer(outer)
+		Window_Impl(Window& outer, Vector2i size, uint8 sampleCount) : outer(outer)
 		{
 			SDL::Main();
-
-			// Initialize button mapping
-			m_keyMapping.AddRangeMapping('a', 'z', Key::A);
-			m_keyMapping.AddRangeMapping('0', '9', Key::Top0);
-			m_keyMapping.AddRangeMapping(SDLK_F1, SDLK_F12, Key::F1);
-			m_keyMapping.AddMapping(SDLK_PRINTSCREEN, Key::PrntScr);
-			m_keyMapping.AddMapping(SDLK_SCROLLLOCK, Key::ScrollLock);
-			m_keyMapping.AddMapping(SDLK_PAUSE, Key::Pause);
-			m_keyMapping.AddMapping(SDLK_ESCAPE, Key::Escape);
-			m_keyMapping.AddMapping(SDLK_BACKQUOTE, Key::Tilde);
-			m_keyMapping.AddMapping(SDLK_PAGEUP, Key::PageUp);
-			m_keyMapping.AddMapping(SDLK_PAGEDOWN, Key::PageDown);
-			m_keyMapping.AddMapping(SDLK_RETURN, Key::Return);
-			m_keyMapping.AddMapping(SDLK_PLUS, Key::Plus);
-			m_keyMapping.AddMapping(SDLK_MINUS, Key::Minus);
-			m_keyMapping.AddMapping(SDLK_LEFT, Key::ArrowLeft);
-			m_keyMapping.AddMapping(SDLK_RIGHT, Key::ArrowRight);
-			m_keyMapping.AddMapping(SDLK_UP, Key::ArrowUp);
-			m_keyMapping.AddMapping(SDLK_DOWN, Key::ArrowDown);
-			m_keyMapping.AddMapping(SDLK_SPACE, Key::Space);
-			m_keyMapping.AddMapping(SDLK_BACKSPACE, Key::Backspace);
-			m_keyMapping.AddMapping(SDLK_TAB, Key::Tab);
 
 			m_clntSize = size;
 
 			m_caption = L"Window";
 			String titleUtf8 = Utility::ConvertToUTF8(m_caption);
+
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, sampleCount);
+			SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 2);
+
 			m_window = SDL_CreateWindow(*titleUtf8, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 				m_clntSize.x, m_clntSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 			assert(m_window);
@@ -445,9 +427,9 @@ namespace Graphics
 		WString m_caption;
 	};
 
-	Window::Window(Vector2i size)
+	Window::Window(Vector2i size, uint8 samplecount)
 	{
-		m_impl = new Window_Impl(*this, size);
+		m_impl = new Window_Impl(*this, size, samplecount);
 	}
 	Window::~Window()
 	{

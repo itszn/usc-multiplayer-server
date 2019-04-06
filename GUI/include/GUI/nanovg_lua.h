@@ -6,6 +6,24 @@
 #include "Graphics/Font.hpp"
 #include "Graphics/RenderQueue.hpp"
 #include "Shared/Transform.hpp"
+#include "Shared/Files.hpp"
+#include "Shared/Thread.hpp"
+
+struct ImageAnimation
+{
+	int FrameCount;
+	int CurrentFrame;
+	int TimesToLoop;
+	int LoopCounter;
+	int w;
+	int h;
+	float SecondsPerFrame;
+	float Timer;
+	bool LoadComplete;
+	Vector<Graphics::Image> Frames;
+	Thread* JobThread;
+	lua_State* State;
+};
 
 struct GUIState
 {
@@ -29,7 +47,10 @@ struct GUIState
 	NVGcolor imageTint;
 	Rect scissor;
 	Vector2i resolution;
+	Map<int, ImageAnimation*> animations;
 };
+
+
 
 
 GUIState g_guiState;
@@ -69,6 +90,101 @@ static int lBeginPath(lua_State* L)
 	g_guiState.fillColor = Vector4(1.0);
 	nvgBeginPath(g_guiState.vg);
 	return 0;
+}
+
+
+static void AnimationLoader(Vector<FileInfo> files, ImageAnimation* ia)
+{
+	ia->FrameCount = files.size();
+	ia->Timer = 0;
+
+	for (size_t i = 0; i < ia->FrameCount; i++)
+	{
+		ia->Frames.Add(Graphics::ImageRes::Create(files[i].fullPath));
+	}
+	ia->LoadComplete = true;
+}
+
+static int lTickAnimation(lua_State* L)
+{
+	int key;
+	float deltatime;
+	key = luaL_checkinteger(L, 1);
+	deltatime = luaL_checknumber(L, 2);
+
+	ImageAnimation* ia = g_guiState.animations[key];
+	if (!ia->LoadComplete)
+		return 0;
+
+	ia->Timer += deltatime;
+	if (ia->Timer >= ia->SecondsPerFrame)
+	{
+		if (ia->LoopCounter < ia->TimesToLoop || ia->TimesToLoop == 0)
+		{
+			ia->Timer = fmodf(ia->Timer, ia->SecondsPerFrame);
+
+			if (ia->CurrentFrame == ia->FrameCount - 1)
+				++ia->LoopCounter;
+
+			if (ia->LoopCounter == ia->TimesToLoop && ia->LoopCounter != 0)
+				return 0;
+
+			ia->CurrentFrame = (ia->CurrentFrame + 1) % ia->FrameCount;
+			nvgUpdateImage(g_guiState.vg, key, (unsigned char*)ia->Frames[ia->CurrentFrame]->GetBits());
+		}
+	}
+	return 0;
+}
+
+static int LoadAnimation(lua_State* L, const char* path, float frametime, int loopcount)
+{
+	Vector<FileInfo> files = Files::ScanFiles(path);
+	if (files.empty())
+		return -1;
+
+	int key = nvgCreateImage(g_guiState.vg, *files[0].fullPath, 0);
+	ImageAnimation* ia = new ImageAnimation();
+	ia->TimesToLoop = loopcount;
+	ia->LoopCounter = 0;
+	ia->SecondsPerFrame = frametime;
+	ia->LoadComplete = false;
+	ia->State = L;
+	ia->JobThread = new Thread(AnimationLoader, files, ia);
+	g_guiState.animations[key] = ia;
+
+	return key;
+}
+
+static int lResetAnimation(lua_State* L)
+{
+	int key;
+	key = luaL_checkinteger(L, 1);
+	ImageAnimation* ia = g_guiState.animations[key];
+	ia->CurrentFrame = 0;
+	ia->Timer = 0;
+	ia->LoopCounter = 0;
+	return 0;
+}
+
+static int lLoadAnimation(lua_State* L)
+{
+	const char* path;
+	float frametime;
+	int loopcount = 0;
+
+	path = luaL_checkstring(L, 1);
+	frametime = luaL_checknumber(L, 2);
+	if (lua_gettop(L) == 3)
+	{
+		loopcount = luaL_checkinteger(L, 3);
+	}
+
+	int result = LoadAnimation(L, path, frametime, loopcount);
+	if (result == -1)
+		return 0;
+
+	lua_pushnumber(L, result);
+	return 1;
 }
 
 static int lText(lua_State* L /*const char* s, float x, float y*/)
@@ -755,11 +871,31 @@ static int DisposeGUI(lua_State* state)
 	g_guiState.textCache.erase(state);
 	g_guiState.paintCache[state].clear();
 	g_guiState.paintCache.erase(state);
+
 	
 	for(auto&& i : g_guiState.vgImages[state])
 	{
 		nvgDeleteImage(g_guiState.vg, i);
 	}
+
+
+	Vector<int> keysToDelete;
+	for (auto anim : g_guiState.animations)
+	{
+		if (anim.second->State != state)
+			continue;
+
+		if(anim.second->JobThread && anim.second->JobThread->joinable())
+			anim.second->JobThread->join();
+		anim.second->Frames.clear();
+		nvgDeleteImage(g_guiState.vg, anim.first);
+	}
+	for (int k : keysToDelete)
+	{
+		delete g_guiState.animations[k];
+		g_guiState.animations.erase(k);
+	}
+
 	return 0;
 }
 
@@ -772,5 +908,30 @@ static int lArc(lua_State* L /* float cx, float cy, float r, float a0, float a1,
 	float a1 = luaL_checknumber(L, 5);
 	int dir = luaL_checkinteger(L, 6);
 	nvgArc(g_guiState.vg, cx, cy, r, a0, a1, dir);
+	return 0;
+}
+
+static int lGlobalCompositeOperation(lua_State* L /* int op */)
+{
+	int op = luaL_checkinteger(L, 1);
+	nvgGlobalCompositeOperation(g_guiState.vg, op);
+	return 0;
+}
+
+static int lGlobalCompositeBlendFunc(lua_State* L /* int sfactor, int dfactor */)
+{
+	int sfactor = luaL_checkinteger(L, 1);
+	int dfactor = luaL_checkinteger(L, 2);
+	nvgGlobalCompositeBlendFunc(g_guiState.vg, sfactor, dfactor);
+	return 0;
+}
+
+static int lGlobalCompositeBlendFuncSeparate(lua_State* L /* int srcRGB, int dstRGB, int srcAlpha, int dstAlpha */)
+{
+	int srcRGB = luaL_checkinteger(L, 1);
+	int dstRGB = luaL_checkinteger(L, 2);
+	int srcAlpha = luaL_checkinteger(L, 3);
+	int dstAlpha = luaL_checkinteger(L, 4);
+	nvgGlobalCompositeBlendFuncSeparate(g_guiState.vg, srcRGB, dstRGB, srcAlpha, dstAlpha);
 	return 0;
 }

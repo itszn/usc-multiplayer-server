@@ -11,7 +11,7 @@ LaserTrackBuilder::LaserTrackBuilder(class OpenGL* gl, class Track* track, uint3
 	m_laserIndex = laserIndex;
 	m_trackWidth = track->trackWidth;
 	m_laserWidth = track->laserWidth;
-	laserTextureSize = track->laserTexture->GetSize();
+	laserTextureSize = track->laserTextures[0]->GetSize(); // NOTE: expects left/right textures to be the same size!
 	laserEntryTextureSize = track->laserTailTextures[0]->GetSize();
 	laserExitTextureSize = track->laserTailTextures[1]->GetSize();
 }
@@ -192,7 +192,7 @@ Mesh LaserTrackBuilder::GenerateTrackMesh(class BeatmapPlayback& playback, Laser
 		float uMax = 1.0f;
 
 		float vMin = 0.0f;
-		float vMax = 1.0f;
+		float vMax = (int)((length * laserLengthScale) / actualLaserHeight);
 
 		float halfWidth = actualLaserWidth * 0.5f;
 		Vector<MeshGenerators::SimpleVertex> verts =
@@ -298,7 +298,7 @@ float LaserTrackBuilder::GetLaserLengthScaleAt(MapTime time)
 void LaserTrackBuilder::m_RecalculateConstants()
 {
 	// Calculate amount to scale laser size to fit the texture border in
-	assert(laserTextureSize.x == laserTextureSize.y); // Use Square texture
+	//assert(laserTextureSize.x == laserTextureSize.y); // Use Square texture
 	const float laserCenterAmount = ((float)laserTextureSize.x - ((float)laserBorderPixels * 2)) / (float)(laserTextureSize.x);
 	const float laserBorderAmount = (1.0f - laserCenterAmount);
 
@@ -308,6 +308,7 @@ void LaserTrackBuilder::m_RecalculateConstants()
 
 	// The the size of the laser with compensation added for the border
 	actualLaserWidth = m_laserWidth;
+	actualLaserHeight = actualLaserWidth * laserTextureSize.y / laserTextureSize.x;
 
 	// The width of the laser without the border
 	laserWidthNoBorder = actualLaserWidth * laserCenterAmount;

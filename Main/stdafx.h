@@ -35,7 +35,6 @@
 #include <Graphics/ParticleSystem.hpp>
 #include <Graphics/MeshGenerators.hpp>
 #include <Graphics/Font.hpp>
-#include <Graphics/Framebuffer.hpp>
 using namespace Graphics;
 
 // Asset loading macro

@@ -446,3 +446,75 @@ SetImageTint(int r, int g, int b)
 *********************************
 Sets the color to tint all coming image drawing calls with.
 (Multiplies the color given with the image colors)
+
+
+GlobalCompositeOperation(int op)
+********************************
+nanovg.h:171_
+
+The available ``op`` are:
+
+.. code-block:: lua
+
+	gfx.BLEND_OP_SOURCE_OVER <--- default
+	gfx.BLEND_OP_SOURCE_IN
+	gfx.BLEND_OP_SOURCE_OUT
+	gfx.BLEND_OP_ATOP
+	gfx.BLEND_OP_DESTINATION_OVER
+	gfx.BLEND_OP_DESTINATION_IN
+	gfx.BLEND_OP_DESTINATION_OUT
+	gfx.BLEND_OP_DESTINATION_ATOP
+	gfx.BLEND_OP_LIGHTER
+	gfx.BLEND_OP_COPY
+	gfx.BLEND_OP_XOR
+
+
+.. _nanovg.h:171: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L171
+
+
+GlobalCompositeBlendFunc(int sfactor, int dfactor)
+**************************************************
+nanovg.h:174_
+
+The available blend factors are:
+
+.. code-block:: c
+
+	gfx.BLEND_ZERO = 1<<0
+	gfx.BLEND_ONE = 1<<1
+	gfx.BLEND_SRC_COLOR = 1<<2
+	gfx.BLEND_ONE_MINUS_SRC_COLOR = 1<<3
+	gfx.BLEND_DST_COLOR = 1<<4
+	gfx.BLEND_ONE_MINUS_DST_COLOR = 1<<5
+	gfx.BLEND_SRC_ALPHA = 1<<6
+	gfx.BLEND_ONE_MINUS_SRC_ALPHA = 1<<7
+	gfx.BLEND_DST_ALPHA = 1<<8
+	gfx.BLEND_ONE_MINUS_DST_ALPHA = 1<<9
+	gfx.BLEND_SRC_ALPHA_SATURATE = 1<<10
+
+
+.. _nanovg.h:174: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L174
+
+
+GlobalCompositeBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha)
+************************************************************************************
+nanovg.h:177_
+
+Uses the same parameter values as ``GlobalCompositeBlendFunc``
+
+.. _nanovg.h:177: https://github.com/memononen/nanovg/blob/master/src/nanovg.h#L177
+
+LoadAnimation(char* path, float frametime, int loopcount = 0)
+*************************************************************
+Loads all the images in a specified folder as an animation. ``frametime`` is used for the speed of the animation
+and if ``loopcount`` is set to something that isn't 0 then the animation will stop after playing that many times.
+
+Returns a numer that is used the same way a regular image is used.
+
+LoadSkinAnimation(char* path, float frametime, int loopcount = 0)
+*****************************************************************
+Same as LoadAnimation but prepends ``"skins/[skinfolder]/textures/"`` to the path.
+
+TickAnimation(int animation, float deltaTime)
+*********************************************
+Progresses the given animation.

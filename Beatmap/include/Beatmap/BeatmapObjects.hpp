@@ -35,7 +35,7 @@ enum class EventKey : uint8
 	SlamVolume, // Float
 	LaserEffectType, // Effect
 	LaserEffectMix, // Float
-	TrackRollBehaviour, // uint8
+	TrackRollBehaviour, // (uint8,Float)
 	ChartEnd,
 };
 
@@ -46,8 +46,9 @@ enum class TrackRollBehaviour : uint8
 	Normal = 0x1,
 	Bigger = 0x2,
 	Biggest = 0x3,
+	Manual = 0x4,
 	// Flag for keep
-	Keep = 0x4,
+	Keep = 0x8,
 };
 TrackRollBehaviour operator|(const TrackRollBehaviour& l, const TrackRollBehaviour& r);
 TrackRollBehaviour operator&(const TrackRollBehaviour& l, const TrackRollBehaviour& r);

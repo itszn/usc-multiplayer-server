@@ -100,7 +100,7 @@ void main()
     float diff = GetDistanceShape(point_diff,N);
     float thing2 = Stretch / (diff);
 	float fog = -1. / (diff * 10. * Scale.x) + 1.;
-    
+    fog = clamp(fog, 0, 1);
     float texY = thing2;
     texY += timing.y * speed;
 
@@ -113,9 +113,6 @@ void main()
 
     col.xyz *= (1.0 - clearTransition);
     col.xyz += clear_col.xyz * clearTransition * 2;
-    col.xyz *= 1.0 + (clearTransition);
-    col.xyz *= vec3(fog);
-    col *= col.a;
     target.xyz = col.xyz;
-    target.a = 1.0;
+    target.a = col.a * fog;
 }
