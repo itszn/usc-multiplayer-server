@@ -395,6 +395,7 @@ public:
 		}
 		else
 		{
+			lua_pop(m_lua, 1);
 			AdvanceSelection(5 * direction);
 		}
 	}
@@ -488,7 +489,7 @@ public:
 		lua_pushboolean(m_lua, search->active);
 		lua_settable(m_lua, -3);
 		//set global
-		lua_getglobal(m_lua, "songwheel");
+		lua_setglobal(m_lua, "songwheel");
 	}
 
 private:
