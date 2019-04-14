@@ -411,7 +411,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		LaserObjectState* laser = (LaserObjectState*)obj;
 
 		// Draw segment function
-		auto DrawSegment = [&](Mesh mesh, Texture texture)
+		auto DrawSegment = [&](Mesh mesh, Texture texture, int part)
 		{
 			MaterialParameterSet laserParams;
 
@@ -427,6 +427,7 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 				laserParams.SetParameter("hitState", active ? 2 + objectGlowState : 0);
 			}
 			laserParams.SetParameter("mainTex", texture);
+			laserParams.SetParameter("laserPart", part);
 
 			// Get the length of this laser segment
 			Transform laserTransform = trackOrigin;
@@ -446,18 +447,18 @@ void Track::DrawObjectState(RenderQueue& rq, class BeatmapPlayback& playback, Ob
 		if(!laser->prev)
 		{
 			Mesh laserTail = m_laserTrackBuilder[laser->index]->GenerateTrackEntry(playback, laser);
-			DrawSegment(laserTail, laserTailTextures[laser->index]);
+			DrawSegment(laserTail, laserTailTextures[laser->index], 1);
 		}
 
 		// Body
 		Mesh laserMesh = m_laserTrackBuilder[laser->index]->GenerateTrackMesh(playback, laser);
-		DrawSegment(laserMesh, laserTextures[laser->index]);
+		DrawSegment(laserMesh, laserTextures[laser->index], 0);
 
 		// Draw exit?
 		if(!laser->next && (laser->flags & LaserObjectState::flag_Instant) != 0) // Only draw exit on slams
 		{
 			Mesh laserTail = m_laserTrackBuilder[laser->index]->GenerateTrackExit(playback, laser);
-			DrawSegment(laserTail, laserTailTextures[2 + laser->index]);
+			DrawSegment(laserTail, laserTailTextures[2 + laser->index], 2);
 		}
 	}
 }

@@ -11,6 +11,9 @@ uniform float objectGlow;
 // 20Hz flickering. 0 = Miss, 1 = Inactive, 2 & 3 = Active alternating.
 uniform int hitState;
 
+// 0 = body, 1 = entry, 2 = exit
+uniform int laserPart;
+
 void main()
 {	
     float x = fsTex.x;
