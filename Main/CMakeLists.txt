@@ -24,7 +24,11 @@ precompiled_header_exclude("Resource.rc")
 
 include_directories(Audio GUI .)
 add_executable(usc-game ${Main_src} ${C_src})
-add_compile_definitions(GIT_COMMIT=${GIT_DATE_HASH})
+
+if(${CMAKE_VERSION} VERSION_GREATER "3.11")
+	add_compile_definitions(GIT_COMMIT=${GIT_DATE_HASH})
+endif()
+
 set_output_postfixes(usc-game)
 
 # Target subsystem on windows, set debugging folder
