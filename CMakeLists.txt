@@ -1,11 +1,15 @@
 # Root CMake file
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.12)
 project(FX)
 
 # Project configurations
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 set(CMAKE_DEBUG_POSTFIX _Debug)
 set(CMAKE_RELEASE_POSTFIX _Release)
+execute_process(COMMAND git log -1 --date=short --format="%cd_%h"
+                OUTPUT_VARIABLE GIT_DATE_HASH
+                ERROR_QUIET)
+
 
 # Set output folders
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

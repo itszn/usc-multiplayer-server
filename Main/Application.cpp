@@ -263,6 +263,14 @@ void Application::m_InitDiscord()
 bool Application::m_Init()
 {
 	ProfilerScope $("Application Setup");
+	Logf("Version: %d.%d.%d", Logger::Info, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+
+#ifdef GIT_COMMIT
+	Logf("Git commit: %s", Logger::Info, GIT_COMMIT);
+#endif // GIT_COMMIT
+
+
+
 
 	// Must have command line
 	assert(m_commandLine.size() >= 1);
