@@ -494,6 +494,14 @@ render = function(deltaTime)
 		gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_TOP)
 		gfx.Text(songwheel.searchStatus, 3, 3)
 	end
+	if songwheel.totalForce then
+		gfx.BeginPath()
+		gfx.FillColor(255,255,255)
+		gfx.FontSize(20);
+		gfx.TextAlign(gfx.TEXT_ALIGN_LEFT + gfx.TEXT_ALIGN_BOTTOM)
+		local forceText = string.format("Force: %.2f", songwheel.totalForce)
+		gfx.Text(forceText, 0, fullY)
+	end
     gfx.LoadSkinFont("segoeui.ttf");
     gfx.ResetTransform()
     gfx.ForceRender()

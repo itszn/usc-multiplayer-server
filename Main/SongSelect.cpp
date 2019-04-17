@@ -211,7 +211,13 @@ class SelectionWheel
 	lua_State* m_lua = nullptr;
 	String m_lastStatus = "";
 	std::mutex m_lock;
-	
+
+	struct CompareForce {
+		bool operator() (const DifficultyIndex *l, const DifficultyIndex *r) const {
+			return Scoring::CalculateForce(l->settings.level, l->scores) > Scoring::CalculateForce(r->settings.level, r->scores);
+		}
+	};
+	std::set<DifficultyIndex *, CompareForce> m_diffsByForce;
 
 public:
 	SelectionWheel()
@@ -262,6 +268,9 @@ public:
 		{
 			SongSelectIndex index(m);
 			m_maps.Add(index.id, index);
+			for(auto diff : m->difficulties) {
+				m_diffsByForce.insert(diff);
+			}
 		}
 		AdvanceSelection(0);
 		m_SetLuaMaps();
@@ -273,6 +282,9 @@ public:
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
 			SongSelectIndex index = m_maps.at(m->selectId * 10);
 			m_maps.erase(index.id);
+			for(auto diff : m->difficulties) {
+				m_diffsByForce.erase(diff);
+			}
 		}
 		if(!m_maps.Contains(m_currentlySelectedId))
 		{
@@ -292,10 +304,14 @@ public:
 		m_filterSet = false;
 		m_mapFilter.clear();
 		m_maps.clear();
+		m_diffsByForce.clear();
 		for (auto m : newList)
 		{
 			SongSelectIndex index(m.second);
 			m_maps.Add(index.id, index);
+			for (auto diff : m.second->difficulties) {
+				m_diffsByForce.insert(diff);
+			}
 		}
 		if(m_maps.size() > 0)
 		{
@@ -566,6 +582,7 @@ private:
 				m_PushIntToTable("id", diff->id);
 				m_PushStringToTable("effector", settings.effector.c_str());
 				m_PushIntToTable("topBadge", Scoring::CalculateBestBadge(diff->scores));
+				m_PushFloatToTable("force", Scoring::CalculateForce(settings.level, diff->scores));
 				lua_pushstring(m_lua, "scores");
 				lua_newtable(m_lua);
 				int scoreIndex = 0;
@@ -590,6 +607,7 @@ private:
 			lua_settable(m_lua, -3);
 		}
 		lua_settable(m_lua, -3);
+		m_PushFloatToTable("totalForce", m_calculateTotalForce());
 		lua_setglobal(m_lua, "songwheel");
 	}
 	// TODO(local): pretty sure this should be m_OnIndexSelected, and we should filter a call to OnMapSelected
@@ -608,6 +626,20 @@ private:
 
 		OnMapSelected.Call(index.GetMap());
 		m_currentlySelectedMapId = index.GetMap()->id;
+	}
+
+	float m_calculateTotalForce()
+	{
+		float totalForce = 0;
+		auto it = m_diffsByForce.begin();
+		int count = 0;
+		while (it != m_diffsByForce.end() && count < 50) {
+			auto diff = *it;
+			totalForce += Scoring::CalculateForce(diff->settings.level, diff->scores);
+			++it;
+			++count;
+		}
+		return totalForce;
 	}
 };
 
@@ -1112,7 +1144,7 @@ public:
 			m_selectionWheel->SetFilter(filter);
 		}
 	}
-    
+
 
     void m_OnButtonPressed(Input::Button buttonCode)
     {
@@ -1156,7 +1188,7 @@ public:
 				}
 			}
         }
-		else    
+		else
 		{
 			switch (buttonCode)
 			{
@@ -1211,7 +1243,7 @@ public:
 
 		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
 			return;
-		
+
 		m_timeSinceButtonReleased[buttonCode] = 0;
 
 		switch (buttonCode)
@@ -1341,12 +1373,12 @@ public:
 				m_settingsWheel->ReloadScript();
 				m_filterSelection->ReloadScript();
 				g_application->ReloadScript("songselect/background", m_lua);
-      }	
+      }
 			else if (key == SDLK_F11)
 			{
 				String paramFormat = g_gameConfig.GetString(GameConfigKeys::EditorParamsFormat);
 				String path = Path::Normalize(g_gameConfig.GetString(GameConfigKeys::EditorPath));
-				String param = Utility::Sprintf(paramFormat.c_str(), 
+				String param = Utility::Sprintf(paramFormat.c_str(),
 					Utility::Sprintf("\"%s\"", Path::Absolute(m_selectionWheel->GetSelectedDifficulty()->path)));
 				Path::Run(path, param.GetData());
 			}
@@ -1371,7 +1403,7 @@ public:
 	}
 	virtual void OnKeyReleased(int32 key)
 	{
-		
+
 	}
 	virtual void Tick(float deltaTime) override
 	{
@@ -1380,7 +1412,7 @@ public:
 			m_mapDatabase.Update();
 			m_dbUpdateTimer.Restart();
 		}
-        
+
         // Tick navigation
 		if (!IsSuspended())
 		{
@@ -1417,7 +1449,7 @@ public:
 
     void TickNavigation(float deltaTime)
     {
-		// Lock mouse to screen when active 
+		// Lock mouse to screen when active
 		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse && g_gameWindow->IsActive())
 		{
 			if(!m_lockMouse)
@@ -1429,7 +1461,7 @@ public:
 				m_lockMouse.Release();
 			g_gameWindow->SetCursorVisible(true);
 		}
-		
+
 		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
 		{
 			m_timeSinceButtonPressed[(Input::Button)i] += deltaTime;
@@ -1441,13 +1473,13 @@ public:
 
         float diff_input = g_input.GetInputLaserDir(0);
         float song_input = g_input.GetInputLaserDir(1);
-        
+
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
 		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff)) * Math::Sign(m_advanceDiff);;
 		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong)) * Math::Sign(m_advanceSong);;
-		
+
 		if (m_settingsWheel->Active)
 		{
 			if (advanceDiffActual != 0)
@@ -1469,7 +1501,7 @@ public:
 			if (advanceSongActual != 0)
 				m_selectionWheel->AdvanceSelection(advanceSongActual);
 		}
-        
+
 		m_advanceDiff -= advanceDiffActual;
         m_advanceSong -= advanceSongActual;
     }
