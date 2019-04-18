@@ -212,13 +212,6 @@ class SelectionWheel
 	String m_lastStatus = "";
 	std::mutex m_lock;
 
-	struct CompareForce {
-		bool operator() (const DifficultyIndex *l, const DifficultyIndex *r) const {
-			return Scoring::CalculateForce(l->settings.level, l->scores) > Scoring::CalculateForce(r->settings.level, r->scores);
-		}
-	};
-	std::set<DifficultyIndex *, CompareForce> m_diffsByForce;
-
 public:
 	SelectionWheel()
 	{
@@ -268,9 +261,6 @@ public:
 		{
 			SongSelectIndex index(m);
 			m_maps.Add(index.id, index);
-			for(auto diff : m->difficulties) {
-				m_diffsByForce.insert(diff);
-			}
 		}
 		AdvanceSelection(0);
 		m_SetLuaMaps();
@@ -282,9 +272,6 @@ public:
 			// TODO(local): don't hard-code the id calc here, maybe make it a utility function?
 			SongSelectIndex index = m_maps.at(m->selectId * 10);
 			m_maps.erase(index.id);
-			for(auto diff : m->difficulties) {
-				m_diffsByForce.erase(diff);
-			}
 		}
 		if(!m_maps.Contains(m_currentlySelectedId))
 		{
@@ -304,14 +291,10 @@ public:
 		m_filterSet = false;
 		m_mapFilter.clear();
 		m_maps.clear();
-		m_diffsByForce.clear();
 		for (auto m : newList)
 		{
 			SongSelectIndex index(m.second);
 			m_maps.Add(index.id, index);
-			for (auto diff : m.second->difficulties) {
-				m_diffsByForce.insert(diff);
-			}
 		}
 		if(m_maps.size() > 0)
 		{
@@ -555,6 +538,7 @@ private:
 	}
 	void m_SetLuaMaps()
 	{
+		auto totalForce = m_calculateTotalForce();
 		lua_getglobal(m_lua, "songwheel");
 		lua_pushstring(m_lua, "songs");
 		lua_newtable(m_lua);
@@ -583,6 +567,7 @@ private:
 				m_PushStringToTable("effector", settings.effector.c_str());
 				m_PushIntToTable("topBadge", Scoring::CalculateBestBadge(diff->scores));
 				m_PushFloatToTable("force", Scoring::CalculateForce(settings.level, diff->scores));
+				m_PushIntToTable("forceInTotal", totalForce.diffs.Contains(diff) ? 1 : 0);
 				lua_pushstring(m_lua, "scores");
 				lua_newtable(m_lua);
 				int scoreIndex = 0;
@@ -607,7 +592,7 @@ private:
 			lua_settable(m_lua, -3);
 		}
 		lua_settable(m_lua, -3);
-		m_PushFloatToTable("totalForce", m_calculateTotalForce());
+		m_PushFloatToTable("totalForce", totalForce.value);
 		lua_setglobal(m_lua, "songwheel");
 	}
 	// TODO(local): pretty sure this should be m_OnIndexSelected, and we should filter a call to OnMapSelected
@@ -628,18 +613,35 @@ private:
 		m_currentlySelectedMapId = index.GetMap()->id;
 	}
 
-	float m_calculateTotalForce()
+	struct TotalForce {
+		float value;
+		Vector<DifficultyIndex *> diffs;
+	};
+
+	TotalForce m_calculateTotalForce()
 	{
-		float totalForce = 0;
-		auto it = m_diffsByForce.begin();
-		int count = 0;
-		while (it != m_diffsByForce.end() && count < 50) {
-			auto diff = *it;
-			totalForce += Scoring::CalculateForce(diff->settings.level, diff->scores);
-			++it;
-			++count;
+		Vector<DifficultyIndex *> diffs;
+		for (auto m : m_maps) {
+			for (auto d : m.second.GetDifficulties()) {
+				diffs.Add(d);
+			}
 		}
-		return totalForce;
+		diffs.Sort([](DifficultyIndex* l, DifficultyIndex* r)
+		{
+			return Scoring::CalculateForce(l->settings.level, l->scores) > Scoring::CalculateForce(r->settings.level, r->scores);
+		});
+
+		float totalForce = 0;
+		auto it = diffs.begin();
+		int count = 0;
+		while (it != diffs.end() && count++ < 50) {
+			auto diff = *it++;
+			auto force = Scoring::CalculateForce(diff->settings.level, diff->scores);
+//			Log(Utility::Sprintf("force: %d -> %f", count, force), Logger::Severity::Info);
+			totalForce += force;
+		}
+		diffs.erase(it, diffs.end());
+		return TotalForce{totalForce, diffs};
 	}
 };
 
