@@ -46,6 +46,7 @@ A difficulty contains the following fields:
     int bestBadge //top badge for this difficulty
     difficulty[] scores //array of all scores on this diff
 	float force
+	int forceInTotal //is force calculated in the total
     
     
 Score
