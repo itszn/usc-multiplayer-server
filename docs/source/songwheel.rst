@@ -5,6 +5,8 @@ Contains a list of songs accessed by ``songwheel.songs``
 
 The current song database status is available in ``songwheel.searchStatus``
 
+The total force is available in ``songwheel.totalForce``
+
 Example for loading the jacket of the first diff for every song:
 
 .. code-block:: lua
@@ -43,6 +45,7 @@ A difficulty contains the following fields:
     string effector
     int bestBadge //top badge for this difficulty
     difficulty[] scores //array of all scores on this diff
+	float force
     
     
 Score
