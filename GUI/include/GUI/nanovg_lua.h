@@ -48,6 +48,7 @@ struct GUIState
 	Rect scissor;
 	Vector2i resolution;
 	Map<int, ImageAnimation*> animations;
+	int scissorOffset;
 };
 
 
@@ -791,15 +792,15 @@ static int lScissor(lua_State* L /* float x, float y, float w, float h */)
 	float y = luaL_checknumber(L, 2);
 	float w = luaL_checknumber(L, 3);
 	float h = luaL_checknumber(L, 4);
-	{
-		Vector3 scale = g_guiState.t.GetScale();
-		Vector3 pos = g_guiState.t.GetPosition();
-		Vector2 topLeft = pos.xy() + Vector2(x, y);
-		Vector2 size = Vector2(w, h) * scale.xy();
+	
+	Vector3 scale = g_guiState.t.GetScale();
+	Vector3 pos = g_guiState.t.GetPosition();
+	Vector2 topLeft = pos.xy() + Vector2(x + g_guiState.scissorOffset, y);
+	Vector2 size = Vector2(w, h) * scale.xy();
 
 
-		g_guiState.scissor = Rect(topLeft, size);
-	}
+	g_guiState.scissor = Rect(topLeft, size);
+	
 	nvgScissor(g_guiState.vg, x, y, w, h);
 	return 0;
 }

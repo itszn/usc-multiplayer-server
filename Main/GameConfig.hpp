@@ -16,6 +16,7 @@ DefineEnum(GameConfigKeys,
 	AntiAliasing,
 	MasterVolume,
 	VSync,
+	ForcePortrait,
 
 	// Game settings
 	HiSpeed,

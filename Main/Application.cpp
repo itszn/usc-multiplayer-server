@@ -92,6 +92,18 @@ void Application::SetCommandLine(const char* cmdLine)
 	// Split up command line parameters
 	m_commandLine = Path::SplitCommandLine(cmdLine);
 }
+void Application::ApplySettings()
+{
+	String newskin = g_gameConfig.GetString(GameConfigKeys::Skin);
+	if (m_skin != newskin)
+	{
+		m_skin = newskin;
+		ReloadSkin();
+	}
+	g_gameWindow->SetVSync(g_gameConfig.GetInt(GameConfigKeys::VSync));
+	m_OnWindowResized(g_gameWindow->GetWindowSize());
+
+}
 int32 Application::Run()
 {
 	if(!m_Init())
@@ -572,6 +584,12 @@ void Application::m_Tick()
 		g_guiState.fontMaterial = &m_fontMaterial;
 		g_guiState.fillMaterial = &m_fillMaterial;
 		g_guiState.resolution = g_resolution;
+
+		if (g_gameConfig.GetBool(GameConfigKeys::ForcePortrait))
+			g_guiState.scissorOffset = g_gameWindow->GetWindowSize().x / 2 - g_resolution.x / 2;
+		else
+			g_guiState.scissorOffset = 0;
+
 		g_guiState.scissor = Rect(0,0,-1,-1);
 		g_guiState.imageTint = nvgRGB(255, 255, 255);
 		// Render all items
@@ -1020,21 +1038,52 @@ void Application::m_OnKeyReleased(int32 key)
 }
 void Application::m_OnWindowResized(const Vector2i& newSize)
 {
-	g_resolution = newSize;
-	g_aspectRatio = (float)g_resolution.x / (float)g_resolution.y;
+	if (g_gameConfig.GetBool(GameConfigKeys::ForcePortrait))
+	{
+		Vector2i tempsize = newSize; //do this because on startup g_resolution is the reference newSize
+		float aspect = 9.0 / 16.0;
+		g_resolution = Vector2i(tempsize.y * aspect, tempsize.y);
+		g_aspectRatio = aspect;
 
-	m_renderStateBase.aspectRatio = g_aspectRatio;
-	m_renderStateBase.viewportSize = g_resolution;
-	g_gl->SetViewport(newSize);
-	glViewport(0, 0, newSize.x, newSize.y);
-	glScissor(0, 0, newSize.x, newSize.y);
-	// Set in config
-	if (g_gameWindow->IsFullscreen()){
-		g_gameConfig.Set(GameConfigKeys::FullscreenMonitorIndex, g_gameWindow->GetDisplayIndex());
-	} else{
-		g_gameConfig.Set(GameConfigKeys::ScreenWidth, newSize.x);
-		g_gameConfig.Set(GameConfigKeys::ScreenHeight, newSize.y);
+		m_renderStateBase.aspectRatio = g_aspectRatio;
+		m_renderStateBase.viewportSize = g_resolution;
+		float left = tempsize.x / 2 - g_resolution.x / 2;
+		float top = 0;
+		float right = left + g_resolution.x;
+		float bottom = g_resolution.y;
+		g_gl->SetViewport(Rect(left, top, right, bottom));
+		glScissor(0, 0, g_resolution.x, g_resolution.y);
+
+		// Set in config
+		if (g_gameWindow->IsFullscreen()) {
+			g_gameConfig.Set(GameConfigKeys::FullscreenMonitorIndex, g_gameWindow->GetDisplayIndex());
+		}
+		else {
+			g_gameConfig.Set(GameConfigKeys::ScreenWidth, tempsize.x);
+			g_gameConfig.Set(GameConfigKeys::ScreenHeight, tempsize.y);
+		}
 	}
+	else
+	{
+		g_resolution = newSize;
+		g_aspectRatio = (float)g_resolution.x / (float)g_resolution.y;
+
+		m_renderStateBase.aspectRatio = g_aspectRatio;
+		m_renderStateBase.viewportSize = g_resolution;
+		g_gl->SetViewport(newSize);
+		glViewport(0, 0, newSize.x, newSize.y);
+		glScissor(0, 0, newSize.x, newSize.y);
+
+		// Set in config
+		if (g_gameWindow->IsFullscreen()) {
+			g_gameConfig.Set(GameConfigKeys::FullscreenMonitorIndex, g_gameWindow->GetDisplayIndex());
+		}
+		else {
+			g_gameConfig.Set(GameConfigKeys::ScreenWidth, newSize.x);
+			g_gameConfig.Set(GameConfigKeys::ScreenHeight, newSize.y);
+		}
+	}
+
 }
 
 int Application::FastText(String inputText, float x, float y, int size, int align)
@@ -1073,7 +1122,8 @@ int Application::FastText(String inputText, float x, float y, int size, int alig
 static int lGetMousePos(lua_State* L)
 {
 	Vector2i pos = g_gameWindow->GetMousePos();
-	lua_pushnumber(L, pos.x);
+	float left = g_gameWindow->GetWindowSize().x / 2 - g_resolution.x / 2;
+	lua_pushnumber(L, pos.x - left);
 	lua_pushnumber(L, pos.y);
 	return 2;
 }

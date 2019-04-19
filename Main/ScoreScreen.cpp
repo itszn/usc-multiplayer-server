@@ -270,13 +270,27 @@ public:
 				w = luaPopInt();
 				y = luaPopInt();
 				x = luaPopInt();
+				if (g_gameConfig.GetBool(GameConfigKeys::ForcePortrait))
+				{
+					x += g_gameWindow->GetWindowSize().x / 2 - g_resolution.x / 2;
+				}
 			}
 			else
 			{
-				x = 0;
-				y = 0;
-				w = g_resolution.x;
-				h = g_resolution.y;
+				if (g_gameConfig.GetBool(GameConfigKeys::ForcePortrait))
+				{
+					x = g_gameWindow->GetWindowSize().x / 2 - g_resolution.x / 2;;
+					y = 0;
+					w = g_resolution.x;
+					h = g_resolution.y;
+				}
+				else
+				{
+					x = 0;
+					y = 0;
+					w = g_resolution.x;
+					h = g_resolution.y;
+				}
 			}
 			Vector2i size(w, h);
 			Image screenshot = ImageRes::Screenshot(g_gl, size, { x,y });

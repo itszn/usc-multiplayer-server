@@ -112,6 +112,7 @@ private:
 	int m_wasapi = 1;
 	int m_update = 1;
 	int m_windowFull = 0;
+	int m_forcePortrait = 0;
 
 	std::queue<SDL_Event> eventQueue;
 
@@ -216,6 +217,7 @@ private:
 		g_gameConfig.Set(GameConfigKeys::WASAPI_Exclusive, m_wasapi == 0);
 		g_gameConfig.Set(GameConfigKeys::CheckForUpdates, m_update == 0);
 		g_gameConfig.Set(GameConfigKeys::WindowedFullscreen, m_windowFull == 0);
+		g_gameConfig.Set(GameConfigKeys::ForcePortrait, m_forcePortrait == 0);
 		g_gameConfig.Set(GameConfigKeys::InputOffset, m_inputOffset);
 		g_gameConfig.Set(GameConfigKeys::InputBounceGuard, m_bounceGuard);
 
@@ -263,6 +265,11 @@ private:
 	}
 
 public:
+	~SettingsScreen_Impl()
+	{
+		g_application->ApplySettings();
+	}
+
 
 	//TODO: Controller support and the rest of the options and better layout
 	bool Init()
@@ -339,6 +346,7 @@ public:
 		m_wasapi = g_gameConfig.GetBool(GameConfigKeys::WASAPI_Exclusive) ? 0 : 1;
 		m_update = g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates) ? 0 : 1;
 		m_windowFull = g_gameConfig.GetBool(GameConfigKeys::WindowedFullscreen) ? 0 : 1;
+		m_forcePortrait = g_gameConfig.GetBool(GameConfigKeys::ForcePortrait) ? 0 : 1;
 
 		String songspath = g_gameConfig.GetString(GameConfigKeys::SongFolder);
 		strcpy(m_songsPath, songspath.c_str());
@@ -475,6 +483,8 @@ public:
 
 			nk_layout_row_dynamic(m_nctx, 30, 1);
 			nk_checkbox_label(m_nctx, "Use windowed fullscreen", &m_windowFull);
+
+			nk_checkbox_label(m_nctx, "Force portrait rendering (don't use if already in portrait)", &m_forcePortrait);
 
 			nk_label(m_nctx, "Anti aliasing (requires restart):", nk_text_alignment::NK_TEXT_LEFT);
 			nk_combobox(m_nctx, m_aaModes, 5, &m_antialiasing, buttonheight, comboBoxSize);

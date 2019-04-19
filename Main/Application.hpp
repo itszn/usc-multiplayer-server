@@ -29,7 +29,7 @@ public:
 		bool loaded = false;
 		Job loadingJob;
 	};
-
+	void ApplySettings();
 	// Runs the application
 	int32 Run();
 	
