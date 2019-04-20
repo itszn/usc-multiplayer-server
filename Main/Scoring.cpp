@@ -72,53 +72,6 @@ uint8 Scoring::CalculateBestBadge(Vector<ScoreIndex*> scores)
 	return top;
 }
 
-float Scoring::CalculateForce(uint8 level, Vector<ScoreIndex*> scores)
-{
-	if (scores.size() < 1)
-		return 0;
-
-	int32 score = scores.at(0)->score;
-	
-	uint8 badge = Scoring::CalculateBestBadge(scores);
-	float badgeRate = 0.5;
-	switch (badge) {
-	case 5:
-		badgeRate = 1.1;
-		break;
-	case 4:
-		badgeRate = 1.05;
-		break;
-	case 3:
-		badgeRate = 1.02;
-		break;
-	case 2:
-		badgeRate = 1;
-		break;
-	}
-	
-	float gradeRate = 0.8;
-	if (score >= 9900000) // S
-		gradeRate = 1.05;
-	else if (score >= 9800000) // AAA+
-		gradeRate = 1.02;
-	else if (score >= 9700000) // AAA
-		gradeRate = 1;
-	else if (score >= 9500000) // AA+
-		gradeRate = 0.97;
-	else if (score >= 9300000) // AA
-		gradeRate = 0.94;
-	else if (score >= 9000000) // A+
-		gradeRate = 0.91;
-	else if (score >= 8700000) // A
-		gradeRate = 0.88;
-	else if (score >= 7500000) // B
-		gradeRate = 0.85;
-	else if (score >= 6500000) // C
-		gradeRate = 0.82;
-
-	return std::floor((level * 2) * (score / 10000000.0) * gradeRate * badgeRate) / 100;
-}
-
 void Scoring::SetPlayback(BeatmapPlayback& playback)
 {
 	if(m_playback)

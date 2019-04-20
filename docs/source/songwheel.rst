@@ -3,9 +3,9 @@ Song Wheel
 ============
 Contains a list of songs accessed by ``songwheel.songs``
 
-The current song database status is available in ``songwheel.searchStatus``
+The list of all (not filtered) songs is available in ``songwheel.allSongs``
 
-The total force is available in ``songwheel.totalForce``
+The current song database status is available in ``songwheel.searchStatus``
 
 Example for loading the jacket of the first diff for every song:
 
@@ -45,8 +45,6 @@ A difficulty contains the following fields:
     string effector
     int bestBadge //top badge for this difficulty
     difficulty[] scores //array of all scores on this diff
-	float force
-	int forceInTotal //is force calculated in the total
     
     
 Score
@@ -81,3 +79,7 @@ get_page_size
 *************
 Function called by the game to get how much to scroll when page up or page down are pressed.
 Needs to be defined for the game to work properly.
+
+songs_changed
+*************
+Function called by the game when ``songs`` is changed.

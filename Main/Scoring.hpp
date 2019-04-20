@@ -69,7 +69,6 @@ public:
 	static String CalculateGrade(uint32 score);
 	static uint8 CalculateBadge(const ScoreIndex& score);
 	static uint8 CalculateBestBadge(Vector<ScoreIndex*> scores);
-	static float CalculateForce(uint8 level, Vector<ScoreIndex*> scores);
 
 	// Needs to be set to find out which objects are active/hittable
 	void SetPlayback(BeatmapPlayback& playback);

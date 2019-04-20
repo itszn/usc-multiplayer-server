@@ -538,12 +538,23 @@ private:
 	}
 	void m_SetLuaMaps()
 	{
-		auto totalForce = m_calculateTotalForce();
+		m_SetLuaMaps("songs", m_SourceCollection());
+		m_SetLuaMaps("allSongs", m_maps);
+
+		lua_getglobal(m_lua, "songs_changed");
+		if (lua_pcall(m_lua, 0, 0, 0) != 0)
+		{
+			Logf("Lua error on congs_chaged: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error songs_changed", lua_tostring(m_lua, -1), 0);
+		}
+	}
+	void m_SetLuaMaps(const char *key, const Map<int32, SongSelectIndex>& collection)
+	{
 		lua_getglobal(m_lua, "songwheel");
-		lua_pushstring(m_lua, "songs");
+		lua_pushstring(m_lua, key);
 		lua_newtable(m_lua);
 		int songIndex = 0;
-		for (auto& song : m_SourceCollection())
+		for (auto& song : collection)
 		{
 			lua_pushinteger(m_lua, ++songIndex);
 			lua_newtable(m_lua);
@@ -566,8 +577,6 @@ private:
 				m_PushIntToTable("id", diff->id);
 				m_PushStringToTable("effector", settings.effector.c_str());
 				m_PushIntToTable("topBadge", Scoring::CalculateBestBadge(diff->scores));
-				m_PushFloatToTable("force", Scoring::CalculateForce(settings.level, diff->scores));
-				m_PushIntToTable("forceInTotal", totalForce.diffs.Contains(diff) ? 1 : 0);
 				lua_pushstring(m_lua, "scores");
 				lua_newtable(m_lua);
 				int scoreIndex = 0;
@@ -592,7 +601,6 @@ private:
 			lua_settable(m_lua, -3);
 		}
 		lua_settable(m_lua, -3);
-		m_PushFloatToTable("totalForce", totalForce.value);
 		lua_setglobal(m_lua, "songwheel");
 	}
 	// TODO(local): pretty sure this should be m_OnIndexSelected, and we should filter a call to OnMapSelected
@@ -611,37 +619,6 @@ private:
 
 		OnMapSelected.Call(index.GetMap());
 		m_currentlySelectedMapId = index.GetMap()->id;
-	}
-
-	struct TotalForce {
-		float value;
-		Vector<DifficultyIndex *> diffs;
-	};
-
-	TotalForce m_calculateTotalForce()
-	{
-		Vector<DifficultyIndex *> diffs;
-		for (auto m : m_maps) {
-			for (auto d : m.second.GetDifficulties()) {
-				diffs.Add(d);
-			}
-		}
-		diffs.Sort([](DifficultyIndex* l, DifficultyIndex* r)
-		{
-			return Scoring::CalculateForce(l->settings.level, l->scores) > Scoring::CalculateForce(r->settings.level, r->scores);
-		});
-
-		float totalForce = 0;
-		auto it = diffs.begin();
-		int count = 0;
-		while (it != diffs.end() && count++ < 50) {
-			auto diff = *it++;
-			auto force = Scoring::CalculateForce(diff->settings.level, diff->scores);
-//			Log(Utility::Sprintf("force: %d -> %f", count, force), Logger::Severity::Info);
-			totalForce += force;
-		}
-		diffs.erase(it, diffs.end());
-		return TotalForce{totalForce, diffs};
 	}
 };
 
