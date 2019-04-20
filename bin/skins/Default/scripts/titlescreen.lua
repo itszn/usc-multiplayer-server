@@ -8,6 +8,16 @@ local label = -1;
 gfx.GradientColors(0,128,255,255,0,128,255,0)
 local gradient = gfx.LinearGradient(0,0,0,1)
 
+view_update = function()
+    if package.config:sub(1,1) == '\\' then --windows
+        updateUrl, updateVersion = game.UpdateAvailable()
+        os.execute("start " .. updateUrl)
+    else --unix
+        --TODO: Mac solution
+        os.execute("xdg-open " .. updateUrl)
+    end
+end
+
 mouse_clipped = function(x,y,w,h)
     return mposx > x and mposy > y and mposx < x+w and mposy < y+h;
 end;
@@ -68,7 +78,7 @@ render = function(deltaTime)
        gfx.TextAlign(gfx.TEXT_ALIGN_BOTTOM + gfx.TEXT_ALIGN_LEFT)
        gfx.FontSize(30)
        gfx.Text(string.format("Version %s is now available", updateVersion), 5, resy - buttonHeight - 10)
-       draw_button("View", buttonWidth / 2 + 5, resy - buttonHeight / 2 - 5, 4);
+       draw_button("View", buttonWidth / 2 + 5, resy - buttonHeight / 2 - 5, view_update);
     end
 end;
 
