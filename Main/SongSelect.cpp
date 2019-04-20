@@ -211,7 +211,6 @@ class SelectionWheel
 	lua_State* m_lua = nullptr;
 	String m_lastStatus = "";
 	std::mutex m_lock;
-	
 
 public:
 	SelectionWheel()
@@ -264,7 +263,7 @@ public:
 			m_maps.Add(index.id, index);
 		}
 		AdvanceSelection(0);
-		m_SetLuaMaps();
+		m_SetLuaMaps(true);
 	}
 	void OnMapsRemoved(Vector<MapIndex*> maps)
 	{
@@ -304,7 +303,7 @@ public:
 			// TODO(local): Go through everything in this file and try to clean
 			//  up all calls to things like this, to keep it from updating like 7 times >.>
 			//AdvanceSelection(0);
-			m_SetLuaMaps();
+			m_SetLuaMaps(true);
 		}
 	}
 	void OnSearchStatusUpdated(String status)
@@ -434,7 +433,7 @@ public:
 			m_mapFilter.Add(index.id, index);
 		}
 		m_filterSet = true;
-		m_SetLuaMaps();
+		m_SetLuaMaps(false);
 		AdvanceSelection(0);
 	}
 	void SetFilter(SongFilter* filter[2])
@@ -450,7 +449,7 @@ public:
 				isFiltered = true;
 		}
 		m_filterSet = isFiltered;
-		m_SetLuaMaps();
+		m_SetLuaMaps(false);
 		AdvanceSelection(0);
 	}
 	void ClearFilter()
@@ -459,7 +458,7 @@ public:
 		{
 			m_filterSet = false;
 			AdvanceSelection(0);
-			m_SetLuaMaps();
+			m_SetLuaMaps(false);
 		}
 	}
 
@@ -537,13 +536,28 @@ private:
 			assert(false);
 		}
 	}
-	void m_SetLuaMaps()
+	void m_SetLuaMaps(bool withAll)
+	{
+		m_SetLuaMaps("songs", m_SourceCollection());
+		if (withAll) {
+			m_SetLuaMaps("allSongs", m_maps);
+		}
+
+		lua_getglobal(m_lua, "songs_changed");
+		lua_pushboolean(m_lua, withAll);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
+		{
+			Logf("Lua error on songs_chaged: %s", Logger::Error, lua_tostring(m_lua, -1));
+			g_gameWindow->ShowMessageBox("Lua Error songs_changed", lua_tostring(m_lua, -1), 0);
+		}
+	}
+	void m_SetLuaMaps(const char *key, const Map<int32, SongSelectIndex>& collection)
 	{
 		lua_getglobal(m_lua, "songwheel");
-		lua_pushstring(m_lua, "songs");
+		lua_pushstring(m_lua, key);
 		lua_newtable(m_lua);
 		int songIndex = 0;
-		for (auto& song : m_SourceCollection())
+		for (auto& song : collection)
 		{
 			lua_pushinteger(m_lua, ++songIndex);
 			lua_newtable(m_lua);
@@ -1112,7 +1126,7 @@ public:
 			m_selectionWheel->SetFilter(filter);
 		}
 	}
-    
+
 
     void m_OnButtonPressed(Input::Button buttonCode)
     {
@@ -1156,7 +1170,7 @@ public:
 				}
 			}
         }
-		else    
+		else
 		{
 			switch (buttonCode)
 			{
@@ -1211,7 +1225,7 @@ public:
 
 		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && m_searchInput->active)
 			return;
-		
+
 		m_timeSinceButtonReleased[buttonCode] = 0;
 
 		switch (buttonCode)
@@ -1341,12 +1355,12 @@ public:
 				m_settingsWheel->ReloadScript();
 				m_filterSelection->ReloadScript();
 				g_application->ReloadScript("songselect/background", m_lua);
-      }	
+      }
 			else if (key == SDLK_F11)
 			{
 				String paramFormat = g_gameConfig.GetString(GameConfigKeys::EditorParamsFormat);
 				String path = Path::Normalize(g_gameConfig.GetString(GameConfigKeys::EditorPath));
-				String param = Utility::Sprintf(paramFormat.c_str(), 
+				String param = Utility::Sprintf(paramFormat.c_str(),
 					Utility::Sprintf("\"%s\"", Path::Absolute(m_selectionWheel->GetSelectedDifficulty()->path)));
 				Path::Run(path, param.GetData());
 			}
@@ -1371,7 +1385,7 @@ public:
 	}
 	virtual void OnKeyReleased(int32 key)
 	{
-		
+
 	}
 	virtual void Tick(float deltaTime) override
 	{
@@ -1380,7 +1394,7 @@ public:
 			m_mapDatabase.Update();
 			m_dbUpdateTimer.Restart();
 		}
-        
+
         // Tick navigation
 		if (!IsSuspended())
 		{
@@ -1417,7 +1431,7 @@ public:
 
     void TickNavigation(float deltaTime)
     {
-		// Lock mouse to screen when active 
+		// Lock mouse to screen when active
 		if(g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::LaserInputDevice) == InputDevice::Mouse && g_gameWindow->IsActive())
 		{
 			if(!m_lockMouse)
@@ -1429,7 +1443,7 @@ public:
 				m_lockMouse.Release();
 			g_gameWindow->SetCursorVisible(true);
 		}
-		
+
 		for (size_t i = 0; i < (size_t)Input::Button::Length; i++)
 		{
 			m_timeSinceButtonPressed[(Input::Button)i] += deltaTime;
@@ -1441,13 +1455,13 @@ public:
 
         float diff_input = g_input.GetInputLaserDir(0);
         float song_input = g_input.GetInputLaserDir(1);
-        
+
         m_advanceDiff += diff_input;
         m_advanceSong += song_input;
 
 		int advanceDiffActual = (int)Math::Floor(m_advanceDiff * Math::Sign(m_advanceDiff)) * Math::Sign(m_advanceDiff);;
 		int advanceSongActual = (int)Math::Floor(m_advanceSong * Math::Sign(m_advanceSong)) * Math::Sign(m_advanceSong);;
-		
+
 		if (m_settingsWheel->Active)
 		{
 			if (advanceDiffActual != 0)
@@ -1469,7 +1483,7 @@ public:
 			if (advanceSongActual != 0)
 				m_selectionWheel->AdvanceSelection(advanceSongActual);
 		}
-        
+
 		m_advanceDiff -= advanceDiffActual;
         m_advanceSong -= advanceSongActual;
     }

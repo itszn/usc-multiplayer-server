@@ -3,6 +3,8 @@ Song Wheel
 ============
 Contains a list of songs accessed by ``songwheel.songs``
 
+The list of all (not filtered) songs is available in ``songwheel.allSongs``
+
 The current song database status is available in ``songwheel.searchStatus``
 
 Example for loading the jacket of the first diff for every song:
@@ -77,3 +79,7 @@ get_page_size
 *************
 Function called by the game to get how much to scroll when page up or page down are pressed.
 Needs to be defined for the game to work properly.
+
+songs_changed(withAll)
+**********************
+Function called by the game when ``songs`` or ``allSongs`` (if withAll == true) is changed.
