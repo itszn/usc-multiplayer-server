@@ -126,6 +126,8 @@ public:
 		if (m_preloaded)
 		{
 			uint32 samplesPerRead = 128;
+			int32 retVal = samplesPerRead;
+			bool earlyOut = false;
 			for (size_t i = 0; i < samplesPerRead; i++)
 			{
 				if (m_playPos < 0)
@@ -139,7 +141,13 @@ public:
 				{
 					m_currentBufferSize = m_bufferSize;
 					m_remainingBufferData = m_bufferSize;
-					return i;
+					m_readBuffer[0][i] = 0;
+					m_readBuffer[1][i] = 0;
+					if (!earlyOut) {
+						retVal = i;
+						earlyOut = true;
+					}
+					continue;
 				}
 				m_readBuffer[0][i] = m_pcm[m_playPos * 2];
 				m_readBuffer[1][i] = m_pcm[m_playPos * 2 + 1];
@@ -147,7 +155,7 @@ public:
 			}
 			m_currentBufferSize = samplesPerRead;
 			m_remainingBufferData = samplesPerRead;
-			return samplesPerRead;
+			return retVal;
 		}
 
 
