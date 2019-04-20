@@ -263,7 +263,7 @@ public:
 			m_maps.Add(index.id, index);
 		}
 		AdvanceSelection(0);
-		m_SetLuaMaps();
+		m_SetLuaMaps(true);
 	}
 	void OnMapsRemoved(Vector<MapIndex*> maps)
 	{
@@ -303,7 +303,7 @@ public:
 			// TODO(local): Go through everything in this file and try to clean
 			//  up all calls to things like this, to keep it from updating like 7 times >.>
 			//AdvanceSelection(0);
-			m_SetLuaMaps();
+			m_SetLuaMaps(true);
 		}
 	}
 	void OnSearchStatusUpdated(String status)
@@ -433,7 +433,7 @@ public:
 			m_mapFilter.Add(index.id, index);
 		}
 		m_filterSet = true;
-		m_SetLuaMaps();
+		m_SetLuaMaps(false);
 		AdvanceSelection(0);
 	}
 	void SetFilter(SongFilter* filter[2])
@@ -449,7 +449,7 @@ public:
 				isFiltered = true;
 		}
 		m_filterSet = isFiltered;
-		m_SetLuaMaps();
+		m_SetLuaMaps(false);
 		AdvanceSelection(0);
 	}
 	void ClearFilter()
@@ -458,7 +458,7 @@ public:
 		{
 			m_filterSet = false;
 			AdvanceSelection(0);
-			m_SetLuaMaps();
+			m_SetLuaMaps(false);
 		}
 	}
 
@@ -536,15 +536,18 @@ private:
 			assert(false);
 		}
 	}
-	void m_SetLuaMaps()
+	void m_SetLuaMaps(bool withAll)
 	{
 		m_SetLuaMaps("songs", m_SourceCollection());
-		m_SetLuaMaps("allSongs", m_maps);
+		if (withAll) {
+			m_SetLuaMaps("allSongs", m_maps);
+		}
 
 		lua_getglobal(m_lua, "songs_changed");
-		if (lua_pcall(m_lua, 0, 0, 0) != 0)
+		lua_pushboolean(m_lua, withAll);
+		if (lua_pcall(m_lua, 1, 0, 0) != 0)
 		{
-			Logf("Lua error on congs_chaged: %s", Logger::Error, lua_tostring(m_lua, -1));
+			Logf("Lua error on songs_chaged: %s", Logger::Error, lua_tostring(m_lua, -1));
 			g_gameWindow->ShowMessageBox("Lua Error songs_changed", lua_tostring(m_lua, -1), 0);
 		}
 	}

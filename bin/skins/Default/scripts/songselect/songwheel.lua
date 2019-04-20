@@ -564,7 +564,9 @@ calculate_force = function(diff)
 	return math.floor((diff.level * 2) * (score.score / 10000000) * gradeRate * badgeRate) / 100
 end
 
-songs_changed = function()
+songs_changed = function(withAll)
+	if not withAll then return end
+
 	local diffs = {}
 	for i = 1, #songwheel.allSongs do
 		local song = songwheel.allSongs[i]
