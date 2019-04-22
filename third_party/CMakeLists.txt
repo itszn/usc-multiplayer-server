@@ -56,3 +56,10 @@ else(WIN32)
 endif(WIN32)
 add_definitions(-DFONS_USE_FREETYPE)
 
+#miniaudio
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/miniaudio/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/miniaudio/extras)
+add_library(miniaudio miniaudio/miniaudio.h miniaudio/extras/stb_vorbis.c)
+target_include_directories(miniaudio PUBLIC miniaudio)
+
+
