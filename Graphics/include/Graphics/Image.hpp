@@ -41,7 +41,7 @@ namespace Graphics
 		virtual void Clear() = 0;
 		virtual Ref<ImageRes> GetImage() = 0;
 		virtual Ref<class TextureRes> GenerateTexture(class OpenGL* gl) = 0;
-		virtual Recti GetCoords(uint32 nIndex) = 0;
+		virtual Shared::Recti GetCoords(uint32 nIndex) = 0;
 	};
 
 	typedef Ref<ImageRes> Image;

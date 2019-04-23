@@ -11,6 +11,9 @@ namespace Graphics
 	//	- Normal
 	namespace MeshGenerators
 	{
+		using Shared::Rect3D;
+		using Shared::Rect;
+
 		struct SimpleVertex : public VertexFormat<Vector3, Vector2>
 		{
 			SimpleVertex() = default;

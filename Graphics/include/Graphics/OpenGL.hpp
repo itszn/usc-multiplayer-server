@@ -13,6 +13,7 @@ namespace Graphics
 	/*
 		OpenGL context wrapper with common functionality
 	*/
+	using Shared::Recti;
 	class OpenGL
 	{
 		class ShaderRes* m_activeShaders[3] = { 0 };

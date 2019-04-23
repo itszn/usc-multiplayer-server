@@ -6,6 +6,8 @@
 
 namespace Graphics
 {
+
+	using Shared::Rect;
 	/*
 		Represents a draw command that can be executed in a render queue
 	*/
