@@ -17,7 +17,7 @@ Ref<AudioStreamRes> AudioStreamRes::Create(class Audio* audio, const String& pat
 		if (type == 0)
 			return CreateAudioStream_ogg(audio, path, preload);
 		else if (type == 1)
-			return CreateAudioStream_ma(audio, path, preload);
+			return CreateAudioStream_mp3(audio, path, preload);
 		else
 			return CreateAudioStream_ma(audio, path, preload);
 	};
