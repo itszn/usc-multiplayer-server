@@ -26,7 +26,7 @@ protected:
 	uint32 m_remainingBufferData = 0;
 
 	int64 m_samplePos = 0;
-	int64 m_samplesTotal = 0; // Total pcm length of audio stream
+	uint64 m_samplesTotal = 0; // Total pcm length of audio stream
 
 	// Resampling values
 	uint64 m_sampleStep = 0;

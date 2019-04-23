@@ -6,6 +6,7 @@
 class AudioStreamRes* CreateAudioStream_ogg(class Audio* audio, const String& path, bool preload);
 class AudioStreamRes* CreateAudioStream_mp3(class Audio* audio, const String& path, bool preload);
 class AudioStreamRes* CreateAudioStream_wav(class Audio* audio, const String& path, bool preload);
+class AudioStreamRes* CreateAudioStream_ma(class Audio* audio, const String& path, bool preload);
 
 Ref<AudioStreamRes> AudioStreamRes::Create(class Audio* audio, const String& path, bool preload)
 {
@@ -16,9 +17,9 @@ Ref<AudioStreamRes> AudioStreamRes::Create(class Audio* audio, const String& pat
 		if (type == 0)
 			return CreateAudioStream_ogg(audio, path, preload);
 		else if (type == 1)
-			return CreateAudioStream_mp3(audio, path, preload);
+			return CreateAudioStream_ma(audio, path, preload);
 		else
-			return CreateAudioStream_wav(audio, path, preload);
+			return CreateAudioStream_ma(audio, path, preload);
 	};
 
 	int32 pref = 0;
@@ -32,6 +33,7 @@ Ref<AudioStreamRes> AudioStreamRes::Create(class Audio* audio, const String& pat
 
 	for(uint32 i = 0; i < 3; i++)
 	{
+		//impl = CreateAudioStream_ma(audio, path, preload);
 		impl = TryCreateType(pref);
 		if(impl)
 			break;

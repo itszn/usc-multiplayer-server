@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Shared/Profiling.hpp"
 #include "AudioStreamBase.hpp"
 
 // Fixed point format for resampling
@@ -102,6 +103,7 @@ int32 AudioStreamBase::GetPosition() const
 }
 void AudioStreamBase::SetPosition(int32 pos)
 {
+	ProfilerScope $0("Set Position");
 	m_lock.lock();
 	m_remainingBufferData = 0;
 	m_samplePos = SecondsToSamples((double)pos / 1000.0);

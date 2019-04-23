@@ -1,5 +1,8 @@
 # Audio library
 
+# Find miniaudio root
+get_property(ma_root GLOBAL PROPERTY MA_ROOT)
+
 # Find files used for project
 file(GLOB Audio_src "src/*.cpp" "include/Audio/*.hpp" "src/minimp3.c" "src/minimp3.h" "src/libc.h")
 
@@ -26,8 +29,9 @@ enable_cpp14()
 enable_precompiled_headers("${Audio_src}" src/stdafx.cpp)
 precompiled_header_exclude("${minimp3_src}" "${soundtouch_src}")
 
-include_directories(include include/Audio src src/soundtouch/src src/soundtouch/include src/minimp3)
+include_directories(include include/Audio src src/soundtouch/src src/soundtouch/include src/minimp3 ${ma_root} ${ma_root}/extras)
 add_library(Audio ${Audio_src} ${minimp3_src} ${soundtouch_src})
+
 
 # Public include paths for library
 target_include_directories(Audio PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

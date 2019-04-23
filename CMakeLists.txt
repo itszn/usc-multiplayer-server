@@ -99,7 +99,6 @@ if(MSVC)
     #set_target_properties(nuklear PROPERTIES FOLDER "Third Party")
     set_target_properties(discord-rpc PROPERTIES FOLDER "Third Party")
     set_target_properties(lua PROPERTIES FOLDER "Third Party")
-	set_target_properties(miniaudio PROPERTIES FOLDER "Third Party")
 	# My libraries in the libraries folder
 	set_target_properties(Shared PROPERTIES FOLDER Libraries)
 	set_target_properties(Graphics PROPERTIES FOLDER Libraries)
