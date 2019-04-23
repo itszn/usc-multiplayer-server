@@ -6,6 +6,8 @@
 
 namespace Graphics
 {
+	using Shared::Recti;
+
 	static uint32 maxHeight = 1024;
 	static uint32 border = 2;
 

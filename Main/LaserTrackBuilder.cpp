@@ -4,6 +4,10 @@
 #include "Track.hpp"
 #include <algorithm>
 
+using Shared::Rect;
+using Shared::Rect3D;
+
+
 LaserTrackBuilder::LaserTrackBuilder(class OpenGL* gl, class Track* track, uint32 laserIndex)
 {
 	m_gl = gl;

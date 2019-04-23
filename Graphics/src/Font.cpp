@@ -12,6 +12,9 @@
 
 namespace Graphics
 {
+	using Shared::Margin;
+	using Shared::Recti;
+
 	struct CachedText
 	{
 		Text text;
