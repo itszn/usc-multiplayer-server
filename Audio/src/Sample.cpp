@@ -16,7 +16,7 @@ class Sample_Impl : public SampleRes
 {
 public:
 	Audio* m_audio;
-	float* m_pcm;
+	float* m_pcm = nullptr;
 
 	mutex m_lock;
 
@@ -28,6 +28,10 @@ public:
 public:
 	~Sample_Impl()
 	{
+		if (m_pcm)
+		{
+			ma_free(m_pcm);
+		}
 		Deregister();
 	}
 	virtual void Play(bool looping) override

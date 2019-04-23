@@ -15,7 +15,7 @@ class AudioStreamMA_Impl : public AudioStreamBase
 {
 private:
 	Buffer m_Internaldata;
-	float* m_pcm;
+	float* m_pcm = nullptr;
 
 	int64 m_playbackPointer = 0;
 	uint64 m_dataPosition = 0;
@@ -27,6 +27,15 @@ private:
 public:
 	~AudioStreamMA_Impl()
 	{
+		if (m_preloaded)
+		{
+			if(m_pcm)
+				ma_free(m_pcm);
+		}
+		else
+		{
+			ma_decoder_uninit(&m_decoder);
+		}
 		Deregister();
 	}
 
