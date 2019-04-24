@@ -33,6 +33,14 @@ Simple DirectMedia Layer - Copyright (c) 1997-2016 Sam Lantinga <slouken@libsdl.
 
 zlib - (c) 1995-2013 Jean-loup Gailly and Mark Adler
 
+jansson - Copyright (c) 2009-2018 Petri Lehtinen <petri@digip.org>
+
+cpr - Copyright (c) 2017 Huu Nguyen
+
+curl - Copyright (c) 1996 - 2017, Daniel Stenberg, <daniel@haxx.se>
+
+miniaudio - Copyright (c) 2019 David Reid
+
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
 INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
