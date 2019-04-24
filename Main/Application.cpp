@@ -762,7 +762,11 @@ Sample Application::LoadSample(const String& name, const bool& external)
     if(external)
 	    path = name;
     else
-        path = String("skins/") + m_skin + String("/audio/") + name + ".wav";
+        path = String("skins/") + m_skin + String("/audio/") + name;
+
+	String ext = Path::GetExtension(path);
+	if (ext.empty())
+		path += ".wav";
 
 	Sample ret = g_audio->CreateSample(Path::Normalize(path));
 	assert(ret);

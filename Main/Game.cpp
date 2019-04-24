@@ -869,19 +869,25 @@ public:
 		CheckedLoad(m_clickSamples[0] = g_application->LoadSample("click-01"));
 		CheckedLoad(m_clickSamples[1] = g_application->LoadSample("click-02"));
 
+		Vector<String> default_sfx = {
+			"clap",
+			"clap_impact",
+			"clap_punchy",
+			"snare",
+			"snare_lo",
+		};
+
 		auto samples = m_beatmap->GetSamplePaths();
 		m_fxSamples = new Sample[samples.size()];
 		for (int i = 0; i < samples.size(); i++)
 		{
-			String ext = samples[i].substr(samples[i].length() - 4, 4);
-			ext.ToUpper();
-			if (ext == ".WAV")
+			if (default_sfx.Contains(samples[i]))
 			{
-				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(m_mapRootPath + "/" + samples[i], true));
+				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(samples[i]));
 			}
 			else
 			{
-				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(samples[i]));
+				CheckedLoad(m_fxSamples[i] = g_application->LoadSample(m_mapRootPath + "/" + samples[i], true));
 			}
 
 		}
