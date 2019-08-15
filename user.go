@@ -20,6 +20,7 @@ import (
 type Score struct {
 	score uint32
 	combo uint32
+	clear uint32
 }
 
 type Score_point struct {
@@ -41,7 +42,9 @@ type User struct {
 	ready       bool
 	missing_map bool
 
-	playing bool
+	playing   bool
+	hard_mode bool
+	level     int
 
 	conn   net.Conn
 	reader *bufio.Reader
@@ -281,6 +284,8 @@ func (self *User) add_routes() {
 	// Override this if you want to provide some other form of auth
 	self.route("user.auth", self.simple_server_auth)
 	self.route("user.ready.toggle", self.toggle_ready_handler)
+	self.route("user.hard.toggle", self.toggle_hard_handler)
+	self.route("user.song.level", self.song_level_handler)
 }
 
 func (self *User) simple_server_auth(msg *Message) error {
@@ -307,8 +312,24 @@ func (self *User) simple_server_auth(msg *Message) error {
 	return nil
 }
 
+func (self *User) song_level_handler(msg *Message) error {
+	if self.room == nil || self.playing {
+		return nil
+	}
+
+	new_level := Json_int(msg.Json()["level"])
+	if new_level == self.level {
+		return nil
+	}
+
+	self.level = new_level
+	self.room.Send_lobby_update()
+	return nil
+
+}
+
 func (self *User) toggle_ready_handler(msg *Message) error {
-	if self.room == nil {
+	if self.room == nil || self.playing {
 		return nil
 	}
 
@@ -319,12 +340,21 @@ func (self *User) toggle_ready_handler(msg *Message) error {
 }
 
 func (self *User) no_map_handler(msg *Message) error {
-	if self.room == nil {
+	if self.room == nil || self.playing {
 		return nil
 	}
 
 	self.missing_map = true
 
 	self.room.Send_lobby_update()
+	return nil
+}
+
+func (self *User) toggle_hard_handler(msg *Message) error {
+	if self.room == nil || self.playing {
+		return nil
+	}
+	self.hard_mode = !self.hard_mode
+	self.room.Send_lobby_update_to_user(self)
 	return nil
 }

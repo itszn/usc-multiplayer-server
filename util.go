@@ -25,3 +25,16 @@ func JsonDecodeBytes(data []byte) (Json, error) {
 	}
 	return res, err
 }
+
+// Make sure we get an int back from the json number
+func Json_int(val interface{}) int {
+	switch val.(type) {
+	case int:
+		return val.(int)
+	case float64:
+		return int(val.(float64))
+	default:
+		panic("Not a number")
+	}
+
+}

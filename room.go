@@ -14,8 +14,9 @@ import (
 )
 
 type Song struct {
-	name string
-	diff int
+	name  string
+	diff  int
+	level int
 }
 
 type Room struct {
@@ -31,7 +32,6 @@ type Room struct {
 	song *Song
 	host *User
 
-	hard_mode      bool
 	do_rotate_host bool
 
 	pub_sub message.PubSub
@@ -58,7 +58,6 @@ func New_room(name string, max int) *Room {
 		song: nil,
 		host: nil,
 
-		hard_mode:      false,
 		do_rotate_host: false,
 		start_soon:     false,
 		in_game:        false,
@@ -172,7 +171,6 @@ func (self *Room) add_routes() {
 	self.route("room.leave", self.leave_room_handler)
 	self.route("room.setsong", self.set_song_handler)
 
-	self.route("room.option.hard.toggle", self.toggle_hard_handler)
 	self.route("room.option.rotation.toggle", self.toggle_rotate_handler)
 
 	self.route("room.game.start", self.start_game_handler)
@@ -198,6 +196,12 @@ func (self *Room) Add_user(user *User) {
 	user.ready = false
 	user.playing = false
 	user.missing_map = false
+	user.hard_mode = false
+	if self.song == nil {
+		user.level = 0
+	} else {
+		user.level = self.song.level
+	}
 
 	user.score_list = make([]Score_point, 0)
 
@@ -253,6 +257,11 @@ func (self *Room) leave_room_handler(msg *Message) error {
 func (self *Room) Send_lobby_update() {
 	self.Send_lobby_update_to(self.users)
 }
+func (self *Room) Send_lobby_update_to_user(target_user *User) {
+	target := make([]*User, 1)
+	target[0] = target_user
+	self.Send_lobby_update_to(target)
+}
 
 func (self *Room) Send_lobby_update_to(target_users []*User) {
 	self.mtx.RLock()
@@ -264,10 +273,12 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 			"id":          u.id,
 			"ready":       u.ready || u == self.host,
 			"missing_map": u.missing_map,
+			"level":       u.level,
 		}
 		if u.score != nil {
 			data["score"] = u.score.score
 			data["combo"] = u.score.combo
+			data["clear"] = u.score.clear
 		}
 		return data
 	}
@@ -302,7 +313,6 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		"topic":      "room.update",
 		"users":      userdata,
 		"do_rotate":  self.do_rotate_host,
-		"hard_mode":  self.hard_mode,
 		"start_soon": self.start_soon,
 	}
 	if self.song != nil {
@@ -321,6 +331,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		if u.playing {
 			continue
 		}
+		packet["hard_mode"] = u.hard_mode
 		u.Send_json(packet)
 	}
 }
@@ -336,16 +347,10 @@ func (self *Room) set_song_handler(msg *Message) error {
 	song := &Song{
 		name: json["song"].(string),
 	}
-	switch json["diff"].(type) {
-	case int:
-		song.diff = json["diff"].(int)
-		break
-	case float64:
-		song.diff = int(json["diff"].(float64))
-		break
-	default:
-		return nil
-	}
+
+	song.diff = Json_int(json["diff"])
+	song.level = Json_int(json["level"])
+	user.level = song.level
 
 	defer self.mtx_unlock(self.mtx_lock())
 
@@ -357,19 +362,6 @@ func (self *Room) set_song_handler(msg *Message) error {
 	self.mtx_unlock(0)
 	self.Send_lobby_update()
 
-	return nil
-}
-
-func (self *Room) toggle_hard_handler(msg *Message) error {
-	user := msg.User()
-
-	if user != self.host {
-		return nil
-	}
-
-	self.hard_mode = !self.hard_mode
-
-	self.Send_lobby_update()
 	return nil
 }
 
@@ -417,7 +409,7 @@ func (self *Room) start_game_handler(msg *Message) error {
 
 			u.Send_json(Json{
 				"topic": "game.started",
-				"hard":  self.hard_mode, // TODO change to per user
+				"hard":  u.hard_mode,
 			})
 			u.playing = true
 		}
@@ -500,10 +492,10 @@ func (self *Room) handle_game_score(msg *Message) error {
 		return nil
 	}
 
-	new_time := uint32(msg.Json()["time"].(float64))
+	new_time := uint32(Json_int(msg.Json()["time"]))
 
 	user.Add_new_score(
-		uint32(msg.Json()["score"].(float64)),
+		uint32(Json_int(msg.Json()["score"])),
 		new_time,
 	)
 
@@ -521,14 +513,15 @@ func (self *Room) handle_final_score(msg *Message) error {
 	}
 
 	new_time := ^uint32(0)
-	score := uint32(msg.Json()["score"].(float64))
+	score := uint32(Json_int(msg.Json()["score"]))
 	user.Add_new_score(score, new_time)
 
 	self.Update_scoreboard(user, new_time)
 
 	user.score = &Score{
 		score: score,
-		combo: uint32(msg.Json()["combo"].(float64)),
+		combo: uint32(Json_int(msg.Json()["combo"])),
+		clear: uint32(Json_int(msg.Json()["clear"])),
 	}
 	user.playing = false
 
@@ -554,9 +547,7 @@ func (self *Room) handle_final_score(msg *Message) error {
 }
 
 func (self *Room) handle_back_in_lobby(msg *Message) error {
-	target := make([]*User, 1)
-	target[0] = msg.User()
-	self.Send_lobby_update_to(target)
+	self.Send_lobby_update_to_user(msg.User())
 	return nil
 }
 
