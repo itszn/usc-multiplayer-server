@@ -20,6 +20,8 @@ type Song struct {
 }
 
 type Room struct {
+	server *Server
+
 	name string
 	id   string
 
@@ -45,10 +47,11 @@ type Room struct {
 }
 
 // TODO per room password
-func New_room(name string, max int) *Room {
+func New_room(server *Server, name string, max int) *Room {
 	room := &Room{
-		name: name,
-		id:   uuid.New().String(),
+		server: server,
+		name:   name,
+		id:     uuid.New().String(),
 
 		max: max,
 
@@ -234,19 +237,21 @@ func (self *Room) Remove_user(user *User) {
 
 	self.mtx_unlock(0)
 
-	// TODO replace with local server member
-	user.server.Send_rooms_to_users()
-
+	// XXX race with a user being added?
 	if len(self.users) == 0 {
-		self.song = nil
-		self.start_soon = false
-		self.in_game = false
-		self.host = nil
+		self.destroy()
+		return
 	}
-	// TODO rotate host
 
 	self.Send_lobby_update()
+	self.server.Send_rooms_to_users()
+}
 
+func (self *Room) destroy() {
+	self.server.Remove_room(self)
+	self.server.Send_rooms_to_users()
+
+	self.router.Close()
 }
 
 func (self *Room) leave_room_handler(msg *Message) error {

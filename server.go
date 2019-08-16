@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sort"
 	"sync"
 	//	"time"
 
@@ -138,11 +139,6 @@ func (self *Server) Start() {
 
 	self.add_routes()
 
-	// XXX remove
-	tmp_room := New_room("test", 10)
-	self.Add_room(tmp_room)
-	go tmp_room.Start()
-
 	go router.Run()
 	self.listen_tcp()
 }
@@ -156,16 +152,34 @@ func (self *Server) add_routes() {
 	// Routes users can talk to
 	self.user_route("server.rooms", self.send_rooms_handler)
 	self.user_route("server.room.join", self.join_room_handler)
+	self.user_route("server.room.new", self.new_room_handler)
+}
 
+type room_sort []*Room
+
+func (self room_sort) Len() int {
+	return len(self)
+}
+func (self room_sort) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+func (self room_sort) Less(i, j int) bool {
+	return self[i].name < self[j].name
 }
 
 func (self *Server) Send_rooms_to_user(u *User) error {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
-	var rooms []Json
+	rooms := make([]*Room, 0, len(self.rooms))
 	for _, room := range self.rooms {
-		rooms = append(rooms, Json{
+		rooms = append(rooms, room)
+	}
+	sort.Sort(room_sort(rooms))
+
+	var roomdata []Json
+	for _, room := range rooms {
+		roomdata = append(roomdata, Json{
 			"current": room.Num_users(),
 			"max":     room.max,
 			"name":    room.name,
@@ -176,7 +190,7 @@ func (self *Server) Send_rooms_to_user(u *User) error {
 
 	return u.Send_json(Json{
 		"topic":  "server.rooms",
-		"rooms":  rooms,
+		"rooms":  roomdata,
 		"userid": u.id,
 	})
 
@@ -214,6 +228,27 @@ func (self *Server) send_rooms_handler(msg *Message) error {
 	return self.Send_rooms_to_user(msg.User())
 }
 
+func (self *Server) add_user_to_room(user *User, room *Room) error {
+	if room.Num_users() >= room.max {
+		return errors.New("Room full")
+	}
+
+	room.Add_user(user)
+
+	user.Send_json(Json{
+		"topic": "server.room.joined",
+		"room": Json{
+			"name": room.name,
+			"id":   room.id,
+		},
+	})
+
+	self.Send_rooms_to_users()
+
+	room.Send_lobby_update()
+	return nil
+}
+
 func (self *Server) join_room_handler(msg *Message) error {
 	user := msg.User()
 
@@ -232,23 +267,19 @@ func (self *Server) join_room_handler(msg *Message) error {
 		return errors.New("Room not found")
 	}
 
-	if room.Num_users() >= room.max {
-		return errors.New("Room full")
+	return self.add_user_to_room(user, room)
+}
+
+func (self *Server) new_room_handler(msg *Message) error {
+	user := msg.User()
+	if user.room != nil {
+		return nil
 	}
 
-	room.Add_user(user)
+	name := user.name + "'s Game"
+	room := New_room(self, name, 10)
+	self.Add_room(room)
+	go room.Start()
 
-	user.Send_json(Json{
-		"topic": "server.room.joined",
-		"room": Json{
-			"name": room.name,
-			"id":   room.id,
-		},
-	})
-
-	self.Send_rooms_to_users()
-
-	room.Send_lobby_update()
-
-	return nil
+	return self.add_user_to_room(user, room)
 }
