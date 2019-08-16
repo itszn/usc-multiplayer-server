@@ -323,9 +323,11 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 	if self.song != nil {
 		packet["song"] = self.song.name
 		packet["diff"] = self.song.diff
+		packet["level"] = self.song.level
 	} else {
 		packet["song"] = nil
 		packet["diff"] = nil
+		packet["level"] = nil
 	}
 
 	if self.host != nil && !self.in_game {
@@ -349,8 +351,21 @@ func (self *Room) set_song_handler(msg *Message) error {
 	}
 
 	json := msg.Json()
+
+	name := json["song"].(string)
+
+	// If we picked the same song again, we don't have to
+	// update missingmap and ready state of users
+	if self.song != nil && self.song.name != name {
+		for _, u := range self.users {
+			u.ready = false
+			u.missing_map = false
+		}
+
+	}
+
 	song := &Song{
-		name: json["song"].(string),
+		name: name,
 	}
 
 	song.diff = Json_int(json["diff"])
@@ -360,9 +375,6 @@ func (self *Room) set_song_handler(msg *Message) error {
 	defer self.mtx_unlock(self.mtx_lock())
 
 	self.song = song
-	for _, u := range self.users {
-		u.missing_map = false
-	}
 
 	self.mtx_unlock(0)
 	self.Send_lobby_update()
