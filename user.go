@@ -286,6 +286,7 @@ func (self *User) add_routes() {
 	self.route("user.ready.toggle", self.toggle_ready_handler)
 	self.route("user.hard.toggle", self.toggle_hard_handler)
 	self.route("user.song.level", self.song_level_handler)
+	self.route("user.nomap", self.no_map_handler)
 }
 
 func (self *User) simple_server_auth(msg *Message) error {
@@ -334,6 +335,7 @@ func (self *User) toggle_ready_handler(msg *Message) error {
 	}
 
 	self.ready = !self.ready
+	self.missing_map = false
 
 	self.room.Send_lobby_update()
 	return nil
@@ -341,6 +343,9 @@ func (self *User) toggle_ready_handler(msg *Message) error {
 
 func (self *User) no_map_handler(msg *Message) error {
 	if self.room == nil || self.playing {
+		return nil
+	}
+	if self.missing_map {
 		return nil
 	}
 
