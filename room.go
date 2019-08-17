@@ -517,7 +517,12 @@ func (self *Room) handle_game_score(msg *Message) error {
 	)
 
 	self.Update_scoreboard(user, new_time)
+
+	var x *User
+	x = nil
+	x.Unblock()
 	return nil
+
 }
 
 func (self *Room) handle_final_score(msg *Message) error {

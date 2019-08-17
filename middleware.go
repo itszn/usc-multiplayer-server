@@ -44,12 +44,11 @@ func User_middleware(provider UserProvider, f message.HandlerFunc) message.Handl
 			return nil, errors.New("No user provided to user middleware")
 		}
 
-		if !user.authed {
-			return nil, errors.New("User is not authorized")
-		}
-
 		ctx := context.WithValue(msg.Context(), user_key, user)
 		msg.SetContext(ctx)
+
+		// Tell the user go-routine we are done with this message
+		defer user.Unblock()
 
 		return f(msg)
 	}

@@ -189,9 +189,10 @@ func (self *Server) Send_rooms_to_user(u *User) error {
 	}
 
 	return u.Send_json(Json{
-		"topic":  "server.rooms",
-		"rooms":  roomdata,
-		"userid": u.id,
+		"topic":   "server.rooms",
+		"rooms":   roomdata,
+		"userid":  u.id,
+		"version": VERSION,
 	})
 
 	return nil

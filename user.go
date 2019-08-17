@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	//"strconv"
 	"strings"
 	"sync"
 
@@ -27,6 +28,10 @@ type Score_point struct {
 	score uint32
 	time  uint32
 }
+
+// If a topic is in the set, no more messages will
+// be processed for this user until Unblock is called
+//var Blocking_topics map[string]void
 
 type User struct {
 	server *Server
@@ -54,6 +59,9 @@ type User struct {
 	router  *message.Router
 
 	mtx sync.RWMutex
+
+	// Used to block new messages from being processed
+	msg_block sync.Mutex
 }
 
 func New_user(conn net.Conn, server *Server) (*User, error) {
@@ -79,6 +87,10 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func (self *User) Unblock() {
+	self.msg_block.Unlock()
 }
 
 func (self *User) Add_new_score(score uint32, time uint32) {
@@ -212,15 +224,25 @@ func (self *User) read_loop() {
 			}
 			fmt.Println(topic, json_data)
 
+			// Take the lock so we wait until we have processed
+			// the current packet
+			// XXX we'll see if this causes any problems
+			self.msg_block.Lock()
+
 			var pub message.Publisher
 
-			if strings.HasPrefix(topic, "server.") {
-				// Message for the server
-				pub = self.server.pub_sub
+			// NOTE: an unauthed user can only call user.auth
+			if !self.authed && topic != "user.auth" {
+				fmt.Println("User not authorised for", topic)
+				continue
 
 			} else if strings.HasPrefix(topic, "user.") {
 				// Message for the user
 				pub = self.pub_sub
+
+			} else if strings.HasPrefix(topic, "server.") {
+				// Message for the server
+				pub = self.server.pub_sub
 
 			} else if strings.HasPrefix(topic, "room.") {
 				// Message for the current room
@@ -276,8 +298,15 @@ func (self *User) Send_json(data Json) error {
 
 }
 
+func (self *User) Get_user(id string) *User {
+	if id != self.id {
+		return nil
+	}
+	return self
+}
+
 func (self *User) route(t string, h MessageHandler) {
-	self.router.AddNoPublisherHandler(t, t, self.pub_sub, Message_wrapper(h))
+	self.router.AddNoPublisherHandler(t, t, self.pub_sub, User_middleware(self, Message_wrapper(h)))
 }
 
 func (self *User) add_routes() {
@@ -291,9 +320,32 @@ func (self *User) add_routes() {
 
 func (self *User) simple_server_auth(msg *Message) error {
 
+	/*
+		version, ok := msg.Json()["version"].(string)
+		var version_f float64
+		if ok {
+			var err error
+			version_f, err = strconv.ParseFloat(version[1:], 64)
+			ok = err == nil
+		}
+		if ok {
+			ok = version_f > 0.11
+		}
+		if !ok {
+			self.Send_json(Json{
+				"topic": "server.error",
+				"error": "Server does not support this version of multiplayer",
+			})
+		}
+	*/
+
 	password := msg.Json()["password"].(string)
 
 	if password != "d3e5a1c17644e28fa156" {
+		self.Send_json(Json{
+			"topic": "server.error",
+			"error": "Not authorized",
+		})
 		return nil
 	}
 
