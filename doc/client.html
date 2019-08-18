@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>USC Multiplayer Protocol Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <style>
+      body {
+        width: 60em;
+        margin: 1em auto;
+        color: #222;
+        font-family: "Ubuntu", sans-serif;
+        padding-bottom: 4em;
+      }
+
+      h1 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      h2 {
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      a {
+        text-decoration: none;
+        color: #567e25;
+      }
+
+      table {
+        width: 100%;
+        font-size: 80%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        font-weight: 700;
+        background-color: #dcdcdc;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #fbfbfb;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5ex 2ex;
+      }
+
+      td p {
+        text-indent: 1em;
+        margin: 0;
+      }
+
+      td p:nth-child(1) {
+        text-indent: 0; /* No indent on first p in td */
+      }
+
+      /* Table of fields */
+      .field-table td:nth-child(1) { /* Field */
+        width: 10em;
+      }
+      .field-table td:nth-child(2) { /* Type */
+        width: 10em;
+      }
+      .field-table td:nth-child(3) { /* Label */
+        width: 6em;
+      }
+      .field-table td:nth-child(4) { /* Description */
+        width: auto;
+      }
+
+      /* Table of extensions */
+      .extension-table td:nth-child(1) { /* Extension */
+        width: 10em;
+      }
+      .extension-table td:nth-child(2) { /* Type */
+        width: 10em;
+      }
+      .extension-table td:nth-child(3) { /* Base */
+        width: 10em;
+      }
+      .extension-table td:nth-child(4) { /* Number */
+        width: 5em;
+      }
+      .extension-table td:nth-child(5) { /* Description */
+        width: auto;
+      }
+
+      /* Table of enum values. */
+      .enum-table td:nth-child(1) { /* Name */
+        width: 10em;
+      }
+      .enum-table td:nth-child(2) { /* Number */
+        width: 10em;
+      }
+      .enum-table td:nth-child(3) { /* Description */
+        width: auto;
+      }
+
+      /* Table of scalar value types. */
+      .scalar-value-types-table tr {
+        height: 3em;
+      }
+
+      /* Table of contents. */
+      #toc-container ul {
+        list-style-type: none;
+        padding-left: 1em;
+        line-height: 180%;
+        margin: 0;
+      }
+      #toc > li > a {
+        font-weight: bold;
+      }
+
+      /* File heading div */
+      .file-heading {
+        width: 100%;
+        display: table;
+        border-bottom: 1px solid #aaa;
+        margin: 4em 0 1.5em 0;
+      }
+      .file-heading h2 {
+        border: none;
+        display: table-cell;
+      }
+      .file-heading a {
+        text-align: right;
+        display: table-cell;
+      }
+
+      /* The 'M', 'E' and 'X' badges in the ToC */
+      .badge {
+        width: 1.6em;
+        height: 1.6em;
+        display: inline-block;
+
+        line-height: 1.6em;
+        text-align: center;
+        font-weight: bold;
+        font-size: 60%;
+
+        color: #89ba48;
+        background-color: #dff0c8;
+
+        margin: 0.5ex 1em 0.5ex -1em;
+        border: 1px solid #fbfbfb;
+        border-radius: 1ex;
+      }
+    </style>
+
+    <!-- User custom CSS -->
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+  </head>
+
+  <body>
+
+    <h1 id="title">USC Multiplayer Protocol Documentation</h1>
+
+    <p>
+    The USC Multiplayer server uses JSON packets with <b>topics</b>.
+    </p>
+    <p>
+    Each packet consists of a serialized JSON object with a <code>topic</code> field. This <code>topic</code> field will direct the packet to the correct subscriber.
+    </p>
+    <p>
+    This documentation lists defined topics for both the server and the client as well as their fields and other information.
+    </p>
+    <p>
+    To see how to JSON send packets over the network see <a href="https://github.com/itszn/usc-multiplayer-server/blob/master/docs/tcp_protocol.md">tcp_protocol.md</a>
+    </p>
+
+
+    <h2>Table of Contents</h2>
+
+    <div id="toc-container">
+      <ul id="toc">
+        
+          <li>
+            <a href="server.html">Server.proto (expand)</a>
+          </li>
+        
+        
+        
+          
+          <li>
+            <a href="#Client.proto">Client.proto</a>
+            <ul>
+              
+              
+              
+              
+                <li>
+                  <a href="#.game.scoreboard"><span class="badge">M</span>game.scoreboard</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.game.started"><span class="badge">M</span>game.started</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.room.update"><span class="badge">M</span>room.update</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.server.error"><span class="badge">M</span>server.error</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.server.room.join"><span class="badge">M</span>server.room.join</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.server.rooms"><span class="badge">M</span>server.rooms</a>
+                </li>
+              
+              
+              
+              
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#Types.proto">Types.proto</a>
+            <ul>
+              
+              
+              
+              
+                <li>
+                  <a href="#.Types.gamescore"><span class="badge">M</span>Types.gamescore</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.Types.room"><span class="badge">M</span>Types.room</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.Types.user"><span class="badge">M</span>Types.user</a>
+                </li>
+              
+              
+              
+              
+              
+            </ul>
+          </li>
+        
+      </ul>
+    </div>
+
+    
+      
+      <div class="file-heading">
+        <h2 id="Client.proto">Client.proto</h2><a href="#title">Top</a>
+      </div>
+      <p>These are the packets the server sends to the client</p>
+
+      
+        
+      
+        
+        <h3 id=".game.scoreboard">game.scoreboard</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>users</td>
+                  <td><a href="#.Types.gamescore">Types.gamescore</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".game.started">game.started</h3>
+        <p>Sent to users in a room when the game has started</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>hard</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>True if the user has excessive rate enabled </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".room.update">room.update</h3>
+        <p>Sent to users when a room has been changed</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>users</td>
+                  <td><a href="#.Types.user">Types.user</a></td>
+                  <td>repeated</td>
+                  <td><p>List of users in the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>do_rotate</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Whether the room rotates host or not </p></td>
+                </tr>
+              
+                <tr>
+                  <td>start_soon</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Set to true if the game is about to start </p></td>
+                </tr>
+              
+                <tr>
+                  <td>song</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>Folder name of the current song<br/>
+Set to <b>null</b> if no song </p></td>
+                </tr>
+              
+                <tr>
+                  <td>diff</td>
+                  <td><a href="#.uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Index of the current selected difficulty<br/>
+Set to <b>null</b> if no song </p></td>
+                </tr>
+              
+                <tr>
+                  <td>level</td>
+                  <td><a href="#.uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Level of the current selected difficulty<br/>
+Set to <b>null</b> if no song </p></td>
+                </tr>
+              
+                <tr>
+                  <td>host</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The UUID of the current host</br>
+If the room is currently in game, this field is not present </p></td>
+                </tr>
+              
+                <tr>
+                  <td>hard_mode</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Whether the current user has excessive rate enabled or not </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".server.error">server.error</h3>
+        <p>Sent on a fatal error. The server will most likely disconnect the user after this</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>error</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>Description of the error </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".server.room.join">server.room.join</h3>
+        <p>Sent in response to <a href="server.html#.server.room.join">server.room.join</a></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>room</td>
+                  <td><a href="#.Types.room">Types.room</a></td>
+                  <td></td>
+                  <td><p>The room that has been joined </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".server.rooms">server.rooms</h3>
+        <p>List of the current lobby rooms</p><p>Sent when lobbies change</p><p><em>Future:</em> userid and version will probably get moved elsewhere</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>rooms</td>
+                  <td><a href="#.Types.room">Types.room</a></td>
+                  <td>repeated</td>
+                  <td><p>List of lobbies on the server </p></td>
+                </tr>
+              
+                <tr>
+                  <td>userid</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>UUID of the current user </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>Version of the server </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+
+      
+
+      
+
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="Types.proto">Types.proto</h2><a href="#title">Top</a>
+      </div>
+      <p>These are types used by packets</p><p><b>Note:</b> These are not message topics!</p>
+
+      
+        
+      
+        
+        <h3 id=".Types.gamescore">Types.gamescore</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The UUID of the user this score belongs to </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The display name of the user this score belongs to </p></td>
+                </tr>
+              
+                <tr>
+                  <td>score</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>The value of the score </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".Types.room">Types.room</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The UUID of the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>current</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>Number of users currently in the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>max</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>Max number of users for the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>Name of the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ingame</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Whether the room is current in game </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".Types.user">Types.user</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The UUID of this user </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>The display name of the user </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ready</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Whether the user is ready or not </p></td>
+                </tr>
+              
+                <tr>
+                  <td>missing_map</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Whether the user is missing the song or not </p></td>
+                </tr>
+              
+                <tr>
+                  <td>level</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>User's selected level for the current song<br/>
+0 = no selected level </p></td>
+                </tr>
+              
+                <tr>
+                  <td>score</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>User's last final score<br/>
+If no score, this field will not be present </p></td>
+                </tr>
+              
+                <tr>
+                  <td>combo</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>User's last max combo<br/>
+If no score, this field will not be present </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clear</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>User's clear status<br/>
+0: Exited<br/>
+1: Failed<br/>
+2: Clear<br/>
+3: Hard Clear<br/>
+4: Full Combo<br/>
+5: Perfect<br/>
+If no score, this field will not be present </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+
+      
+
+      
+
+      
+    
+  </body>
+</html>
+

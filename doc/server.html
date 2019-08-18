@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>USC Multiplayer Protocol Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <style>
+      body {
+        width: 60em;
+        margin: 1em auto;
+        color: #222;
+        font-family: "Ubuntu", sans-serif;
+        padding-bottom: 4em;
+      }
+
+      h1 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      h2 {
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      a {
+        text-decoration: none;
+        color: #567e25;
+      }
+
+      table {
+        width: 100%;
+        font-size: 80%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        font-weight: 700;
+        background-color: #dcdcdc;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #fbfbfb;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5ex 2ex;
+      }
+
+      td p {
+        text-indent: 1em;
+        margin: 0;
+      }
+
+      td p:nth-child(1) {
+        text-indent: 0; /* No indent on first p in td */
+      }
+
+      /* Table of fields */
+      .field-table td:nth-child(1) { /* Field */
+        width: 10em;
+      }
+      .field-table td:nth-child(2) { /* Type */
+        width: 10em;
+      }
+      .field-table td:nth-child(3) { /* Label */
+        width: 6em;
+      }
+      .field-table td:nth-child(4) { /* Description */
+        width: auto;
+      }
+
+      /* Table of extensions */
+      .extension-table td:nth-child(1) { /* Extension */
+        width: 10em;
+      }
+      .extension-table td:nth-child(2) { /* Type */
+        width: 10em;
+      }
+      .extension-table td:nth-child(3) { /* Base */
+        width: 10em;
+      }
+      .extension-table td:nth-child(4) { /* Number */
+        width: 5em;
+      }
+      .extension-table td:nth-child(5) { /* Description */
+        width: auto;
+      }
+
+      /* Table of enum values. */
+      .enum-table td:nth-child(1) { /* Name */
+        width: 10em;
+      }
+      .enum-table td:nth-child(2) { /* Number */
+        width: 10em;
+      }
+      .enum-table td:nth-child(3) { /* Description */
+        width: auto;
+      }
+
+      /* Table of scalar value types. */
+      .scalar-value-types-table tr {
+        height: 3em;
+      }
+
+      /* Table of contents. */
+      #toc-container ul {
+        list-style-type: none;
+        padding-left: 1em;
+        line-height: 180%;
+        margin: 0;
+      }
+      #toc > li > a {
+        font-weight: bold;
+      }
+
+      /* File heading div */
+      .file-heading {
+        width: 100%;
+        display: table;
+        border-bottom: 1px solid #aaa;
+        margin: 4em 0 1.5em 0;
+      }
+      .file-heading h2 {
+        border: none;
+        display: table-cell;
+      }
+      .file-heading a {
+        text-align: right;
+        display: table-cell;
+      }
+
+      /* The 'M', 'E' and 'X' badges in the ToC */
+      .badge {
+        width: 1.6em;
+        height: 1.6em;
+        display: inline-block;
+
+        line-height: 1.6em;
+        text-align: center;
+        font-weight: bold;
+        font-size: 60%;
+
+        color: #89ba48;
+        background-color: #dff0c8;
+
+        margin: 0.5ex 1em 0.5ex -1em;
+        border: 1px solid #fbfbfb;
+        border-radius: 1ex;
+      }
+    </style>
+
+    <!-- User custom CSS -->
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+  </head>
+
+  <body>
+
+    <h1 id="title">USC Multiplayer Protocol Documentation</h1>
+
+    <p>
+    The USC Multiplayer server uses JSON packets with <b>topics</b>.
+    </p>
+    <p>
+    Each packet consists of a serialized JSON object with a <code>topic</code> field. This <code>topic</code> field will direct the packet to the correct subscriber.
+    </p>
+    <p>
+    This documentation lists defined topics for both the server and the client as well as their fields and other information.
+    </p>
+    <p>
+    To see how to JSON send packets over the network see <a href="https://github.com/itszn/usc-multiplayer-server/blob/master/docs/tcp_protocol.md">tcp_protocol.md</a>
+    </p>
+
+
+    <h2>Table of Contents</h2>
+
+    <div id="toc-container">
+      <ul id="toc">
+        
+        
+          <li>
+            <a href="client.html">Client.proto (expand)</a>
+          </li>
+        
+        
+          
+          <li>
+            <a href="#Server.proto">Server.proto</a>
+            <ul>
+              
+              
+              
+              
+                <li>
+                  <a href="#.room.game"><span class="badge">M</span>room.game</a>
+                </li>
+              
+              
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.room.host.set"><span class="badge">M</span>room.host.set</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.room.leave"><span class="badge">M</span>room.leave</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.room.option"><span class="badge">M</span>room.option</a>
+                </li>
+              
+              
+              
+              
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.room.score.final"><span class="badge">M</span>room.score.final</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.room.score.update"><span class="badge">M</span>room.score.update</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.room.setsong"><span class="badge">M</span>room.setsong</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.room.update.get"><span class="badge">M</span>room.update.get</a>
+                </li>
+              
+              
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.server.room.join"><span class="badge">M</span>server.room.join</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.server.room.new"><span class="badge">M</span>server.room.new</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.server.rooms"><span class="badge">M</span>server.rooms</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.user.auth"><span class="badge">M</span>user.auth</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.user.hard.toggle"><span class="badge">M</span>user.hard.toggle</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.user.nomap"><span class="badge">M</span>user.nomap</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.user.ready.toggle"><span class="badge">M</span>user.ready.toggle</a>
+                </li>
+              
+              
+              
+              
+              
+                <li>
+                  <a href="#.user.song.level"><span class="badge">M</span>user.song.level</a>
+                </li>
+              
+              
+              
+              
+              
+            </ul>
+          </li>
+        
+      </ul>
+    </div>
+
+    
+      
+      <div class="file-heading">
+        <h2 id="Server.proto">Server.proto</h2><a href="#title">Top</a>
+      </div>
+      <p>These are the packets a client can send to the server</p><p>Unathenticated users can only send <a href="server.html#.user.auth">user.auth</a></p>
+
+      
+        
+      
+        
+        <h3 id=".room.game">room.game</h3>
+        <p>Start the game, triggers a 6 second countdown</p>
+
+        
+
+        
+      
+      
+        
+      
+        
+      
+        
+        <h3 id=".room.host.set">room.host.set</h3>
+        <p>Change the room's host</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>host</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>The UUID of the user to make host </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".room.leave">room.leave</h3>
+        <p>Leave the current room</p>
+
+        
+
+        
+      
+      
+        
+        <h3 id=".room.option">room.option</h3>
+        <p>Toggle host rotation for the room</p>
+
+        
+
+        
+      
+      
+        
+      
+        
+      
+        
+      
+        
+        <h3 id=".room.score.final">room.score.final</h3>
+        <p>Tell the server the user's final score</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>score</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The user's final score at the end of the game </p></td>
+                </tr>
+              
+                <tr>
+                  <td>combo</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The user's max combo during the game </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clear</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The user's clear status for the game<br/>
+0: Exited<br/>
+1: Failed<br/>
+2: Clear<br/>
+3: Hard Clear<br/>
+4: Full Combo<br/>
+5: Perfect </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".room.score.update">room.score.update</h3>
+        <p>Tell the server user's current score</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>time</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The map time for the last score tick </p></td>
+                </tr>
+              
+                <tr>
+                  <td>score</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The current score at the chosen score tick </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".room.setsong">room.setsong</h3>
+        <p>Select a song as host</p><p><em>Future:</em> This will be changing to better find songs</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>song</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>The folder name of the selected song </p></td>
+                </tr>
+              
+                <tr>
+                  <td>diff</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The index of the chosen difficulty </p></td>
+                </tr>
+              
+                <tr>
+                  <td>level</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The level of the chosen difficulty </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".room.update.get">room.update.get</h3>
+        <p>Have the server send the lobby status. Responds with <a href="client.html#.room.update">room.update</a></p>
+
+        
+
+        
+      
+      
+        
+      
+        
+      
+        
+        <h3 id=".server.room.join">server.room.join</h3>
+        <p>Join a room by a given UUID. Responds with <a href="client.html#.server.room.join">server.room.join</a></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>UUID of the room to join </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+        <h3 id=".server.room.new">server.room.new</h3>
+        <p>Create a new room and join the user as the host</p><p><em>Future:</em> Current takes no args but will eventually take a room name and password</p>
+
+        
+
+        
+      
+      
+        
+        <h3 id=".server.rooms">server.rooms</h3>
+        <p>Have the server send the client the list of rooms. Responds with <a href="client.html#.server.rooms">server.rooms</a></p>
+
+        
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".user.auth">user.auth</h3>
+        <p>Authenticate the user. Responds with <a href="client.html#.server.rooms">server.rooms</a></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>password</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>Password to authenticate with 
+<em>Future:</em> This will be moved to a digest system </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>The display name for the user </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>Current version of the client </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".user.hard.toggle">user.hard.toggle</h3>
+        <p>Toggle the excessive rate for the user</p>
+
+        
+
+        
+      
+      
+        
+        <h3 id=".user.nomap">user.nomap</h3>
+        <p>Tell the server the client could not find the map</p>
+
+        
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".user.ready.toggle">user.ready.toggle</h3>
+        <p>Toggle the user's ready state</p>
+
+        
+
+        
+      
+      
+        
+      
+        
+        <h3 id=".user.song.level">user.song.level</h3>
+        <p>Select which level the user is playing</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>level</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td>required</td>
+                  <td><p>The level to play </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+
+      
+
+      
+
+      
+    
+  </body>
+</html>
+

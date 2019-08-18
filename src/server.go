@@ -168,6 +168,17 @@ func (self room_sort) Less(i, j int) bool {
 }
 
 func (self *Server) Send_rooms_to_user(u *User) error {
+	target := make(map[string]*User)
+	target[u.id] = u
+	return self.Send_rooms_to_targets(target)
+}
+
+func (self *Server) Send_rooms_to_users() error {
+	return self.Send_rooms_to_targets(self.users)
+}
+
+// We take a map just because we don't want to copy all users every time
+func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
@@ -188,41 +199,19 @@ func (self *Server) Send_rooms_to_user(u *User) error {
 		})
 	}
 
-	return u.Send_json(Json{
-		"topic":   "server.rooms",
-		"rooms":   roomdata,
-		"userid":  u.id,
-		"version": VERSION,
-	})
-
-	return nil
-}
-
-func (self *Server) Send_rooms_to_users() {
-	self.mtx.RLock()
-	defer self.mtx.RUnlock()
-
-	var rooms []Json
-	for _, room := range self.rooms {
-		rooms = append(rooms, Json{
-			"current": room.Num_users(),
-			"max":     room.max,
-			"name":    room.name,
-			"ingame":  room.in_game,
-			"id":      room.id,
-		})
-	}
-
-	for _, user := range self.users {
+	for _, user := range users {
 		if user.room != nil {
 			continue
 		}
 		user.Send_json(Json{
-			"topic":  "server.rooms",
-			"rooms":  rooms,
-			"userid": user.id,
+			"topic":   "server.rooms",
+			"rooms":   roomdata,
+			"userid":  user.id,
+			"version": VERSION,
 		})
 	}
+
+	return nil
 }
 
 func (self *Server) send_rooms_handler(msg *Message) error {
@@ -239,8 +228,11 @@ func (self *Server) add_user_to_room(user *User, room *Room) error {
 	user.Send_json(Json{
 		"topic": "server.room.joined",
 		"room": Json{
-			"name": room.name,
-			"id":   room.id,
+			"current": room.Num_users(),
+			"max":     room.max,
+			"name":    room.name,
+			"ingame":  room.in_game,
+			"id":      room.id,
 		},
 	})
 

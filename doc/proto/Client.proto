@@ -1,0 +1,73 @@
+// These are the packets the server sends to the client
+syntax = "proto3";
+
+import "Types.proto";
+
+message server {
+    // List of the current lobby rooms
+    // Sent when lobbies change
+    // <em>Future:</em> userid and version will probably get moved elsewhere
+    message rooms {
+        // List of lobbies on the server
+        repeated Types.room rooms = 1;
+        // UUID of the current user
+        string userid = 2;
+        // Version of the server
+        string version = 3;
+    }
+
+    message room {
+    // Sent in response to <a href="server.html#.server.room.join">server.room.join</a>
+    message join {
+        // The room that has been joined
+        Types.room room = 1;
+    }}
+
+    // Sent on a fatal error. The server will most likely disconnect the user after this
+    message error {
+        // Description of the error
+        string error = 1;
+    }
+}
+
+message room {
+
+    // Sent to users when a room has been changed
+    message update {
+        // List of users in the room
+        repeated Types.user users = 1;
+        // Whether the room rotates host or not
+        bool do_rotate = 2;
+        // Set to true if the game is about to start
+        bool start_soon = 3;
+        // Folder name of the current song<br/>
+        // Set to <b>null</b> if no song
+        string song = 4;
+        // Index of the current selected difficulty<br/>
+        // Set to <b>null</b> if no song
+        uint32 diff = 5;
+        // Level of the current selected difficulty<br/>
+        // Set to <b>null</b> if no song
+        uint32 level = 6;
+        // The UUID of the current host</br>
+        // If the room is currently in game, this field is not present
+        string host = 7;
+        // Whether the current user has excessive rate enabled or not
+        bool hard_mode = 8;
+    }
+
+}
+
+message game {
+    // Sent to users in a room when the game has started
+    message started {
+        // True if the user has excessive rate enabled
+        bool hard = 1;
+
+    }
+
+    message scoreboard {
+        repeated Types.gamescore users = 1;
+    }
+}
+
