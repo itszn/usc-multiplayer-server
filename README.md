@@ -12,13 +12,13 @@ Check out the [release page](https://github.com/itszn/usc-multiplayer-server/rel
 Otherwise see below of building:
 
 ## Building
-[Install go 1.12+](https://golang.org/doc/install) then
-```
-# Install required go dependencies
-make get
-# Build the server
-make build
+[Install go 1.12+](https://golang.org/doc/install)
 
-# Run the server after building
-./usc_multiplayer
+```
+cd src
+# Install required go dependencies
+go get
+
+# Build the server
+go build
 ```
