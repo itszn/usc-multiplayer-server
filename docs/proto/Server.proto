@@ -61,6 +61,12 @@ message user {
     // Tell the server the client could not find the map
     message nomap {
     }
+
+    message sync {
+    // Tell the server that the client is ready sync
+    message ready {
+
+    }}
 }
 
 

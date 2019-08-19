@@ -9,7 +9,7 @@ var (
 )
 
 var (
-	VERSION = "v0.111"
+	VERSION = "v0.12"
 )
 
 func main() {

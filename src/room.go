@@ -177,6 +177,7 @@ func (self *Room) add_routes() {
 	self.route("room.option.rotation.toggle", self.toggle_rotate_handler)
 
 	self.route("room.game.start", self.start_game_handler)
+	self.route("room.sync.ready", self.handle_sync_ready)
 	self.route("room.score.update", self.handle_game_score)
 	self.route("room.score.final", self.handle_final_score)
 
@@ -429,12 +430,45 @@ func (self *Room) start_game_handler(msg *Message) error {
 				"hard":  u.hard_mode,
 			})
 			u.playing = true
+			u.ready = false
+			u.synced = false
 		}
 
 		self.mtx_unlock(0)
 		self.Send_lobby_update()
 	}()
 
+	return nil
+}
+
+func (self *Room) handle_sync_ready(msg *Message) error {
+	user := msg.User()
+	if !user.playing || user.synced {
+		return nil
+	}
+
+	defer self.mtx_unlock(self.mtx_lock())
+	user.synced = true
+
+	// Check if all players are ready
+	for _, u := range self.users {
+		if !u.playing {
+			continue
+		}
+		if !u.synced {
+			return nil
+		}
+	}
+
+	// Send sync start packet
+	for _, u := range self.users {
+		if !u.playing {
+			continue
+		}
+		u.Send_json(Json{
+			"topic": "game.sync.start",
+		})
+	}
 	return nil
 }
 

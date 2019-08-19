@@ -69,5 +69,10 @@ message game {
     message scoreboard {
         repeated Types.gamescore users = 1;
     }
+
+    message sync {
+    // Tells the client to start the song (all players are synced)
+    message start {
+    }}
 }
 

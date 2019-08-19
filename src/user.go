@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	//"strconv"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -46,6 +46,7 @@ type User struct {
 
 	ready       bool
 	missing_map bool
+	synced      bool
 
 	playing   bool
 	hard_mode bool
@@ -320,24 +321,22 @@ func (self *User) add_routes() {
 
 func (self *User) simple_server_auth(msg *Message) error {
 
-	/*
-		version, ok := msg.Json()["version"].(string)
-		var version_f float64
-		if ok {
-			var err error
-			version_f, err = strconv.ParseFloat(version[1:], 64)
-			ok = err == nil
-		}
-		if ok {
-			ok = version_f > 0.11
-		}
-		if !ok {
-			self.Send_json(Json{
-				"topic": "server.error",
-				"error": "Server does not support this version of multiplayer",
-			})
-		}
-	*/
+	version, ok := msg.Json()["version"].(string)
+	var version_f float64
+	if ok {
+		var err error
+		version_f, err = strconv.ParseFloat(version[1:], 64)
+		ok = err == nil
+	}
+	if ok {
+		ok = version_f >= 0.12
+	}
+	if !ok {
+		self.Send_json(Json{
+			"topic": "server.error",
+			"error": "Server does not support this version of multiplayer",
+		})
+	}
 
 	password := msg.Json()["password"].(string)
 
