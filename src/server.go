@@ -193,11 +193,12 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 	var roomdata []Json
 	for _, room := range rooms {
 		roomdata = append(roomdata, Json{
-			"current": room.Num_users(),
-			"max":     room.max,
-			"name":    room.name,
-			"ingame":  room.in_game,
-			"id":      room.id,
+			"current":  room.Num_users(),
+			"max":      room.max,
+			"name":     room.name,
+			"ingame":   room.in_game,
+			"id":       room.id,
+			"password": room.password != "",
 		})
 	}
 
@@ -228,11 +229,12 @@ func (self *Server) add_user_to_room(user *User, room *Room) error {
 	user.Send_json(Json{
 		"topic": "server.room.joined",
 		"room": Json{
-			"current": room.Num_users(),
-			"max":     room.max,
-			"name":    room.name,
-			"ingame":  room.in_game,
-			"id":      room.id,
+			"current":  room.Num_users(),
+			"max":      room.max,
+			"name":     room.name,
+			"ingame":   room.in_game,
+			"id":       room.id,
+			"password": room.password,
 		},
 	})
 
@@ -260,6 +262,15 @@ func (self *Server) join_room_handler(msg *Message) error {
 		return errors.New("Room not found")
 	}
 
+	if room.password != "" {
+		if room.password != msg.Json()["password"].(string) {
+			user.Send_json(Json{
+				"topic": "server.room.badpassword",
+			})
+			return nil
+		}
+	}
+
 	return self.add_user_to_room(user, room)
 }
 
@@ -269,8 +280,12 @@ func (self *Server) new_room_handler(msg *Message) error {
 		return nil
 	}
 
-	name := user.name + "'s Game"
-	room := New_room(self, name, 10)
+	name := msg.Json()["name"].(string)
+	password, has_pass := msg.Json()["password"].(string)
+	if !has_pass {
+		password = ""
+	}
+	room := New_room(self, name, 10, password)
 	self.Add_room(room)
 	go room.Start()
 

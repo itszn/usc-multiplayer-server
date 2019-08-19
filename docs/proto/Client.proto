@@ -21,11 +21,16 @@ message server {
     }
 
     message room {
-    // Sent in response to <a href="server.html#.server.room.join">server.room.join</a>
-    message join {
-        // The room that has been joined
-        Types.room room = 1;
-    }}
+        // Sent in response to <a href="server.html#.server.room.join">server.room.join</a>
+        message joined {
+            // The room that has been joined
+            Types.room room = 1;
+        }
+
+        // Sent when the wrong password was used for a room
+        message badpassword {
+        }
+    }
 
     // Sent on a fatal error. The server will most likely disconnect the user after this
     message error {

@@ -562,6 +562,13 @@
                   <td><p>UUID of the room to join </p></td>
                 </tr>
               
+                <tr>
+                  <td>password</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>optional</td>
+                  <td><p>Password for the string if has one </p></td>
+                </tr>
+              
             </tbody>
           </table>
 
@@ -572,9 +579,33 @@
       
         
         <h3 id=".server.room.new">server.room.new</h3>
-        <p>Create a new room and join the user as the host</p><p><em>Future:</em> Current takes no args but will eventually take a room name and password</p>
+        <p>Create a new room and join the user as the host</p>
 
         
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>required</td>
+                  <td><p>Name for the room </p></td>
+                </tr>
+              
+                <tr>
+                  <td>password</td>
+                  <td><a href="#.string">string</a></td>
+                  <td>optional</td>
+                  <td><p>Password for the room </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
 
         
       

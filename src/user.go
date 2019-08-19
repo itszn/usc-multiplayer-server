@@ -222,8 +222,8 @@ func (self *User) read_loop() {
 				continue
 
 			}
-			if DEBUG_LEVEL >= 3 {
-				fmt.Println(topic, json_data)
+			if DEBUG_LEVEL >= 2 {
+				fmt.Println("-->", topic, json_data)
 			}
 
 			// Take the lock so we wait until we have processed
@@ -294,8 +294,8 @@ func (self *User) Send_json(data Json) error {
 	self.writer.WriteByte('\n')
 
 	self.writer.Flush()
-	if DEBUG_LEVEL >= 3 {
-		fmt.Println("Sent packet", data)
+	if DEBUG_LEVEL >= 2 {
+		fmt.Println("<--", data)
 	}
 
 	return nil

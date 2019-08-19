@@ -15,6 +15,8 @@ message Types {
         string name = 4;
         // Whether the room is current in game
         bool ingame = 5;
+        // Set if the room has a password
+        bool password = 6;
     }
 
     message user {

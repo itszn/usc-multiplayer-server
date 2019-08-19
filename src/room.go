@@ -47,7 +47,7 @@ type Room struct {
 }
 
 // TODO per room password
-func New_room(server *Server, name string, max int) *Room {
+func New_room(server *Server, name string, max int, password string) *Room {
 	room := &Room{
 		server: server,
 		name:   name,
@@ -57,6 +57,7 @@ func New_room(server *Server, name string, max int) *Room {
 
 		users:    make([]*User, 0),
 		user_map: make(map[string]*User),
+		password: password,
 
 		song: nil,
 		host: nil,

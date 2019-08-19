@@ -246,7 +246,13 @@
               
               
                 <li>
-                  <a href="#.server.room.join"><span class="badge">M</span>server.room.join</a>
+                  <a href="#.server.room.badpassword"><span class="badge">M</span>server.room.badpassword</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#.server.room.joined"><span class="badge">M</span>server.room.joined</a>
                 </li>
               
               
@@ -521,7 +527,16 @@ If the room is currently in game, this field is not present </p></td>
         
       
         
-        <h3 id=".server.room.join">server.room.join</h3>
+        <h3 id=".server.room.badpassword">server.room.badpassword</h3>
+        <p>Sent when the wrong password was used for a room</p>
+
+        
+
+        
+      
+      
+        
+        <h3 id=".server.room.joined">server.room.joined</h3>
         <p>Sent in response to <a href="server.html#.server.room.join">server.room.join</a></p>
 
         
@@ -672,6 +687,13 @@ If the room is currently in game, this field is not present </p></td>
                   <td><a href="#.bool">bool</a></td>
                   <td></td>
                   <td><p>Whether the room is current in game </p></td>
+                </tr>
+              
+                <tr>
+                  <td>password</td>
+                  <td><a href="#.bool">bool</a></td>
+                  <td></td>
+                  <td><p>Set if the room has a password </p></td>
                 </tr>
               
             </tbody>

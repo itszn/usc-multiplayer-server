@@ -13,12 +13,16 @@ message server {
         message join {
             // UUID of the room to join
             required string id = 1;
+            // Password for the string if has one
+            optional string password = 2;
         }
 
         // Create a new room and join the user as the host
-        // <em>Future:</em> Current takes no args but will eventually take a room name and password
         message new {
-
+            // Name for the room
+            required string name = 1;
+            // Password for the room
+            optional string password = 2;
         }
     }
 }
