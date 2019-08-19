@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -182,6 +183,9 @@ func (self *User) destroy() {
 func (self *User) read_loop() {
 	// If this loop exits, clean up user
 	defer self.destroy()
+
+	// Sleep for a short bit to avoid race with the router
+	time.Sleep(100 * time.Millisecond)
 
 	// Use to catch ^C
 	sigchan := make(chan os.Signal, 1)
