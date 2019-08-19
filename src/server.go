@@ -70,7 +70,9 @@ func (self *Server) listen_tcp() {
 			return
 		}
 
-		fmt.Println("New connection")
+		if DEBUG_LEVEL >= 2 {
+			fmt.Println("New connection")
+		}
 
 		new_user, err := New_user(conn, self)
 		if err != nil {

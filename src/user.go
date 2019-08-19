@@ -162,7 +162,6 @@ func (self *User) init() error {
 func (self *User) Start() {
 	go self.read_loop()
 
-	fmt.Println("Started user router")
 	if err := self.router.Run(); err != nil {
 		fmt.Println("Error ", err)
 		self.destroy()
@@ -223,7 +222,9 @@ func (self *User) read_loop() {
 				continue
 
 			}
-			fmt.Println(topic, json_data)
+			if DEBUG_LEVEL >= 3 {
+				fmt.Println(topic, json_data)
+			}
 
 			// Take the lock so we wait until we have processed
 			// the current packet
@@ -293,7 +294,9 @@ func (self *User) Send_json(data Json) error {
 	self.writer.WriteByte('\n')
 
 	self.writer.Flush()
-	fmt.Println("Sent packet", data)
+	if DEBUG_LEVEL >= 3 {
+		fmt.Println("Sent packet", data)
+	}
 
 	return nil
 
@@ -357,7 +360,9 @@ func (self *User) simple_server_auth(msg *Message) error {
 	self.name = name
 
 	self.authed = true
-	fmt.Println("Authenticated user", self.name)
+	if DEBUG_LEVEL >= 2 {
+		fmt.Println("Authenticated user", self.name)
+	}
 
 	self.Send_json(Json{
 		"topic":        "server.info",

@@ -160,7 +160,6 @@ func (self *Room) init() error {
 }
 
 func (self *Room) Start() {
-	fmt.Println("Started room router")
 	if err := self.router.Run(); err != nil {
 		fmt.Println("Error ", err)
 	}
@@ -552,11 +551,7 @@ func (self *Room) handle_game_score(msg *Message) error {
 
 	self.Update_scoreboard(user, new_time)
 
-	var x *User
-	x = nil
-	x.Unblock()
 	return nil
-
 }
 
 func (self *Room) handle_final_score(msg *Message) error {
