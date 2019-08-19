@@ -280,7 +280,10 @@ func (self *Server) new_room_handler(msg *Message) error {
 		return nil
 	}
 
-	name := msg.Json()["name"].(string)
+	name, has_name := msg.Json()["name"].(string)
+	if !has_name {
+		name = user.name + "'s Game"
+	}
 	password, has_pass := msg.Json()["password"].(string)
 	if !has_pass {
 		password = ""
