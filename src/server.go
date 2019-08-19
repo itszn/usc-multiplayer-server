@@ -204,10 +204,8 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 			continue
 		}
 		user.Send_json(Json{
-			"topic":   "server.rooms",
-			"rooms":   roomdata,
-			"userid":  user.id,
-			"version": VERSION,
+			"topic": "server.rooms",
+			"rooms": roomdata,
 		})
 	}
 

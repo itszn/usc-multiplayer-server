@@ -237,6 +237,12 @@
               
               
               
+                <li>
+                  <a href="#.server.info"><span class="badge">M</span>server.info</a>
+                </li>
+              
+              
+              
               
               
                 <li>
@@ -473,6 +479,46 @@ If the room is currently in game, this field is not present </p></td>
       
       
         
+        <h3 id=".server.info">server.info</h3>
+        <p>List of the current lobby rooms</p><p>Sent when lobbies change</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>Version of the server </p></td>
+                </tr>
+              
+                <tr>
+                  <td>userid</td>
+                  <td><a href="#.string">string</a></td>
+                  <td></td>
+                  <td><p>UUID of the current user </p></td>
+                </tr>
+              
+                <tr>
+                  <td>refresh_rate</td>
+                  <td><a href="#.int32">int32</a></td>
+                  <td></td>
+                  <td><p>The refresh rate of the scoreboard (how often to send scores) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+
+          
+
+        
+      
+      
+        
       
         
         <h3 id=".server.room.join">server.room.join</h3>
@@ -502,7 +548,7 @@ If the room is currently in game, this field is not present </p></td>
       
         
         <h3 id=".server.rooms">server.rooms</h3>
-        <p>List of the current lobby rooms</p><p>Sent when lobbies change</p><p><em>Future:</em> userid and version will probably get moved elsewhere</p>
+        <p></p>
 
         
           <table class="field-table">
@@ -516,20 +562,6 @@ If the room is currently in game, this field is not present </p></td>
                   <td><a href="#.Types.room">Types.room</a></td>
                   <td>repeated</td>
                   <td><p>List of lobbies on the server </p></td>
-                </tr>
-              
-                <tr>
-                  <td>userid</td>
-                  <td><a href="#.string">string</a></td>
-                  <td></td>
-                  <td><p>UUID of the current user </p></td>
-                </tr>
-              
-                <tr>
-                  <td>version</td>
-                  <td><a href="#.string">string</a></td>
-                  <td></td>
-                  <td><p>Version of the server </p></td>
                 </tr>
               
             </tbody>

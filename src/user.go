@@ -359,6 +359,13 @@ func (self *User) simple_server_auth(msg *Message) error {
 	self.authed = true
 	fmt.Println("Authenticated user", self.name)
 
+	self.Send_json(Json{
+		"topic":        "server.info",
+		"userid":       self.id,
+		"version":      VERSION,
+		"refresh_rate": SCOREBOARD_REFERSH_RATE,
+	})
+
 	self.server.Send_rooms_to_user(self)
 
 	return nil

@@ -6,14 +6,18 @@ import "Types.proto";
 message server {
     // List of the current lobby rooms
     // Sent when lobbies change
-    // <em>Future:</em> userid and version will probably get moved elsewhere
+    message info {
+        // Version of the server
+        string version = 1;
+        // UUID of the current user
+        string userid = 2;
+        // The refresh rate of the scoreboard (how often to send scores)
+        int32 refresh_rate = 3;
+
+    }
     message rooms {
         // List of lobbies on the server
         repeated Types.room rooms = 1;
-        // UUID of the current user
-        string userid = 2;
-        // Version of the server
-        string version = 3;
     }
 
     message room {
