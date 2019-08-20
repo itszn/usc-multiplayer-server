@@ -17,6 +17,8 @@ message Types {
         bool ingame = 5;
         // Set if the room has a password
         bool password = 6;
+        // Token that can be used to join a room without a password
+        string join_token = 7;
     }
 
     message user {

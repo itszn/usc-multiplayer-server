@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
 	"sort"
 	"sync"
@@ -44,6 +45,8 @@ type Room struct {
 
 	mtx    sync.RWMutex
 	mtx_id uint64
+
+	join_token string
 }
 
 // TODO per room password
@@ -131,6 +134,10 @@ func (self *Room) Rotate_host() {
 }
 
 func (self *Room) init() error {
+	token_bytes := make([]byte, 16)
+	rand.Read(token_bytes)
+	self.join_token = fmt.Sprintf("%x", token_bytes)
+
 	self.pub_sub = gochannel.NewGoChannel(gochannel.Config{}, logger)
 
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
@@ -321,6 +328,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		"users":      userdata,
 		"do_rotate":  self.do_rotate_host,
 		"start_soon": self.start_soon,
+		"join_token": self.join_token,
 	}
 	if self.song != nil {
 		packet["song"] = self.song.name

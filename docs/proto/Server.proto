@@ -12,9 +12,11 @@ message server {
         // Join a room by a given UUID. Responds with <a href="client.html#.server.room.join">server.room.join</a>
         message join {
             // UUID of the room to join
-            required string id = 1;
+            optional string id = 1;
             // Password for the string if has one
             optional string password = 2;
+            // Use a token instead of and id and password to join a room
+            optional string token = 3;
         }
 
         // Create a new room and join the user as the host

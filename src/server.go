@@ -229,12 +229,13 @@ func (self *Server) add_user_to_room(user *User, room *Room) error {
 	user.Send_json(Json{
 		"topic": "server.room.joined",
 		"room": Json{
-			"current":  room.Num_users(),
-			"max":      room.max,
-			"name":     room.name,
-			"ingame":   room.in_game,
-			"id":       room.id,
-			"password": room.password,
+			"current":    room.Num_users(),
+			"max":        room.max,
+			"name":       room.name,
+			"ingame":     room.in_game,
+			"id":         room.id,
+			"password":   room.password != "",
+			"join_token": room.join_token,
 		},
 	})
 
@@ -251,18 +252,34 @@ func (self *Server) join_room_handler(msg *Message) error {
 		return errors.New("User already in a room")
 	}
 
-	// TODO add room password or something
-	room_id := msg.Json()["id"].(string)
+	join_token, has_token := msg.Json()["token"].(string)
 
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
-	room, ok := self.rooms[room_id]
-	if !ok {
+	var room *Room = nil
+	var found_room bool
+
+	if has_token {
+		for _, r := range self.rooms {
+			if r.join_token == join_token {
+				room = r
+				break
+			}
+		}
+		if room == nil {
+			found_room = false
+		}
+	} else {
+		room_id := msg.Json()["id"].(string)
+		room, found_room = self.rooms[room_id]
+	}
+
+	if !found_room {
 		return errors.New("Room not found")
 	}
 
-	if room.password != "" {
+	if !has_token && room.password != "" {
 		if room.password != msg.Json()["password"].(string) {
 			user.Send_json(Json{
 				"topic": "server.room.badpassword",
