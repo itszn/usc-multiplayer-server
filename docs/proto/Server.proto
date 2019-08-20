@@ -48,6 +48,12 @@ message user {
 
     }}
 
+    message mirror {
+    // Toggle the mirror option for the user
+    message toggle {
+
+    }}
+
     message hard {
     // Toggle the excessive rate for the user
     message toggle {

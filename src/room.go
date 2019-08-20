@@ -201,6 +201,7 @@ func (self *Room) Add_user(user *User) {
 	user.playing = false
 	user.missing_map = false
 	user.hard_mode = false
+	user.mirror_mode = false
 	if self.song == nil {
 		user.level = 0
 	} else {
@@ -340,6 +341,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 			continue
 		}
 		packet["hard_mode"] = u.hard_mode
+		packet["mirror_mode"] = u.mirror_mode
 		u.Send_json(packet)
 	}
 }
@@ -426,8 +428,9 @@ func (self *Room) start_game_handler(msg *Message) error {
 			}
 
 			u.Send_json(Json{
-				"topic": "game.started",
-				"hard":  u.hard_mode,
+				"topic":  "game.started",
+				"hard":   u.hard_mode,
+				"mirror": u.mirror_mode,
 			})
 			u.playing = true
 			u.ready = false
@@ -460,15 +463,18 @@ func (self *Room) handle_sync_ready(msg *Message) error {
 		}
 	}
 
-	// Send sync start packet
-	for _, u := range self.users {
-		if !u.playing {
-			continue
+	go func() {
+		time.Sleep(1 * time.Second)
+		// Send sync start packet
+		for _, u := range self.users {
+			if !u.playing {
+				continue
+			}
+			u.Send_json(Json{
+				"topic": "game.sync.start",
+			})
 		}
-		u.Send_json(Json{
-			"topic": "game.sync.start",
-		})
-	}
+	}()
 	return nil
 }
 
@@ -590,6 +596,24 @@ func (self *Room) handle_final_score(msg *Message) error {
 		if self.do_rotate_host {
 			// Use go routine here to avoid deadlock
 			go self.Rotate_host()
+		}
+
+		all_fail := true
+		for _, u := range self.users {
+			if u.score != nil && u.score.clear >= 2 {
+				all_fail = false
+			}
+		}
+
+		// Send packet to exit out users still watching
+		if all_fail {
+			for _, u := range self.users {
+				if u.score != nil {
+					u.Send_json(Json{
+						"topic": "game.allfailed",
+					})
+				}
+			}
 		}
 	}
 	user.ready = false

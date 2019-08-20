@@ -49,9 +49,10 @@ type User struct {
 	missing_map bool
 	synced      bool
 
-	playing   bool
-	hard_mode bool
-	level     int
+	playing     bool
+	hard_mode   bool
+	mirror_mode bool
+	level       int
 
 	conn   net.Conn
 	reader *bufio.Reader
@@ -322,6 +323,7 @@ func (self *User) add_routes() {
 	self.route("user.auth", self.simple_server_auth)
 	self.route("user.ready.toggle", self.toggle_ready_handler)
 	self.route("user.hard.toggle", self.toggle_hard_handler)
+	self.route("user.mirror.toggle", self.toggle_mirror_handler)
 	self.route("user.song.level", self.song_level_handler)
 	self.route("user.nomap", self.no_map_handler)
 }
@@ -427,6 +429,15 @@ func (self *User) toggle_hard_handler(msg *Message) error {
 		return nil
 	}
 	self.hard_mode = !self.hard_mode
+	self.room.Send_lobby_update_to_user(self)
+	return nil
+}
+
+func (self *User) toggle_mirror_handler(msg *Message) error {
+	if self.room == nil || self.playing {
+		return nil
+	}
+	self.mirror_mode = !self.mirror_mode
 	self.room.Send_lobby_update_to_user(self)
 	return nil
 }
