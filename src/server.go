@@ -269,6 +269,8 @@ func (self *Server) join_room_handler(msg *Message) error {
 		}
 		if room == nil {
 			found_room = false
+		} else {
+			found_room = true
 		}
 	} else {
 		room_id := msg.Json()["id"].(string)
