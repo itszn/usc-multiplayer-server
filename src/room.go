@@ -16,6 +16,7 @@ import (
 
 type Song struct {
 	name  string
+	hash  string
 	diff  int
 	level int
 }
@@ -334,10 +335,12 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		packet["song"] = self.song.name
 		packet["diff"] = self.song.diff
 		packet["level"] = self.song.level
+		packet["hash"] = self.song.hash
 	} else {
 		packet["song"] = nil
 		packet["diff"] = nil
 		packet["level"] = nil
+		packet["hash"] = nil
 	}
 
 	if self.host != nil && !self.in_game {
@@ -381,6 +384,11 @@ func (self *Room) set_song_handler(msg *Message) error {
 
 	song.diff = Json_int(json["diff"])
 	song.level = Json_int(json["level"])
+	hash, has_hash := json["hash"].(string)
+	if !has_hash {
+		hash = ""
+	}
+	song.hash = hash
 	user.level = song.level
 
 	defer self.mtx_unlock(self.mtx_lock())
@@ -452,14 +460,9 @@ func (self *Room) start_game_handler(msg *Message) error {
 	return nil
 }
 
-func (self *Room) handle_sync_ready(msg *Message) error {
-	user := msg.User()
-	if !user.playing || user.synced {
-		return nil
-	}
-
-	defer self.mtx_unlock(self.mtx_lock())
-	user.synced = true
+func (self *Room) check_sync_state() error {
+	self.mtx.RLock()
+	defer self.mtx.RUnlock()
 
 	// Check if all players are ready
 	for _, u := range self.users {
@@ -483,6 +486,19 @@ func (self *Room) handle_sync_ready(msg *Message) error {
 			})
 		}
 	}()
+	return nil
+}
+
+func (self *Room) handle_sync_ready(msg *Message) error {
+	user := msg.User()
+	if !user.playing || user.synced {
+		return nil
+	}
+
+	user.synced = true
+
+	self.check_sync_state()
+
 	return nil
 }
 
