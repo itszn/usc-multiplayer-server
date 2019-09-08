@@ -43,6 +43,7 @@ type Room struct {
 
 	start_soon bool
 	in_game    bool
+	is_synced  bool
 
 	mtx    sync.RWMutex
 	mtx_id uint64
@@ -69,6 +70,7 @@ func New_room(server *Server, name string, max int, password string) *Room {
 		do_rotate_host: false,
 		start_soon:     false,
 		in_game:        false,
+		is_synced:      false,
 
 		mtx_id: 1,
 	}
@@ -191,6 +193,8 @@ func (self *Room) add_routes() {
 
 	self.route("room.update.get", self.handle_back_in_lobby)
 	self.route("room.host.set", self.handle_set_host)
+
+	self.route("room.kick", self.handle_kick)
 }
 
 func (self *Room) Add_user(user *User) {
@@ -224,7 +228,13 @@ func (self *Room) Add_user(user *User) {
 }
 
 func (self *Room) Remove_user(user *User) {
-	if _, ok := self.user_map[user.id]; !ok {
+	self.Remove_user_by_id(user.id)
+
+}
+
+func (self *Room) Remove_user_by_id(id string) {
+	user, ok := self.user_map[id]
+	if !ok {
 		return
 	}
 
@@ -304,9 +314,15 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		if u.score == nil {
 			continue
 		}
+
+		// clear_off makes sure people who cleared are higher in the leaderboard
+		clear_off := uint32(0)
+		if u.score.clear > 1 {
+			clear_off = 10000000
+		}
 		board = append(board, score_sort{
 			user:  u,
-			score: u.score.score,
+			score: u.score.score + clear_off,
 		})
 	}
 	sort.Sort(score_sort_by_score(board))
@@ -431,6 +447,7 @@ func (self *Room) start_game_handler(msg *Message) error {
 
 		defer self.mtx_unlock(self.mtx_lock())
 		self.in_game = true
+		self.is_synced = false
 		self.start_soon = false
 
 		for _, u := range self.users {
@@ -455,27 +472,43 @@ func (self *Room) start_game_handler(msg *Message) error {
 
 		self.mtx_unlock(0)
 		self.Send_lobby_update()
+
+		// We want to prevent players from holding up
+		time.Sleep(15 * time.Second)
+		self.check_sync_state(true)
 	}()
 
 	return nil
 }
 
-func (self *Room) check_sync_state() error {
+func (self *Room) check_sync_state(force bool) error {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
-	// Check if all players are ready
-	for _, u := range self.users {
-		if !u.playing {
-			continue
-		}
-		if !u.synced {
-			return nil
+	if self.is_synced {
+		return nil
+	}
+
+	if !force {
+		// Check if all players are ready
+		for _, u := range self.users {
+			if !u.playing {
+				continue
+			}
+			if !u.synced {
+				return nil
+			}
 		}
 	}
 
+	self.is_synced = true
+
 	go func() {
 		time.Sleep(1 * time.Second)
+
+		self.mtx.RLock()
+		defer self.mtx.RUnlock()
+
 		// Send sync start packet
 		for _, u := range self.users {
 			if !u.playing {
@@ -484,6 +517,11 @@ func (self *Room) check_sync_state() error {
 			u.Send_json(Json{
 				"topic": "game.sync.start",
 			})
+
+			// Start them but kick them off the scoreboard (so they don't lag behind)
+			if !u.synced {
+				u.playing = false
+			}
 		}
 	}()
 	return nil
@@ -497,7 +535,7 @@ func (self *Room) handle_sync_ready(msg *Message) error {
 
 	user.synced = true
 
-	self.check_sync_state()
+	self.check_sync_state(false)
 
 	return nil
 }
@@ -536,7 +574,6 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 			return
 		}
 	}
-
 	board := make([]score_sort, 0)
 	for _, u := range self.users {
 		if !u.playing && u.score == nil {
@@ -617,27 +654,10 @@ func (self *Room) handle_final_score(msg *Message) error {
 
 	if done {
 		self.in_game = false
+		self.is_synced = false
 		if self.do_rotate_host {
 			// Use go routine here to avoid deadlock
 			go self.Rotate_host()
-		}
-
-		all_fail := true
-		for _, u := range self.users {
-			if u.score != nil && u.score.clear >= 2 {
-				all_fail = false
-			}
-		}
-
-		// Send packet to exit out users still watching
-		if all_fail {
-			for _, u := range self.users {
-				if u.score != nil {
-					u.Send_json(Json{
-						"topic": "game.allfailed",
-					})
-				}
-			}
 		}
 	}
 	user.ready = false
@@ -670,4 +690,16 @@ func (self *Room) handle_set_host(msg *Message) error {
 
 	self.Send_lobby_update()
 	return nil
+}
+
+func (self *Room) handle_kick(msg *Message) error {
+	user := msg.User()
+	if self.host != user {
+		return nil
+	}
+
+	uid := msg.Json()["id"].(string)
+	self.Remove_user_by_id(uid)
+	return nil
+
 }

@@ -307,7 +307,7 @@ func (self *Server) new_room_handler(msg *Message) error {
 	if !has_pass {
 		password = ""
 	}
-	room := New_room(self, name, 10, password)
+	room := New_room(self, name, 8, password)
 	self.Add_room(room)
 	go room.Start()
 

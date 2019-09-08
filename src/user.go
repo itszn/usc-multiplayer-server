@@ -338,7 +338,7 @@ func (self *User) simple_server_auth(msg *Message) error {
 		ok = err == nil
 	}
 	if ok {
-		ok = version_f >= 0.12
+		ok = version_f >= 0.16
 	}
 	if !ok {
 		self.Send_json(Json{

@@ -14,7 +14,7 @@ var (
 )
 
 var (
-	VERSION                 = "v0.15"
+	VERSION                 = "v0.16"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0
 )
