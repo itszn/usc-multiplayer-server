@@ -347,14 +347,17 @@ func (self *User) simple_server_auth(msg *Message) error {
 		})
 	}
 
-	password := msg.Json()["password"].(string)
+	if SERVER_PASS != "" {
 
-	if password != "d3e5a1c17644e28fa156" {
-		self.Send_json(Json{
-			"topic": "server.error",
-			"error": "Not authorized",
-		})
-		return nil
+		password := msg.Json()["password"].(string)
+
+		if password != SERVER_PASS {
+			self.Send_json(Json{
+				"topic": "server.error",
+				"error": "Not authorized",
+			})
+			return nil
+		}
 	}
 
 	name, ok := msg.Json()["name"].(string)

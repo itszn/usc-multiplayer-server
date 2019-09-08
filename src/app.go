@@ -17,6 +17,7 @@ var (
 	VERSION                 = "v0.16"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0
+	SERVER_PASS             = ""
 )
 
 func main() {
@@ -26,6 +27,9 @@ func main() {
 
 	var bind string
 	flag.StringVar(&bind, "bind", "0.0.0.0:39079", "host:port to bind to")
+
+	flag.StringVar(&SERVER_PASS, "password", "", "server password if required")
+
 	flag.Parse()
 
 	// Setup watermill logging
