@@ -58,11 +58,13 @@ message room {
         // Level of the current selected difficulty<br/>
         // Set to <b>null</b> if no song
         uint32 level = 6;
+        // Selective hash of the audio file (0x8000 bytes)
+        string hash = 7;
         // The UUID of the current host</br>
         // If the room is currently in game, this field is not present
-        string host = 7;
+        string host = 8;
         // Whether the current user has excessive rate enabled or not
-        bool hard_mode = 8;
+        bool hard_mode = 9;
     }
 
 }
@@ -84,9 +86,5 @@ message game {
     // Tells the client to start the song (all players are synced)
     message start {
     }}
-
-    // Sent when all users have failed the song (ending it early)
-    message allfailed {
-    }
 }
 
