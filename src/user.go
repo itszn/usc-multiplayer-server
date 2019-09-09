@@ -75,6 +75,8 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 		server: server,
 		room:   nil,
 
+		name: "",
+
 		score:       nil,
 		ready:       false,
 		missing_map: false,
@@ -201,7 +203,9 @@ func (self *User) read_loop() {
 
 		mode, err := self.reader.ReadByte()
 		if err != nil {
-			fmt.Println("Error reading: ", err.Error())
+			if self.name != "" {
+				fmt.Println("User disconnected:", self.name)
+			}
 			return
 		}
 
@@ -209,21 +213,21 @@ func (self *User) read_loop() {
 		if mode == 1 {
 			line, err := self.reader.ReadBytes('\n')
 			if err != nil {
-				fmt.Println("Error reading: ", err.Error())
+				fmt.Println("Error reading packet:", err.Error())
 				return
 			}
 
 			// Decode the JSON data
 			json_data, err := JsonDecodeBytes(line)
 			if err != nil {
-				fmt.Println("Error converting JSON: ", err.Error())
+				fmt.Println("Error converting JSON:", err.Error())
 				continue
 			}
 
 			// Get the topic from the JSON data
 			topic, ok := json_data["topic"].(string)
 			if !ok {
-				fmt.Println("Topic missing")
+				fmt.Println("Error: Topic missing")
 				continue
 
 			}
@@ -240,7 +244,7 @@ func (self *User) read_loop() {
 
 			// NOTE: an unauthed user can only call user.auth
 			if !self.authed && topic != "user.auth" {
-				fmt.Println("User not authorised for", topic)
+				fmt.Println("Error: User not authorised for", topic)
 				continue
 
 			} else if strings.HasPrefix(topic, "user.") {
@@ -260,7 +264,7 @@ func (self *User) read_loop() {
 
 			} else {
 				// We don't know where to send this message
-				fmt.Println("Unknown topic route ", topic)
+				fmt.Println("Error: Unknown topic route", topic)
 				continue
 			}
 
@@ -369,9 +373,7 @@ func (self *User) simple_server_auth(msg *Message) error {
 	self.name = name
 
 	self.authed = true
-	if DEBUG_LEVEL >= 2 {
-		fmt.Println("Authenticated user", self.name)
-	}
+	fmt.Println("User joined: ", self.name)
 
 	self.Send_json(Json{
 		"topic":        "server.info",
