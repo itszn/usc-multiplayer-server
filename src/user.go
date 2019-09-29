@@ -27,7 +27,7 @@ type Score struct {
 
 type Score_point struct {
 	score uint32
-	time  uint32
+	index  int32
 }
 
 // If a topic is in the set, no more messages will
@@ -98,17 +98,17 @@ func (self *User) Unblock() {
 	self.msg_block.Unlock()
 }
 
-func (self *User) Add_new_score(score uint32, time uint32) {
+func (self *User) Add_new_score(score uint32, index int32) {
 	self.mtx.Lock()
 	defer self.mtx.Unlock()
 
 	self.score_list = append(self.score_list, Score_point{
 		score: score,
-		time:  time,
+		index:  index,
 	})
 }
 
-func (self *User) Get_last_score_time() uint32 {
+func (self *User) Get_last_score_index() int32 {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
@@ -118,15 +118,15 @@ func (self *User) Get_last_score_time() uint32 {
 		return 0
 	}
 
-	return self.score_list[l-1].time
+	return self.score_list[l-1].index
 }
 
-func (self *User) Get_score_at(time uint32) uint32 {
+func (self *User) Get_score_at(index int32) uint32 {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
 	for i := len(self.score_list) - 1; i >= 0; i-- {
-		if self.score_list[i].time <= time {
+		if self.score_list[i].index <= index {
 			return self.score_list[i].score
 		}
 	}

@@ -560,7 +560,7 @@ func (self score_sort_by_score) Less(i, j int) bool {
 	return self[i].score > self[j].score
 }
 
-func (self *Room) Update_scoreboard(user *User, new_time uint32) {
+func (self *Room) Update_scoreboard(user *User, new_index int32) {
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
@@ -568,8 +568,8 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 		if u == user || !u.playing {
 			continue
 		}
-		last_time := u.Get_last_score_time()
-		if last_time < new_time {
+		last_index := u.Get_last_score_index()
+		if last_index < new_index {
 			// If there is a lowertime, this update doesn't change the scoreboard
 			return
 		}
@@ -581,7 +581,7 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 		}
 		board = append(board, score_sort{
 			user:  u,
-			score: u.Get_score_at(new_time),
+			score: u.Get_score_at(new_index),
 		})
 	}
 	sort.Sort(score_sort_by_score(board))
@@ -610,14 +610,14 @@ func (self *Room) handle_game_score(msg *Message) error {
 		return nil
 	}
 
-	new_time := uint32(Json_int(msg.Json()["time"]))
+	new_index := int32(Json_int(msg.Json()["index"]))
 
 	user.Add_new_score(
 		uint32(Json_int(msg.Json()["score"])),
-		new_time,
+		new_index,
 	)
 
-	self.Update_scoreboard(user, new_time)
+	self.Update_scoreboard(user, new_index)
 
 	return nil
 }
@@ -631,7 +631,7 @@ func (self *Room) handle_final_score(msg *Message) error {
 		return nil
 	}
 
-	new_time := ^uint32(0)
+	new_time := int32(0x7FFFFFFF)
 	score := uint32(Json_int(msg.Json()["score"]))
 	user.Add_new_score(score, new_time)
 
