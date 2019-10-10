@@ -81,8 +81,9 @@ message user {
     }}
 
     message extra {
-    // Attach or update a string of extra to your user
+    // Attach or update a string of extra data to your user
     message set {
+        // The data too attach. The specific format of this data is user defined
         required string data = 1;
     }}
 }
