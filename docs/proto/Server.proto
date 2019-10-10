@@ -79,6 +79,12 @@ message user {
     message ready {
 
     }}
+
+    message extra {
+    // Attach or update a string of extra to your user
+    message set {
+        required string data = 1;
+    }}
 }
 
 

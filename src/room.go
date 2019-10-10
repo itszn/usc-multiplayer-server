@@ -305,6 +305,9 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 			data["combo"] = u.score.combo
 			data["clear"] = u.score.clear
 		}
+		if u.extra_data != "" {
+			data["extra_data"] = u.extra_data
+		}
 		return data
 	}
 

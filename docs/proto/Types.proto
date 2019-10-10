@@ -48,6 +48,8 @@ message Types {
         // 5: Perfect<br/>
         // If no score, this field will not be present
         int32 clear = 8;
+        // Exists if the user has provided any extra data.
+        string extra_data = 9;
     }
 
 

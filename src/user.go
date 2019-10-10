@@ -65,6 +65,8 @@ type User struct {
 
 	// Used to block new messages from being processed
 	msg_block sync.Mutex
+
+	extra_data string
 }
 
 func New_user(conn net.Conn, server *Server) (*User, error) {
@@ -85,6 +87,8 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 		conn:   conn,
 		reader: bufio.NewReader(conn),
 		writer: bufio.NewWriter(conn),
+
+		extra_data: "",
 	}
 
 	if err := user.init(); err != nil {
@@ -330,6 +334,7 @@ func (self *User) add_routes() {
 	self.route("user.mirror.toggle", self.toggle_mirror_handler)
 	self.route("user.song.level", self.song_level_handler)
 	self.route("user.nomap", self.no_map_handler)
+	self.route("user.extra.set", self.set_extra_data_handler)
 }
 
 func (self *User) simple_server_auth(msg *Message) error {
@@ -444,5 +449,15 @@ func (self *User) toggle_mirror_handler(msg *Message) error {
 	}
 	self.mirror_mode = !self.mirror_mode
 	self.room.Send_lobby_update_to_user(self)
+	return nil
+}
+
+func (self *User) set_extra_data_handler(msg *Message) error {
+	self.extra_data = msg.Json()["data"].(string)
+
+	if self.room != nil {
+		// Update current room with your extra data
+		self.room.Send_lobby_update()
+	}
 	return nil
 }
