@@ -33,8 +33,10 @@ type Room struct {
 	users    []*User
 	user_map map[string]*User
 
-	song *Song
-	host *User
+	song        *Song
+	host        *User
+	owner       *User
+	first_owner string
 
 	do_rotate_host bool
 
@@ -222,8 +224,13 @@ func (self *Room) Add_user(user *User) {
 
 	user.score_list = make([]Score_point, 0)
 
-	if self.host == nil {
+	if self.owner == nil {
+		self.owner = user
+		self.first_owner = user.id
 		self.host = user
+	} else if self.first_owner == user.id {
+		// Reclaim ownership if you leave and rejoin
+		self.owner = user
 	}
 }
 
@@ -246,13 +253,19 @@ func (self *Room) Remove_user_by_id(id string) {
 
 	user.room = nil
 
+	// Remove the user from the lists
 	delete(self.user_map, user.id)
-
 	for i, u := range self.users {
 		if u == user {
 			self.users = append(self.users[:i], self.users[i+1:]...)
 			break
 		}
+	}
+
+	// Select anyone as the owner
+	if self.owner == user && len(self.users) > 0 {
+		// TODO Do we want to change owner or just have none?
+		self.owner = self.users[0]
 	}
 
 	self.mtx_unlock(0)
@@ -365,6 +378,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 	if self.host != nil && !self.in_game {
 		packet["host"] = self.host.id
 	}
+	packet["owner"] = self.owner.id
 
 	for _, u := range target_users {
 		if u.playing {
@@ -423,7 +437,8 @@ func (self *Room) set_song_handler(msg *Message) error {
 func (self *Room) toggle_rotate_handler(msg *Message) error {
 	user := msg.User()
 
-	if user != self.host {
+	// Either host or owner can change this setting
+	if user != self.host && user != self.owner {
 		return nil
 	}
 
@@ -700,7 +715,8 @@ func (self *Room) handle_set_host(msg *Message) error {
 	defer self.mtx.RUnlock()
 
 	user := msg.User()
-	if self.host != user {
+	// Either host or owner can change host
+	if self.host != user && self.owner != user {
 		return nil
 	}
 
@@ -718,7 +734,8 @@ func (self *Room) handle_set_host(msg *Message) error {
 
 func (self *Room) handle_kick(msg *Message) error {
 	user := msg.User()
-	if self.host != user {
+	// Only owner can kick
+	if self.owner != user {
 		return nil
 	}
 
