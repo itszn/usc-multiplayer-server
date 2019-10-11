@@ -512,14 +512,35 @@ func (self *Room) check_sync_state(force bool) error {
 		self.mtx.RLock()
 		defer self.mtx.RUnlock()
 
+		var userdata []Json
+		for _, u := range self.users {
+			if !u.playing {
+				continue
+			}
+			data := Json{
+				"name":        u.name,
+				"id":          u.id,
+				"ready":       true,
+				"missing_map": false,
+				"level":       u.level,
+			}
+			if u.extra_data != "" {
+				data["extra_data"] = u.extra_data
+			}
+			userdata = append(userdata, data)
+		}
+
+		packet := Json{
+			"topic": "game.sync.start",
+			"users": userdata,
+		}
+
 		// Send sync start packet
 		for _, u := range self.users {
 			if !u.playing {
 				continue
 			}
-			u.Send_json(Json{
-				"topic": "game.sync.start",
-			})
+			u.Send_json(packet)
 
 			// Start them but kick them off the scoreboard (so they don't lag behind)
 			if !u.synced {

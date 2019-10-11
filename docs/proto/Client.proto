@@ -85,6 +85,8 @@ message game {
     message sync {
     // Tells the client to start the song (all players are synced)
     message start {
+        // Information about the players in the match
+        repeated Types.user users = 1;
     }}
 }
 
