@@ -13,7 +13,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
+	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 )
 
 type Server struct {
@@ -126,7 +126,7 @@ func (self *Server) Start() {
 	self.router = router
 
 	// Add handler to shut down router
-	router.AddPlugin(plugin.SignalsHandler)
+	//router.AddPlugin(plugin.SignalsHandler)
 
 	router.AddMiddleware(
 		// correlation ID will copy correlation id from consumed message metadata to produced messages

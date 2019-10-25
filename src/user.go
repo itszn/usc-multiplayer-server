@@ -15,7 +15,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
+	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/google/uuid"
 )
 
@@ -149,7 +149,7 @@ func (self *User) init() error {
 	self.router = router
 
 	// Add handler to shut down router
-	router.AddPlugin(plugin.SignalsHandler)
+	//router.AddPlugin(plugin.SignalsHandler)
 
 	// Add router HandlerFunc -> HandlerFunc middleware
 	router.AddMiddleware(
@@ -283,6 +283,9 @@ func (self *User) read_loop() {
 				continue
 			}
 			continue
+		} else if mode == 2 {
+			// Length prefix
+
 		}
 
 	}

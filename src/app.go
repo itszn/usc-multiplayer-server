@@ -7,6 +7,9 @@ import (
 	"os"
 
 	"github.com/ThreeDotsLabs/watermill"
+
+	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -46,6 +49,8 @@ func main() {
 		logger = &watermill.StdLoggerAdapter{ErrorLogger: logger_impl}
 	}
 	SCOREBOARD_REFERSH_RATE = *f_SCOREBOARD_REFERSH_RATE
+
+	go http.ListenAndServe("0.0.0.0:6060", nil)
 
 	fmt.Println("Starting server on", bind)
 	server := New_server(bind)

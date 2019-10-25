@@ -10,7 +10,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
+	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/google/uuid"
 )
 
@@ -154,7 +154,7 @@ func (self *Room) init() error {
 	self.router = router
 
 	// Add handler to shut down router
-	router.AddPlugin(plugin.SignalsHandler)
+	//router.AddPlugin(plugin.SignalsHandler)
 
 	// Add router HandlerFunc -> HandlerFunc middleware
 	router.AddMiddleware(
@@ -600,7 +600,7 @@ func (self score_sort_by_score) Less(i, j int) bool {
 }
 
 func (self *Room) Update_scoreboard(user *User, new_time uint32) {
-	self.mtx.RLock()
+	self.mtx.RLock() // XXX Blocking here?
 	defer self.mtx.RUnlock()
 
 	for _, u := range self.users {
@@ -675,6 +675,8 @@ func (self *Room) handle_final_score(msg *Message) error {
 	user.Add_new_score(score, new_time)
 
 	self.Update_scoreboard(user, new_time)
+
+	// DEAD LOCK??
 
 	user.score = &Score{
 		score: score,
