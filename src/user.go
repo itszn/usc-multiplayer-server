@@ -384,7 +384,7 @@ func (self *User) simple_server_auth(msg *Message) error {
 	self.Send_json(Json{
 		"topic":        "server.info",
 		"userid":       self.id,
-		"version":      VERSION,
+		"version":      PROTO_VERSION,
 		"refresh_rate": SCOREBOARD_REFERSH_RATE,
 	})
 
