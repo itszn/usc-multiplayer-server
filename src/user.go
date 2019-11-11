@@ -15,7 +15,6 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/google/uuid"
 )
 
@@ -61,7 +60,7 @@ type User struct {
 	pub_sub message.PubSub
 	router  *message.Router
 
-	mtx sync.RWMutex
+	mtx Lock
 
 	// Used to block new messages from being processed
 	msg_block sync.Mutex
@@ -90,6 +89,7 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 
 		extra_data: "",
 	}
+	user.mtx.init(2)
 
 	if err := user.init(); err != nil {
 		return nil, err
@@ -104,12 +104,13 @@ func (self *User) Unblock() {
 
 func (self *User) Add_new_score(score uint32, time uint32) {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	self.score_list = append(self.score_list, Score_point{
 		score: score,
 		time:  time,
 	})
+
+	self.mtx.Unlock()
 }
 
 func (self *User) Get_last_score_time() uint32 {
@@ -121,6 +122,7 @@ func (self *User) Get_last_score_time() uint32 {
 	if l == 0 {
 		return 0
 	}
+
 
 	return self.score_list[l-1].time
 }
@@ -147,9 +149,6 @@ func (self *User) init() error {
 	}
 
 	self.router = router
-
-	// Add handler to shut down router
-	router.AddPlugin(plugin.SignalsHandler)
 
 	// Add router HandlerFunc -> HandlerFunc middleware
 	router.AddMiddleware(
@@ -296,7 +295,6 @@ func (self *User) Send_json(data Json) error {
 
 	// Have to take lock until we finish writing
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	// Write packet mode
 	self.writer.WriteByte(1)
@@ -307,6 +305,9 @@ func (self *User) Send_json(data Json) error {
 	self.writer.WriteByte('\n')
 
 	self.writer.Flush()
+
+	self.mtx.Unlock()
+
 	if DEBUG_LEVEL >= 2 {
 		fmt.Println("<--", data)
 	}

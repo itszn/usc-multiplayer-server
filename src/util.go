@@ -36,5 +36,5 @@ func Json_int(val interface{}) int {
 	default:
 		panic("Not a number")
 	}
-
 }
+
