@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -15,7 +17,6 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/google/uuid"
 )
 
@@ -67,6 +68,9 @@ type User struct {
 	msg_block sync.Mutex
 
 	extra_data string
+
+	is_playback bool
+	replay_user *User
 }
 
 func New_user(conn net.Conn, server *Server) (*User, error) {
@@ -89,6 +93,9 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 		writer: bufio.NewWriter(conn),
 
 		extra_data: "",
+
+		is_playback: false,
+		replay_user: nil,
 	}
 
 	if err := user.init(); err != nil {
@@ -285,10 +292,42 @@ func (self *User) read_loop() {
 			continue
 		} else if mode == 2 {
 			// Length prefix
+			var length uint32
+			binary.Read(self.reader, binary.LittleEndian, &length)
 
+			data := make([]byte, length, length)
+			io.ReadFull(self.reader, data)
+			if DEBUG_LEVEL >= 2 {
+				fmt.Println("-->", data)
+			}
+
+			if self.replay_user != nil {
+				self.replay_user.Send_length_prefix(data)
+			}
 		}
 
 	}
+}
+
+func (self *User) Send_length_prefix(bytes []byte) error {
+	// Have to take lock until we finish writing
+	self.mtx.Lock()
+	defer self.mtx.Unlock()
+
+	// Write packet mode
+	self.writer.WriteByte(2)
+	err := binary.Write(self.writer, binary.LittleEndian, uint32(len(bytes)))
+	if err != nil {
+		return err
+	}
+	self.writer.Write(bytes)
+	self.writer.Flush()
+
+	if DEBUG_LEVEL >= 2 {
+		fmt.Println("<--", bytes)
+	}
+
+	return nil
 }
 
 func (self *User) Send_json(data Json) error {
@@ -382,6 +421,13 @@ func (self *User) simple_server_auth(msg *Message) error {
 
 	self.authed = true
 	fmt.Println("User joined: ", self.name)
+
+	is_playback, ok := msg.Json()["playback"].(bool)
+	if !ok {
+		is_playback = false
+	}
+
+	self.is_playback = is_playback
 
 	self.Send_json(Json{
 		"topic":        "server.info",

@@ -232,6 +232,27 @@ func (self *Room) Add_user(user *User) {
 		// Reclaim ownership if you leave and rejoin
 		self.owner = user
 	}
+
+	self.Match_replay_user(user)
+}
+
+func (self *Room) Match_replay_user(user *User) {
+
+	user.replay_user = nil
+	// Find the user a match
+	for _, u := range self.users {
+		if u == user {
+			continue
+		}
+		if u.replay_user != nil || u.is_playback == user.is_playback {
+			continue
+		}
+
+		u.replay_user = user
+		user.replay_user = u
+		fmt.Printf("Playback: %s <-> %s\n", u.name, user.name)
+		break
+	}
 }
 
 func (self *Room) Remove_user(user *User) {
@@ -274,6 +295,12 @@ func (self *Room) Remove_user_by_id(id string) {
 	if len(self.users) == 0 {
 		self.destroy()
 		return
+	}
+
+	// Unlink replay user
+	if user.replay_user != nil {
+		self.Match_replay_user(user.replay_user.replay_user)
+		user.replay_user = nil
 	}
 
 	self.Send_lobby_update()
@@ -327,7 +354,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 	// First add and sort anyone who has a score
 	board := make([]score_sort, 0)
 	for _, u := range self.users {
-		if u.score == nil {
+		if u.is_playback || u.score == nil {
 			continue
 		}
 
@@ -350,7 +377,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 
 	// Now get everyone else
 	for _, u := range self.users {
-		if u.score != nil {
+		if u.is_playback || u.score != nil {
 			continue
 		}
 		userdata = append(userdata, make_data(u))
@@ -386,6 +413,11 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		}
 		packet["hard_mode"] = u.hard_mode
 		packet["mirror_mode"] = u.mirror_mode
+		if u.replay_user != nil {
+			packet["replay_name"] = u.replay_user.name
+		} else {
+			packet["replay_name"] = ""
+		}
 		u.Send_json(packet)
 	}
 }
@@ -529,7 +561,7 @@ func (self *Room) check_sync_state(force bool) error {
 
 		var userdata []Json
 		for _, u := range self.users {
-			if !u.playing {
+			if u.is_playback || !u.playing {
 				continue
 			}
 			data := Json{
@@ -550,9 +582,15 @@ func (self *Room) check_sync_state(force bool) error {
 			"users": userdata,
 		}
 
+		has_playback := false
+
 		// Send sync start packet
 		for _, u := range self.users {
 			if !u.playing {
+				continue
+			}
+			if u.is_playback {
+				has_playback = true
 				continue
 			}
 			u.Send_json(packet)
@@ -561,6 +599,18 @@ func (self *Room) check_sync_state(force bool) error {
 			if !u.synced {
 				u.playing = false
 			}
+		}
+
+		if !has_playback {
+			return
+		}
+
+		time.Sleep(20 * time.Second)
+		for _, u := range self.users {
+			if !u.playing || !u.is_playback {
+				continue
+			}
+			u.Send_json(packet)
 		}
 	}()
 	return nil
@@ -600,11 +650,11 @@ func (self score_sort_by_score) Less(i, j int) bool {
 }
 
 func (self *Room) Update_scoreboard(user *User, new_time uint32) {
-	self.mtx.RLock() // XXX Blocking here?
+	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
 	for _, u := range self.users {
-		if u == user || !u.playing {
+		if u.is_playback || u == user || !u.playing {
 			continue
 		}
 		last_time := u.Get_last_score_time()
@@ -615,7 +665,7 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 	}
 	board := make([]score_sort, 0)
 	for _, u := range self.users {
-		if !u.playing && u.score == nil {
+		if u.is_playback || !u.playing && u.score == nil {
 			continue
 		}
 		board = append(board, score_sort{
@@ -645,7 +695,7 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 
 func (self *Room) handle_game_score(msg *Message) error {
 	user := msg.User()
-	if !user.playing {
+	if !user.playing || user.is_playback {
 		return nil
 	}
 
@@ -666,7 +716,7 @@ func (self *Room) handle_final_score(msg *Message) error {
 	defer self.mtx.RUnlock()
 
 	user := msg.User()
-	if !user.playing {
+	if !user.playing || user.is_playback {
 		return nil
 	}
 
@@ -675,8 +725,6 @@ func (self *Room) handle_final_score(msg *Message) error {
 	user.Add_new_score(score, new_time)
 
 	self.Update_scoreboard(user, new_time)
-
-	// DEAD LOCK??
 
 	user.score = &Score{
 		score: score,
