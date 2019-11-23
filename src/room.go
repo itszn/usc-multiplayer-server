@@ -47,7 +47,7 @@ type Room struct {
 	in_game    bool
 	is_synced  bool
 
-	mtx    Lock
+	mtx Lock
 
 	join_token string
 }
@@ -265,8 +265,7 @@ func (self *Room) Remove_user_by_id(id string) {
 
 	self.mtx.Unlock()
 
-
-	if (!self.alive) {
+	if !self.alive {
 		// We need to ensure we are not in a lock atm
 		self.server.Remove_room(self)
 	} else {
@@ -688,16 +687,47 @@ func (self *Room) handle_final_score(msg *Message) error {
 		combo: uint32(Json_int(msg.Json()["combo"])),
 		clear: uint32(Json_int(msg.Json()["clear"])),
 	}
+
+	final_stats := msg.Json()
+	final_stats["uid"] = user.id
+	final_stats["name"] = user.name
+	final_stats["topic"] = "game.finalstats"
+
 	user.playing = false
 
 	self.mtx.RLock()
 	defer self.mtx.RUnlock()
 
+	_, has_stats := final_stats["gauge"]
+
+	if has_stats {
+		// validate type of stats
+		Json_float(final_stats["gauge"])
+		Json_float(final_stats["mean_delta"])
+		Json_float(final_stats["median_delta"])
+		Json_int(final_stats["early"])
+		Json_int(final_stats["late"])
+		Json_int(final_stats["miss"])
+		Json_int(final_stats["near"])
+		Json_int(final_stats["crit"])
+		Json_int(final_stats["flags"])
+		samples := final_stats["graph"].([]interface{})
+		if len(samples) < 256 {
+			panic("Not enough graph samples")
+		} else {
+			for _, s := range samples {
+				Json_float(s)
+			}
+		}
+	}
+
 	done := true
 	for _, u := range self.users {
 		if u.playing {
 			done = false
-			break
+		}
+		if has_stats && u.id != user.id && (u.playing || u.score != nil) {
+			u.Send_json(final_stats)
 		}
 	}
 
@@ -709,7 +739,6 @@ func (self *Room) handle_final_score(msg *Message) error {
 		}
 	}
 	user.ready = false
-
 
 	self.Send_lobby_update()
 	return nil

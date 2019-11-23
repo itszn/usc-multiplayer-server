@@ -123,7 +123,6 @@ func (self *User) Get_last_score_time() uint32 {
 		return 0
 	}
 
-
 	return self.score_list[l-1].time
 }
 

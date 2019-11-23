@@ -14,8 +14,8 @@ var (
 )
 
 var (
-	SERVER_VERSION                = "v1.1.1"
-	PROTO_VERSION                 = "v0.17"
+	SERVER_VERSION          = "v1.2.0"
+	PROTO_VERSION           = "v0.18"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0
 	SERVER_PASS             = ""
@@ -48,7 +48,7 @@ func main() {
 	}
 	SCOREBOARD_REFERSH_RATE = *f_SCOREBOARD_REFERSH_RATE
 
-	fmt.Printf("Running server %s, USC multi protocol %s\n",SERVER_VERSION, PROTO_VERSION)
+	fmt.Printf("Running server %s, USC multi protocol %s\n", SERVER_VERSION, PROTO_VERSION)
 	fmt.Println("Starting server on", bind)
 	server := New_server(bind)
 	server.Start()

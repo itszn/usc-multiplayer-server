@@ -38,3 +38,14 @@ func Json_int(val interface{}) int {
 	}
 }
 
+// Make sure we get an int back from the json number
+func Json_float(val interface{}) float64 {
+	switch val.(type) {
+	case int:
+		return float64(val.(int))
+	case float64:
+		return val.(float64)
+	default:
+		panic("Not a number")
+	}
+}
