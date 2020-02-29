@@ -179,6 +179,8 @@ func (self *Room) add_routes() {
 	self.route("room.host.set", self.handle_set_host)
 
 	self.route("room.kick", self.handle_kick)
+
+	self.route("room.chat.send", self.chat_handler)
 }
 
 func (self *Room) Add_user(user *User) bool {
@@ -782,4 +784,23 @@ func (self *Room) handle_kick(msg *Message) error {
 	self.Remove_user_by_id(uid)
 	return nil
 
+}
+
+func (self *Room) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": fmt.Sprintf("[%s] %s",user.name, message),
+	}
+
+	for _, u := range self.users {
+		if u.id == user.id {
+			continue
+		}
+		u.Send_json(packet)
+	}
+	return nil
 }

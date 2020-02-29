@@ -155,6 +155,7 @@ func (self *Server) add_routes() {
 	self.user_route("server.rooms", self.send_rooms_handler)
 	self.user_route("server.room.join", self.join_room_handler)
 	self.user_route("server.room.new", self.new_room_handler)
+	self.user_route("server.chat.send", self.chat_handler)
 }
 
 type room_sort []*Room
@@ -322,4 +323,23 @@ func (self *Server) new_room_handler(msg *Message) error {
 	go room.Start()
 
 	return self.add_user_to_room(user, room)
+}
+
+func (self *Server) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": fmt.Sprintf("[%s] %s",user.name, message),
+	}
+
+	for _, u := range self.users {
+		if u.room != nil || u.id == user.id {
+			continue
+		}
+		u.Send_json(packet)
+	}
+	return nil
 }
