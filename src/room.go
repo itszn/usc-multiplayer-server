@@ -14,7 +14,8 @@ import (
 
 type Song struct {
 	name  string
-	hash  string
+	audio_hash  string
+	chart_hash string
 	diff  int
 	level int
 }
@@ -371,12 +372,16 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		packet["song"] = self.song.name
 		packet["diff"] = self.song.diff
 		packet["level"] = self.song.level
-		packet["hash"] = self.song.hash
+		packet["hash"] = self.song.audio_hash
+		packet["audio_hash"] = self.song.audio_hash
+		packet["audio_hash"] = self.song.chart_hash
 	} else {
 		packet["song"] = nil
 		packet["diff"] = nil
 		packet["level"] = nil
 		packet["hash"] = nil
+		packet["audio_hash"] = nil
+		packet["chart_hash"] = nil
 	}
 
 	if self.host != nil && !self.in_game {
@@ -423,11 +428,22 @@ func (self *Room) set_song_handler(msg *Message) error {
 
 	song.diff = Json_int(json["diff"])
 	song.level = Json_int(json["level"])
-	hash, has_hash := json["hash"].(string)
+
+	chart_hash, has_hash := json["chart_hash"].(string)
 	if !has_hash {
-		hash = ""
+		chart_hash = ""
 	}
-	song.hash = hash
+	song.chart_hash = chart_hash
+
+	audio_hash, has_hash := json["chart_hash"].(string)
+	if !has_hash {
+		audio_hash, has_hash = json["hash"].(string)
+		if !has_hash {
+			audio_hash = ""
+		}
+	}
+	song.audio_hash = audio_hash
+
 	user.level = song.level
 
 	self.mtx.Lock()

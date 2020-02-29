@@ -58,13 +58,17 @@ message room {
         // Level of the current selected difficulty<br/>
         // Set to <b>null</b> if no song
         uint32 level = 6;
-        // Selective hash of the audio file (0x8000 bytes)
+        // Selective hash of the audio file (0x8000 bytes) *Deprecated*
         string hash = 7;
+        // Selective hash of the audio file (0x8000 bytes)
+        string audio_hash = 8;
+        // Normalized hash of chart file (see USC for more details) 
+        string chart_hash = 9;
         // The UUID of the current host</br>
         // If the room is currently in game, this field is not present
-        string host = 8;
+        string host = 10;
         // Whether the current user has excessive rate enabled or not
-        bool hard_mode = 9;
+        bool hard_mode = 11;
     }
 
 }
