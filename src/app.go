@@ -14,7 +14,7 @@ var (
 )
 
 var (
-	SERVER_VERSION          = "v1.3.0"
+	SERVER_VERSION          = "v1.3.1"
 	PROTO_VERSION           = "v0.19"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0

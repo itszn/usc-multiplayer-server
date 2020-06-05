@@ -374,7 +374,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		packet["level"] = self.song.level
 		packet["hash"] = self.song.audio_hash
 		packet["audio_hash"] = self.song.audio_hash
-		packet["audio_hash"] = self.song.chart_hash
+		packet["chart_hash"] = self.song.chart_hash
 	} else {
 		packet["song"] = nil
 		packet["diff"] = nil
