@@ -1,10 +1,13 @@
 package main
 
 import (
-	"crypto/rand"
+	crand "crypto/rand"
 	"fmt"
 	"sort"
 	"time"
+	"strings"
+	"strconv"
+	"math/rand"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
@@ -51,10 +54,12 @@ type Room struct {
 	mtx Lock
 
 	join_token string
+
+	is_event_room bool
 }
 
 // TODO per room password
-func New_room(server *Server, name string, max int, password string) *Room {
+func New_room(server *Server, name string, max int, password string, is_event_room bool) *Room {
 	room := &Room{
 		server: server,
 		name:   name,
@@ -75,7 +80,10 @@ func New_room(server *Server, name string, max int, password string) *Room {
 		start_soon:     false,
 		in_game:        false,
 		is_synced:      false,
+
+		is_event_room: is_event_room,
 	}
+
 	room.mtx.init(1)
 
 	room.init()
@@ -126,7 +134,7 @@ func (self *Room) Rotate_host() {
 
 func (self *Room) init() error {
 	token_bytes := make([]byte, 16)
-	rand.Read(token_bytes)
+	crand.Read(token_bytes)
 	self.join_token = fmt.Sprintf("%x", token_bytes)
 
 	self.pub_sub = gochannel.NewGoChannel(gochannel.Config{}, logger)
@@ -192,6 +200,9 @@ func (self *Room) Add_user(user *User) bool {
 		return false
 	}
 
+	// TODO this counts replay users but probably shouldn't
+	// Its not a problem atm bc replay only supports two players anyway
+	// So you can have at a max 4 refs
 	if len(self.users) == self.max {
 		return false
 	}
@@ -200,8 +211,17 @@ func (self *Room) Add_user(user *User) bool {
 		return false
 	}
 
+	// Normal users can only join normal rooms
+	if (self.is_event_room && !user.is_event_user) {
+		return false
+	}
+	if (!self.is_event_room && user.is_playback) {
+		return false
+	}
+
 	self.user_map[user.id] = user
 	self.users = append(self.users, user)
+
 
 	user.room = self
 	user.score = nil
@@ -227,27 +247,49 @@ func (self *Room) Add_user(user *User) bool {
 		self.owner = user
 	}
 
-	self.Match_replay_user(user)
+	// Only try and match users if in event room
+	if (self.is_event_room) {
+		self.Match_replay_user(user)
+	}
+	return true
 }
 
 func (self *Room) Match_replay_user(user *User) {
+	// Refs don't get matched
+	if (user == nil || user.is_ref) {
+		return
+	}
 
 	user.replay_user = nil
-	// Find the user a match
+	// Try to match a playback user with a normal user and vis-versa
 	for _, u := range self.users {
+		// Can't match with themselves
 		if u == user {
 			continue
 		}
-		if u.replay_user != nil || u.is_playback == user.is_playback {
+		// If this user is already matched or is a ref, skip
+		if u.is_ref || u.replay_user != nil {
 			continue
 		}
 
+		// If user is also normal or also playback skip
+		if u.is_playback == user.is_playback {
+			continue
+		}
+
+		// Match the users and let users know
 		u.replay_user = user
 		user.replay_user = u
 		fmt.Printf("Playback: %s <-> %s\n", u.name, user.name)
+		if user.is_playback {
+			self.Broadcast_chat(
+				fmt.Sprintf("> Streaming enabled for %s <",u.name))
+		} else {
+			self.Broadcast_chat(
+				fmt.Sprintf("> Streaming enabled for %s <",user.name))
+		}
 		break
 	}
-	return true
 }
 
 func (self *Room) Remove_user(user *User) {
@@ -288,7 +330,14 @@ func (self *Room) Remove_user_by_id(id string) {
 
 	// Unlink replay user
 	if user.replay_user != nil {
-		self.Match_replay_user(user.replay_user.replay_user)
+		if user.is_playback {
+			self.Broadcast_chat(
+				fmt.Sprintf("> Streaming lost for %s <",user.replay_user.name))
+		} else {
+			self.Broadcast_chat(
+				fmt.Sprintf("> Streaming lost for %s <",user.name))
+		}
+		self.Match_replay_user(user.replay_user)
 		user.replay_user = nil
 	}
 
@@ -334,14 +383,18 @@ func (self *Room) Send_lobby_update_to_user(target_user *User) {
 func (self *Room) Send_lobby_update_to(target_users []*User) {
 
 	make_data := func(u *User) Json {
+		name := u.name
+		if u.is_ref {
+			name = "[ref] "+name
+		}
 		data := Json{
-			"name":        u.name,
+			"name":        name,
 			"id":          u.id,
 			"ready":       u.ready || u == self.host,
 			"missing_map": u.missing_map,
 			"level":       u.level,
 		}
-		if u.score != nil {
+		if u.score != nil && !u.is_ref{
 			data["score"] = u.score.score
 			data["combo"] = u.score.combo
 			data["clear"] = u.score.clear
@@ -358,7 +411,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 	self.mtx.RLock()
 
 	for _, u := range self.users {
-		if u.is_playback || u.score == nil {
+		if u.is_playback || u.score == nil || u.is_ref {
 			continue
 		}
 
@@ -381,7 +434,7 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 
 	// Now get everyone else
 	for _, u := range self.users {
-		if u.is_playback || u.score != nil {
+		if u.is_playback || (u.score != nil && !u.is_ref) {
 			continue
 		}
 		userdata = append(userdata, make_data(u))
@@ -425,8 +478,10 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		packet["mirror_mode"] = u.mirror_mode
 		if u.replay_user != nil {
 			packet["replay_name"] = u.replay_user.name
+			packet["replay_id"] = u.replay_user.id
 		} else {
 			packet["replay_name"] = ""
+			packet["replay_id"] = ""
 		}
 		u.Send_json(packet)
 	}
@@ -530,11 +585,19 @@ func (self *Room) start_game_handler(msg *Message) error {
 				continue
 			}
 
-			u.Send_json(Json{
+			packet := Json{
 				"topic":  "game.started",
-				"hard":   u.hard_mode,
-				"mirror": u.mirror_mode,
-			})
+			}
+			if u.is_playback && u.replay_user != nil {
+				packet["replay_level"] = u.replay_user.level
+				packet["hard"] = u.replay_user.hard_mode
+				packet["mirror"] = u.replay_user.mirror_mode
+			} else {
+				packet["hard"] = u.hard_mode
+				packet["mirror"] = u.mirror_mode
+			}
+
+			u.Send_json(packet)
 			u.playing = true
 			u.ready = false
 			u.synced = false
@@ -585,7 +648,7 @@ func (self *Room) check_sync_state(force bool) error {
 
 		var userdata []Json
 		for _, u := range self.users {
-			if u.is_playback || !u.playing {
+			if u.is_playback || !u.playing || u.is_ref {
 				continue
 			}
 			data := Json{
@@ -629,7 +692,8 @@ func (self *Room) check_sync_state(force bool) error {
 			return
 		}
 
-		time.Sleep(20 * time.Second)
+		// Kick off the playback users
+		time.Sleep(10 * time.Second)
 		for _, u := range self.users {
 			if !u.playing || !u.is_playback {
 				continue
@@ -679,7 +743,7 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 	defer self.mtx.RUnlock()
 
 	for _, u := range self.users {
-		if u.is_playback || u == user || !u.playing {
+		if u.is_playback || u == user || !u.playing || u.is_ref {
 			continue
 		}
 		last_time := u.Get_last_score_time()
@@ -690,7 +754,7 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 	}
 	board := make([]score_sort, 0)
 	for _, u := range self.users {
-		if u.is_playback || !u.playing && u.score == nil {
+		if u.is_playback || (!u.playing && u.score == nil) || u.is_ref {
 			continue
 		}
 		board = append(board, score_sort{
@@ -716,11 +780,19 @@ func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 	for _, b := range board {
 		b.user.Send_json(packet)
 	}
+
+	// Also send to refs who are playing
+	for _, u := range self.users {
+		if !u.is_ref || !u.playing {
+			continue
+		}
+		u.Send_json(packet)
+	}
 }
 
 func (self *Room) handle_game_score(msg *Message) error {
 	user := msg.User()
-	if !user.playing || user.is_playback {
+	if !user.playing || user.is_playback || user.is_ref {
 		return nil
 	}
 
@@ -739,62 +811,78 @@ func (self *Room) handle_game_score(msg *Message) error {
 func (self *Room) handle_final_score(msg *Message) error {
 
 	user := msg.User()
-	if !user.playing || user.is_playback {
+	if !user.playing {
 		return nil
 	}
 
-	new_time := ^uint32(0)
-	score := uint32(Json_int(msg.Json()["score"]))
-	user.Add_new_score(score, new_time)
-
-	self.Update_scoreboard(user, new_time)
-
-	user.score = &Score{
-		score: score,
-		combo: uint32(Json_int(msg.Json()["combo"])),
-		clear: uint32(Json_int(msg.Json()["clear"])),
-	}
-
-	final_stats := msg.Json()
-	final_stats["uid"] = user.id
-	final_stats["name"] = user.name
-	final_stats["topic"] = "game.finalstats"
-
 	user.playing = false
 
-	self.mtx.RLock()
-	defer self.mtx.RUnlock()
+	var done bool
+	if user.is_ref || user.is_playback {
 
-	_, has_stats := final_stats["gauge"]
+		self.mtx.RLock()
+		defer self.mtx.RUnlock()
 
-	if has_stats {
-		// validate type of stats
-		Json_float(final_stats["gauge"])
-		Json_float(final_stats["mean_delta"])
-		Json_float(final_stats["median_delta"])
-		Json_int(final_stats["early"])
-		Json_int(final_stats["late"])
-		Json_int(final_stats["miss"])
-		Json_int(final_stats["near"])
-		Json_int(final_stats["crit"])
-		Json_int(final_stats["flags"])
-		samples := final_stats["graph"].([]interface{})
-		if len(samples) < 256 {
-			panic("Not enough graph samples")
-		} else {
-			for _, s := range samples {
-				Json_float(s)
+		done = true
+		for _, u := range self.users {
+			if u.playing && !u.is_playback{
+				done = false
 			}
 		}
-	}
+	} else {
+		new_time := ^uint32(0)
+		score := uint32(Json_int(msg.Json()["score"]))
 
-	done := true
-	for _, u := range self.users {
-		if u.playing {
-			done = false
+		user.Add_new_score(score, new_time)
+
+		self.Update_scoreboard(user, new_time)
+
+		user.score = &Score{
+			score: score,
+			combo: uint32(Json_int(msg.Json()["combo"])),
+			clear: uint32(Json_int(msg.Json()["clear"])),
 		}
-		if has_stats && u.id != user.id && (u.playing || u.score != nil) {
-			u.Send_json(final_stats)
+
+		final_stats := msg.Json()
+		final_stats["uid"] = user.id
+		final_stats["name"] = user.name
+		final_stats["topic"] = "game.finalstats"
+
+
+		self.mtx.RLock()
+		defer self.mtx.RUnlock()
+
+		_, has_stats := final_stats["gauge"]
+
+		if has_stats {
+			// validate type of stats
+			Json_float(final_stats["gauge"])
+			Json_float(final_stats["mean_delta"])
+			Json_float(final_stats["median_delta"])
+			Json_int(final_stats["early"])
+			Json_int(final_stats["late"])
+			Json_int(final_stats["miss"])
+			Json_int(final_stats["near"])
+			Json_int(final_stats["crit"])
+			Json_int(final_stats["flags"])
+			samples := final_stats["graph"].([]interface{})
+			if len(samples) < 256 {
+				panic("Not enough graph samples")
+			} else {
+				for _, s := range samples {
+					Json_float(s)
+				}
+			}
+		}
+
+		done = true
+		for _, u := range self.users {
+			if u.playing && !u.is_playback{
+				done = false
+			}
+			if has_stats && u.id != user.id && (u.playing || u.score != nil) {
+				u.Send_json(final_stats)
+			}
 		}
 	}
 
@@ -851,14 +939,31 @@ func (self *Room) handle_kick(msg *Message) error {
 
 }
 
-func (self *Room) chat_handler(msg *Message) error {
-	user := msg.User()
-
-	message := msg.Json()["message"].(string)
-
+func (self *Room) Send_chat(user *User, msg string) {
 	packet := Json{
 		"topic": "server.chat.received",
-		"message": fmt.Sprintf("[%s] %s",user.name, message),
+		"message": msg,
+	}
+	user.Send_json(packet);
+}
+
+// Send a message to everyone
+func (self *Room) Broadcast_chat(msg string) {
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": msg,
+	}
+
+	for _, u := range self.users {
+		u.Send_json(packet)
+	}
+}
+
+// Send a message to everyone but one user
+func (self *Room) Mirror_chat(user *User, msg string) {
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": msg,
 	}
 
 	for _, u := range self.users {
@@ -867,5 +972,94 @@ func (self *Room) chat_handler(msg *Message) error {
 		}
 		u.Send_json(packet)
 	}
+}
+
+func (self *Room) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	if strings.HasPrefix(message, "/help") {
+		self.Send_chat(user, "* /help  - This help text")
+		self.Send_chat(user, "* /ref  - Mark yourself as a ref")
+		self.Send_chat(user, "* /player  - Mark yourself as a player")
+		self.Send_chat(user, "* /roll <num>  - Roll a number between 1 and <num>")
+		return nil
+
+	} else if message == "/ref" {
+		if user.is_ref {
+			self.Send_chat(user, "* You are already marked as a ref")
+			return nil
+		}
+		// User is a ref and not a normal user
+		user.is_ref = true;
+
+		self.Broadcast_chat(
+			fmt.Sprintf("> %s has marked themselves as a ref <",user.name))
+
+		// Normally just send update and return
+		if (!self.is_event_room) {
+			self.Send_lobby_update();
+			return nil
+		}
+
+		// For event room, unlink replay user
+		if user.replay_user != nil {
+			if user.is_playback {
+				self.Broadcast_chat(
+					fmt.Sprintf("> Streaming lost for %s <",user.replay_user.name))
+			} else {
+				self.Broadcast_chat(
+					fmt.Sprintf("> Streaming lost for %s <",user.name))
+			}
+			self.Match_replay_user(user.replay_user)
+			user.replay_user = nil
+		}
+
+		self.Send_lobby_update();
+		return nil
+
+	} else if message == "/player" {
+		if !user.is_ref {
+			self.Send_chat(user, "* You are already marked as a player")
+			return nil
+		}
+
+		// User is a ref and not a normal user
+		user.is_ref = false;
+
+		self.Broadcast_chat(
+			fmt.Sprintf("> %s has marked themselves as a player <",user.name))
+
+		// For event room, relink user to replay
+		if (self.is_event_room) {
+			self.Match_replay_user(user)
+		}
+
+		self.Send_lobby_update();
+		return nil
+
+	} else if strings.HasPrefix(message, "/roll") {
+		// Roll a die
+		s := strings.Split(message, " ")
+		end := int(100)
+		if len(s) > 1 {
+			i, err := strconv.Atoi(s[1])
+			if err == nil && i >= 1 {
+				end = i
+			}
+		}
+		res := rand.Intn(end) + 1
+
+		self.Mirror_chat(user, fmt.Sprintf("[%s] %s",user.name, message))
+
+		self.Broadcast_chat(
+			fmt.Sprintf("> %s rolled a %d <",user.name, res))
+
+		return nil
+	}
+
+	self.Mirror_chat(user, fmt.Sprintf("[%s] %s",user.name, message))
+
 	return nil
 }

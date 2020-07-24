@@ -55,6 +55,8 @@ type User struct {
 	mirror_mode bool
 	level       int
 
+	is_ref bool
+
 	conn   net.Conn
 	reader *bufio.Reader
 	writer *bufio.Writer
@@ -71,6 +73,7 @@ type User struct {
 
 	is_playback bool
 	replay_user *User
+	is_event_user bool
 }
 
 func New_user(conn net.Conn, server *Server) (*User, error) {
@@ -88,6 +91,8 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 		missing_map: false,
 		playing:     false,
 
+		is_ref: false,
+
 		conn:   conn,
 		reader: bufio.NewReader(conn),
 		writer: bufio.NewWriter(conn),
@@ -96,6 +101,7 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 
 		is_playback: false,
 		replay_user: nil,
+		is_event_user: false,
 	}
 	user.mtx.init(2)
 
@@ -427,8 +433,13 @@ func (self *User) simple_server_auth(msg *Message) error {
 	if !ok {
 		is_playback = false
 	}
-
 	self.is_playback = is_playback
+
+	is_event, ok := msg.Json()["eventclient"].(bool)
+	if !ok {
+		is_event = false
+	}
+	self.is_event_user = is_event
 
 	self.Send_json(Json{
 		"topic":        "server.info",

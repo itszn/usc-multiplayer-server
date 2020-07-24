@@ -7,6 +7,9 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
+	"strconv"
+	"math/rand"
 	//	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -198,10 +201,14 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 			continue
 		}
 
+		name := room.name
+		if room.is_event_room {
+			name = name + " <event>"
+		}
 		roomdata = append(roomdata, Json{
 			"current":  room.Num_users(),
 			"max":      room.max,
-			"name":     room.name,
+			"name":     name,
 			"ingame":   room.in_game,
 			"id":       room.id,
 			"password": room.password != "",
@@ -318,21 +325,41 @@ func (self *Server) new_room_handler(msg *Message) error {
 	if !has_pass {
 		password = ""
 	}
-	room := New_room(self, name, 8, password)
+	room := New_room(self, name, 8, password, user.is_event_user)
 	self.Add_room(room)
 	go room.Start()
 
 	return self.add_user_to_room(user, room)
 }
 
-func (self *Server) chat_handler(msg *Message) error {
-	user := msg.User()
-
-	message := msg.Json()["message"].(string)
-
+func (self *Server) Send_chat(user *User, msg string) {
 	packet := Json{
 		"topic": "server.chat.received",
-		"message": fmt.Sprintf("[%s] %s",user.name, message),
+		"message": msg,
+	}
+	user.Send_json(packet);
+}
+
+// Send a message to everyone
+func (self *Server) Broadcast_chat(msg string) {
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": msg,
+	}
+
+	for _, u := range self.users {
+		if u.room != nil {
+			continue
+		}
+		u.Send_json(packet)
+	}
+}
+
+// Send a message to everyone but one user
+func (self *Server) Mirror_chat(user *User, msg string) {
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": msg,
 	}
 
 	for _, u := range self.users {
@@ -341,5 +368,38 @@ func (self *Server) chat_handler(msg *Message) error {
 		}
 		u.Send_json(packet)
 	}
+}
+
+func (self *Server) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	if strings.HasPrefix(message, "/help") {
+		self.Send_chat(user, "* /help  - This help text")
+		self.Send_chat(user, "* /roll <num>  - Roll a number between 1 and <num>")
+		return nil
+
+	} else if strings.HasPrefix(message, "/roll") {
+		// Roll a die
+		s := strings.Split(message, " ")
+		end := int(100)
+		if len(s) > 1 {
+			i, err := strconv.Atoi(s[1])
+			if err == nil && i >= 1 {
+				end = i
+			}
+		}
+		res := rand.Intn(end) + 1
+
+		self.Mirror_chat(user, fmt.Sprintf("[%s] %s",user.name, message))
+
+		self.Broadcast_chat(
+			fmt.Sprintf("> %s rolled a %d <",user.name, res))
+
+		return nil
+	}
+
+	self.Mirror_chat(user, fmt.Sprintf("[%s] %s",user.name, message))
 	return nil
 }

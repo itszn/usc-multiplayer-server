@@ -8,7 +8,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 
-	"net/http"
+	//"net/http"
 	_ "net/http/pprof"
 )
 
@@ -51,7 +51,7 @@ func main() {
 	}
 	SCOREBOARD_REFERSH_RATE = *f_SCOREBOARD_REFERSH_RATE
 
-	go http.ListenAndServe("0.0.0.0:6060", nil)
+	//go http.ListenAndServe("0.0.0.0:6060", nil)
 
 	fmt.Printf("Running server %s, USC multi protocol %s\n", SERVER_VERSION, PROTO_VERSION)
 	fmt.Println("Starting server on", bind)
