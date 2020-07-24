@@ -7,13 +7,11 @@ import (
 	"os"
 	"os/signal"
 	"sort"
-	"sync"
 	//	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 )
 
 type Server struct {
@@ -25,7 +23,7 @@ type Server struct {
 	users map[string]*User
 	rooms map[string]*Room
 
-	mtx sync.RWMutex
+	mtx Lock
 }
 
 func New_server(bind string) *Server {
@@ -34,6 +32,7 @@ func New_server(bind string) *Server {
 		users: make(map[string]*User),
 		rooms: make(map[string]*Room),
 	}
+	server.mtx.init(0)
 	return server
 }
 
@@ -89,30 +88,34 @@ func (self *Server) listen_tcp() {
 
 func (self *Server) Add_user(u *User) {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	self.users[u.id] = u
+
+	self.mtx.Unlock()
 }
 
 func (self *Server) Remove_user(u *User) {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	delete(self.users, u.id)
+
+	self.mtx.Unlock()
 }
 
 func (self *Server) Add_room(r *Room) {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	self.rooms[r.id] = r
+
+	self.mtx.Unlock()
 }
 
 func (self *Server) Remove_room(r *Room) {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
 
 	delete(self.rooms, r.id)
+
+	self.mtx.Unlock()
 }
 
 func (self *Server) Start() {
@@ -124,9 +127,6 @@ func (self *Server) Start() {
 		panic(err)
 	}
 	self.router = router
-
-	// Add handler to shut down router
-	//router.AddPlugin(plugin.SignalsHandler)
 
 	router.AddMiddleware(
 		// correlation ID will copy correlation id from consumed message metadata to produced messages
@@ -155,6 +155,7 @@ func (self *Server) add_routes() {
 	self.user_route("server.rooms", self.send_rooms_handler)
 	self.user_route("server.room.join", self.join_room_handler)
 	self.user_route("server.room.new", self.new_room_handler)
+	self.user_route("server.chat.send", self.chat_handler)
 }
 
 type room_sort []*Room
@@ -182,7 +183,6 @@ func (self *Server) Send_rooms_to_users() error {
 // We take a map just because we don't want to copy all users every time
 func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 	self.mtx.RLock()
-	defer self.mtx.RUnlock()
 
 	rooms := make([]*Room, 0, len(self.rooms))
 	for _, room := range self.rooms {
@@ -190,8 +190,14 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 	}
 	sort.Sort(room_sort(rooms))
 
+	self.mtx.RUnlock()
+
 	var roomdata []Json
 	for _, room := range rooms {
+		if !room.alive {
+			continue
+		}
+
 		roomdata = append(roomdata, Json{
 			"current":  room.Num_users(),
 			"max":      room.max,
@@ -224,7 +230,10 @@ func (self *Server) add_user_to_room(user *User, room *Room) error {
 		return errors.New("Room full")
 	}
 
-	room.Add_user(user)
+	if !room.Add_user(user) {
+		return errors.New("Could not join room")
+	}
+
 
 	user.Send_json(Json{
 		"topic": "server.room.joined",
@@ -254,11 +263,11 @@ func (self *Server) join_room_handler(msg *Message) error {
 
 	join_token, has_token := msg.Json()["token"].(string)
 
-	self.mtx.RLock()
-	defer self.mtx.RUnlock()
 
 	var room *Room = nil
 	var found_room bool
+
+	self.mtx.RLock()
 
 	if has_token {
 		for _, r := range self.rooms {
@@ -276,6 +285,8 @@ func (self *Server) join_room_handler(msg *Message) error {
 		room_id := msg.Json()["id"].(string)
 		room, found_room = self.rooms[room_id]
 	}
+
+	self.mtx.RUnlock()
 
 	if !found_room {
 		return errors.New("Room not found")
@@ -312,4 +323,23 @@ func (self *Server) new_room_handler(msg *Message) error {
 	go room.Start()
 
 	return self.add_user_to_room(user, room)
+}
+
+func (self *Server) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": fmt.Sprintf("[%s] %s",user.name, message),
+	}
+
+	for _, u := range self.users {
+		if u.room != nil || u.id == user.id {
+			continue
+		}
+		u.Send_json(packet)
+	}
+	return nil
 }

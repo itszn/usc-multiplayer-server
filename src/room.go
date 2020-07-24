@@ -4,25 +4,26 @@ import (
 	"crypto/rand"
 	"fmt"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
-	//"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/google/uuid"
 )
 
 type Song struct {
 	name  string
-	hash  string
+	audio_hash  string
+	chart_hash string
 	diff  int
 	level int
 }
 
 type Room struct {
 	server *Server
+
+	alive bool
 
 	name string
 	id   string
@@ -47,8 +48,7 @@ type Room struct {
 	in_game    bool
 	is_synced  bool
 
-	mtx    sync.RWMutex
-	mtx_id uint64
+	mtx Lock
 
 	join_token string
 }
@@ -62,6 +62,8 @@ func New_room(server *Server, name string, max int, password string) *Room {
 
 		max: max,
 
+		alive: true,
+
 		users:    make([]*User, 0),
 		user_map: make(map[string]*User),
 		password: password,
@@ -73,29 +75,12 @@ func New_room(server *Server, name string, max int, password string) *Room {
 		start_soon:     false,
 		in_game:        false,
 		is_synced:      false,
-
-		mtx_id: 1,
 	}
+	room.mtx.init(1)
 
 	room.init()
 
 	return room
-}
-
-// Lock the mutex and return the current key
-func (self *Room) mtx_lock() uint64 {
-	self.mtx.Lock()
-	return self.mtx_id
-}
-
-// Try to unlock the mutex using a key
-// if the key was already used, nop
-func (self *Room) mtx_unlock(key uint64) {
-	if self.mtx_id == key || key == 0 {
-		// Update the key for the next lock
-		self.mtx_id++
-		self.mtx.Unlock()
-	}
 }
 
 func (self *Room) Get_user(id string) *User {
@@ -116,10 +101,11 @@ func (self *Room) Num_users() int {
 }
 
 func (self *Room) Rotate_host() {
-	defer self.mtx_unlock(self.mtx_lock())
-
+	self.mtx.RLock()
 	user_len := len(self.users)
+
 	if user_len < 2 {
+		self.mtx.Unlock()
 		return
 	}
 
@@ -133,8 +119,8 @@ func (self *Room) Rotate_host() {
 	ind = (ind + 1) % user_len
 
 	self.host = self.users[ind]
+	self.mtx.RUnlock()
 
-	self.mtx_unlock(0)
 	self.Send_lobby_update()
 }
 
@@ -152,9 +138,6 @@ func (self *Room) init() error {
 	}
 
 	self.router = router
-
-	// Add handler to shut down router
-	//router.AddPlugin(plugin.SignalsHandler)
 
 	// Add router HandlerFunc -> HandlerFunc middleware
 	router.AddMiddleware(
@@ -197,13 +180,24 @@ func (self *Room) add_routes() {
 	self.route("room.host.set", self.handle_set_host)
 
 	self.route("room.kick", self.handle_kick)
+
+	self.route("room.chat.send", self.chat_handler)
 }
 
-func (self *Room) Add_user(user *User) {
-	defer self.mtx_unlock(self.mtx_lock())
+func (self *Room) Add_user(user *User) bool {
+	self.mtx.Lock()
+	defer self.mtx.Unlock()
+
+	if !self.alive {
+		return false
+	}
+
+	if len(self.users) == self.max {
+		return false
+	}
 
 	if _, ok := self.user_map[user.id]; ok {
-		return
+		return false
 	}
 
 	self.user_map[user.id] = user
@@ -253,6 +247,7 @@ func (self *Room) Match_replay_user(user *User) {
 		fmt.Printf("Playback: %s <-> %s\n", u.name, user.name)
 		break
 	}
+	return true
 }
 
 func (self *Room) Remove_user(user *User) {
@@ -261,16 +256,14 @@ func (self *Room) Remove_user(user *User) {
 }
 
 func (self *Room) Remove_user_by_id(id string) {
+	self.mtx.Lock()
+
 	user, ok := self.user_map[id]
+
 	if !ok {
+		self.mtx.Unlock()
 		return
 	}
-
-	if self.host == user && len(self.users) > 1 {
-		self.Rotate_host()
-	}
-
-	defer self.mtx_unlock(self.mtx_lock())
 
 	user.room = nil
 
@@ -289,12 +282,8 @@ func (self *Room) Remove_user_by_id(id string) {
 		self.owner = self.users[0]
 	}
 
-	self.mtx_unlock(0)
-
-	// XXX race with a user being added?
 	if len(self.users) == 0 {
 		self.destroy()
-		return
 	}
 
 	// Unlink replay user
@@ -303,14 +292,28 @@ func (self *Room) Remove_user_by_id(id string) {
 		user.replay_user = nil
 	}
 
-	self.Send_lobby_update()
+	self.mtx.Unlock()
+
+	if !self.alive {
+		// We need to ensure we are not in a lock atm
+		self.server.Remove_room(self)
+	} else {
+
+		self.mtx.RLock()
+		if self.host == user && len(self.users) > 1 {
+			self.Rotate_host()
+		}
+
+		self.Send_lobby_update()
+		self.mtx.RUnlock()
+	}
+
+	// We need to ensure we are not in a lock atm
 	self.server.Send_rooms_to_users()
 }
 
 func (self *Room) destroy() {
-	self.server.Remove_room(self)
-	self.server.Send_rooms_to_users()
-
+	self.alive = false
 	self.router.Close()
 }
 
@@ -329,8 +332,6 @@ func (self *Room) Send_lobby_update_to_user(target_user *User) {
 }
 
 func (self *Room) Send_lobby_update_to(target_users []*User) {
-	self.mtx.RLock()
-	defer self.mtx.RUnlock()
 
 	make_data := func(u *User) Json {
 		data := Json{
@@ -353,6 +354,9 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 
 	// First add and sort anyone who has a score
 	board := make([]score_sort, 0)
+
+	self.mtx.RLock()
+
 	for _, u := range self.users {
 		if u.is_playback || u.score == nil {
 			continue
@@ -394,18 +398,24 @@ func (self *Room) Send_lobby_update_to(target_users []*User) {
 		packet["song"] = self.song.name
 		packet["diff"] = self.song.diff
 		packet["level"] = self.song.level
-		packet["hash"] = self.song.hash
+		packet["hash"] = self.song.audio_hash
+		packet["audio_hash"] = self.song.audio_hash
+		packet["chart_hash"] = self.song.chart_hash
 	} else {
 		packet["song"] = nil
 		packet["diff"] = nil
 		packet["level"] = nil
 		packet["hash"] = nil
+		packet["audio_hash"] = nil
+		packet["chart_hash"] = nil
 	}
 
 	if self.host != nil && !self.in_game {
 		packet["host"] = self.host.id
 	}
 	packet["owner"] = self.owner.id
+
+	self.mtx.RUnlock()
 
 	for _, u := range target_users {
 		if u.playing {
@@ -449,18 +459,28 @@ func (self *Room) set_song_handler(msg *Message) error {
 
 	song.diff = Json_int(json["diff"])
 	song.level = Json_int(json["level"])
-	hash, has_hash := json["hash"].(string)
+
+	chart_hash, has_hash := json["chart_hash"].(string)
 	if !has_hash {
-		hash = ""
+		chart_hash = ""
 	}
-	song.hash = hash
+	song.chart_hash = chart_hash
+
+	audio_hash, has_hash := json["chart_hash"].(string)
+	if !has_hash {
+		audio_hash, has_hash = json["hash"].(string)
+		if !has_hash {
+			audio_hash = ""
+		}
+	}
+	song.audio_hash = audio_hash
+
 	user.level = song.level
 
-	defer self.mtx_unlock(self.mtx_lock())
-
+	self.mtx.Lock()
 	self.song = song
+	self.mtx.Unlock()
 
-	self.mtx_unlock(0)
 	self.Send_lobby_update()
 
 	return nil
@@ -495,7 +515,7 @@ func (self *Room) start_game_handler(msg *Message) error {
 	go func() {
 		time.Sleep(5 * time.Second)
 
-		defer self.mtx_unlock(self.mtx_lock())
+		self.mtx.Lock()
 		self.in_game = true
 		self.is_synced = false
 		self.start_soon = false
@@ -519,8 +539,9 @@ func (self *Room) start_game_handler(msg *Message) error {
 			u.ready = false
 			u.synced = false
 		}
+		// Ok because we only called user locking functions
+		self.mtx.Unlock()
 
-		self.mtx_unlock(0)
 		self.Send_lobby_update()
 
 		// We want to prevent players from holding up
@@ -533,6 +554,7 @@ func (self *Room) start_game_handler(msg *Message) error {
 
 func (self *Room) check_sync_state(force bool) error {
 	self.mtx.RLock()
+	// Ok because we only call user locking  functions
 	defer self.mtx.RUnlock()
 
 	if self.is_synced {
@@ -553,10 +575,12 @@ func (self *Room) check_sync_state(force bool) error {
 
 	self.is_synced = true
 
+	// Start the game for real
 	go func() {
 		time.Sleep(1 * time.Second)
 
 		self.mtx.RLock()
+		// Ok because we only call user locking functions
 		defer self.mtx.RUnlock()
 
 		var userdata []Json
@@ -651,6 +675,7 @@ func (self score_sort_by_score) Less(i, j int) bool {
 
 func (self *Room) Update_scoreboard(user *User, new_time uint32) {
 	self.mtx.RLock()
+	// Ok because we only call user locking functions
 	defer self.mtx.RUnlock()
 
 	for _, u := range self.users {
@@ -712,8 +737,6 @@ func (self *Room) handle_game_score(msg *Message) error {
 }
 
 func (self *Room) handle_final_score(msg *Message) error {
-	self.mtx.RLock()
-	defer self.mtx.RUnlock()
 
 	user := msg.User()
 	if !user.playing || user.is_playback {
@@ -731,13 +754,47 @@ func (self *Room) handle_final_score(msg *Message) error {
 		combo: uint32(Json_int(msg.Json()["combo"])),
 		clear: uint32(Json_int(msg.Json()["clear"])),
 	}
+
+	final_stats := msg.Json()
+	final_stats["uid"] = user.id
+	final_stats["name"] = user.name
+	final_stats["topic"] = "game.finalstats"
+
 	user.playing = false
+
+	self.mtx.RLock()
+	defer self.mtx.RUnlock()
+
+	_, has_stats := final_stats["gauge"]
+
+	if has_stats {
+		// validate type of stats
+		Json_float(final_stats["gauge"])
+		Json_float(final_stats["mean_delta"])
+		Json_float(final_stats["median_delta"])
+		Json_int(final_stats["early"])
+		Json_int(final_stats["late"])
+		Json_int(final_stats["miss"])
+		Json_int(final_stats["near"])
+		Json_int(final_stats["crit"])
+		Json_int(final_stats["flags"])
+		samples := final_stats["graph"].([]interface{})
+		if len(samples) < 256 {
+			panic("Not enough graph samples")
+		} else {
+			for _, s := range samples {
+				Json_float(s)
+			}
+		}
+	}
 
 	done := true
 	for _, u := range self.users {
 		if u.playing {
 			done = false
-			break
+		}
+		if has_stats && u.id != user.id && (u.playing || u.score != nil) {
+			u.Send_json(final_stats)
 		}
 	}
 
@@ -745,8 +802,7 @@ func (self *Room) handle_final_score(msg *Message) error {
 		self.in_game = false
 		self.is_synced = false
 		if self.do_rotate_host {
-			// Use go routine here to avoid deadlock
-			go self.Rotate_host()
+			self.Rotate_host()
 		}
 	}
 	user.ready = false
@@ -793,4 +849,23 @@ func (self *Room) handle_kick(msg *Message) error {
 	self.Remove_user_by_id(uid)
 	return nil
 
+}
+
+func (self *Room) chat_handler(msg *Message) error {
+	user := msg.User()
+
+	message := msg.Json()["message"].(string)
+
+	packet := Json{
+		"topic": "server.chat.received",
+		"message": fmt.Sprintf("[%s] %s",user.name, message),
+	}
+
+	for _, u := range self.users {
+		if u.id == user.id {
+			continue
+		}
+		u.Send_json(packet)
+	}
+	return nil
 }

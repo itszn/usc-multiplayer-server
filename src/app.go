@@ -17,7 +17,8 @@ var (
 )
 
 var (
-	VERSION                 = "v0.17"
+	SERVER_VERSION          = "v1.3.1"
+	PROTO_VERSION           = "v0.19"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0
 	SERVER_PASS             = ""
@@ -52,6 +53,7 @@ func main() {
 
 	go http.ListenAndServe("0.0.0.0:6060", nil)
 
+	fmt.Printf("Running server %s, USC multi protocol %s\n", SERVER_VERSION, PROTO_VERSION)
 	fmt.Println("Starting server on", bind)
 	server := New_server(bind)
 	server.Start()

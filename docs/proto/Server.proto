@@ -104,8 +104,13 @@ message room {
         required int32 diff = 2;
         // The level of the chosen difficulty
         required int32 level = 3;
-        // Selective hash of the song file (0x8000 bytes)
+        // Selective hash of the song file (0x8000 bytes) *Deprecated
         required string hash = 4;
+        // Selective hash of the song file (0x8000 bytes) *Deprecated
+        required string audio_hash = 5;
+        // Normalized hash of chart file (see USC for more details) 
+        required string chart_hash = 6;
+        
     }
 
     // Toggle host rotation for the room
