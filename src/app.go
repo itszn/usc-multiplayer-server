@@ -17,7 +17,7 @@ var (
 )
 
 var (
-	SERVER_VERSION          = "v1.3.1"
+	SERVER_VERSION          = "v1.4.0"
 	PROTO_VERSION           = "v0.19"
 	SCOREBOARD_REFERSH_RATE = 0
 	DEBUG_LEVEL             = 0
@@ -27,7 +27,7 @@ var (
 func main() {
 	f_VERBOSE := flag.Bool("verbose", false, "Print verbose info")
 	f_DEBUG := flag.Bool("debug", false, "Print debug info")
-	f_SCOREBOARD_REFERSH_RATE := flag.Int("refresh", 500, "Number of milliseconds between score updates (0 for realtime)")
+	f_SCOREBOARD_REFERSH_RATE := flag.Int("refresh", 500, "Number of milliseconds between score updates (1 for realtime)")
 
 	var bind string
 	flag.StringVar(&bind, "bind", "0.0.0.0:39079", "host:port to bind to")
