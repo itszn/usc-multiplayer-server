@@ -247,7 +247,7 @@ func (self *User) read_loop() {
 				continue
 
 			}
-			if DEBUG_LEVEL >= 2 {
+			if (DEBUG_LEVEL >= 2 && topic != "room.score.update") || DEBUG_LEVEL >= 3 {
 				fmt.Println("-->", topic, json_data)
 			}
 
@@ -302,7 +302,7 @@ func (self *User) read_loop() {
 
 			data := make([]byte, length, length)
 			io.ReadFull(self.reader, data)
-			if DEBUG_LEVEL >= 2 {
+			if DEBUG_LEVEL >= 3 {
 				fmt.Println("-->", data)
 			}
 
@@ -328,7 +328,7 @@ func (self *User) Send_length_prefix(bytes []byte) error {
 	self.writer.Write(bytes)
 	self.writer.Flush()
 
-	if DEBUG_LEVEL >= 2 {
+	if DEBUG_LEVEL >= 3 {
 		fmt.Println("<--", bytes)
 	}
 
@@ -356,7 +356,11 @@ func (self *User) Send_json(data Json) error {
 
 	self.mtx.Unlock()
 
-	if DEBUG_LEVEL >= 2 {
+	topic, ok := data["topic"].(string)
+	if !ok {
+		fmt.Println("<--", data)
+		fmt.Println("Error: Topic missing")
+	} else if (DEBUG_LEVEL >= 2 && topic != "game.scoreboard") || DEBUG_LEVEL >= 3{
 		fmt.Println("<--", data)
 	}
 
