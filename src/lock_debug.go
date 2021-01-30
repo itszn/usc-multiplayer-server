@@ -31,7 +31,7 @@ type Lock struct {
 }
 
 func (self *Lock) init(mid int) {
-	fmt.Println("Debugging lock for lock type %u", mid)
+	fmt.Printf("Debugging lock for lock type %u %p\n", mid, &self.mtx)
 	self.mid = mid
 }
 
@@ -58,20 +58,30 @@ func (self *Lock) checkLock() {
 }
 
 func (self *Lock) Lock() {
+	fmt.Printf("Grabbing lock %u %p\n",self.mid, &self.mtx)
+	debug.PrintStack()
 	self.mtx.Lock()
+	fmt.Printf("Got lock %u %p\n",self.mid, &self.mtx)
 	self.checkLock()
 }
 
 func (self *Lock) Unlock() {
 	G_THREADS[getGID()][self.mid] -= 1
+	fmt.Printf("Releasing lock %u %p\n",self.mid, &self.mtx)
 	self.mtx.Unlock()
+	fmt.Printf("Lock actually released %u %p\n",self.mid, &self.mtx)
 }
 
 func (self *Lock) RLock() {
+	fmt.Printf("Grabbing r-lock %u %p\n",self.mid, &self.mtx)
+	debug.PrintStack()
 	self.mtx.RLock()
+	fmt.Printf("Got r-lock %u %p\n",self.mid, &self.mtx)
 	self.checkLock()
 }
 func (self *Lock) RUnlock() {
 	G_THREADS[getGID()][self.mid] -= 1
+	fmt.Printf("Releasing r-lock %u %p\n",self.mid, &self.mtx)
 	self.mtx.RUnlock()
+	fmt.Printf("r-Lock actually released %u %p\n",self.mid, &self.mtx)
 }

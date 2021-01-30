@@ -98,7 +98,9 @@ func (self *Server) Add_user(u *User) {
 }
 
 func (self *Server) Remove_user(u *User) {
+	fmt.Println("in Remove_user")
 	self.mtx.Lock()
+	fmt.Println("grabbed lock")
 
 	delete(self.users, u.id)
 
@@ -196,6 +198,7 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 	self.mtx.RUnlock()
 
 	var roomdata []Json
+	/*
 	for _, room := range rooms {
 		if !room.alive {
 			continue
@@ -214,6 +217,7 @@ func (self *Server) Send_rooms_to_targets(users map[string]*User) error {
 			"password": room.password != "",
 		})
 	}
+	*/
 
 	for _, user := range users {
 		if user.room != nil {
@@ -289,8 +293,12 @@ func (self *Server) join_room_handler(msg *Message) error {
 			found_room = true
 		}
 	} else {
-		room_id := msg.Json()["id"].(string)
-		room, found_room = self.rooms[room_id]
+		room_id, ok := msg.Json()["id"].(string)
+		if ok {
+			room, found_room = self.rooms[room_id]
+		} else {
+			found_room = false
+		}
 	}
 
 	self.mtx.RUnlock()
@@ -300,7 +308,8 @@ func (self *Server) join_room_handler(msg *Message) error {
 	}
 
 	if !has_token && room.password != "" {
-		if room.password != msg.Json()["password"].(string) {
+		pw, ok := msg.Json()["password"].(string)
+		if !ok || room.password != pw {
 			user.Send_json(Json{
 				"topic": "server.room.badpassword",
 			})

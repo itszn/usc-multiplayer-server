@@ -12,12 +12,16 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"log"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/infrastructure/gochannel"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/google/uuid"
+
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Score struct {
@@ -43,6 +47,7 @@ type User struct {
 
 	room  *Room
 	score *Score
+	db *sql.DB
 
 	score_list []Score_point
 
@@ -54,6 +59,10 @@ type User struct {
 	hard_mode   bool
 	mirror_mode bool
 	level       int
+	last_hash   string
+
+	last_score uint32
+	last_time uint32
 
 	is_ref bool
 
@@ -74,12 +83,20 @@ type User struct {
 	is_playback bool
 	replay_user *User
 	is_event_user bool
+
+	bot bool
 }
 
 func New_user(conn net.Conn, server *Server) (*User, error) {
+	db,err := sql.Open("sqlite3", "./maps.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 	user := &User{
 		id:     uuid.New().String(),
 		authed: false,
+
+		db: db,
 
 		server: server,
 		room:   nil,
@@ -102,12 +119,21 @@ func New_user(conn net.Conn, server *Server) (*User, error) {
 		is_playback: false,
 		replay_user: nil,
 		is_event_user: false,
+		bot: false,
 	}
 	user.mtx.init(2)
+
+	if (conn == nil) {
+		user.bot = true
+		user.name = "itszn"
+		user.authed = true
+		return user, nil
+	}
 
 	if err := user.init(); err != nil {
 		return nil, err
 	}
+
 
 	return user, nil
 }
@@ -123,6 +149,8 @@ func (self *User) Add_new_score(score uint32, time uint32) {
 		score: score,
 		time:  time,
 	})
+
+	self.last_score = score
 
 	self.mtx.Unlock()
 }
@@ -189,11 +217,19 @@ func (self *User) Start() {
 }
 
 func (self *User) destroy() {
+	fmt.Println("Remving user")
 	self.server.Remove_user(self)
+	fmt.Println("removed user")
 
 	if self.room != nil {
 		self.room.Remove_user(self)
 	}
+
+	if self.bot {
+		return
+	}
+
+	self.db.Close()
 
 	self.conn.Close()
 	self.router.Close()
@@ -319,6 +355,11 @@ func (self *User) Send_length_prefix(bytes []byte) error {
 	self.mtx.Lock()
 	defer self.mtx.Unlock()
 
+	// XXX we should not be able to hit this in this chal
+	if self.bot {
+		return nil
+	}
+
 	// Write packet mode
 	self.writer.WriteByte(2)
 	err := binary.Write(self.writer, binary.LittleEndian, uint32(len(bytes)))
@@ -341,6 +382,91 @@ func (self *User) Send_json(data Json) error {
 		return err
 	}
 
+	topic, ok := data["topic"].(string)
+	if self.bot {
+		if (DEBUG_LEVEL >= 2) {
+			fmt.Println("BOT <--", data)
+		}
+
+		if topic == "room.update" {
+			song, ok := data["song"].(string)
+			if (ok) {
+				sqlStmt := `SELECT DISTINCT folderId FROM Charts WHERE path LIKE "%` +  song + `%"`
+				log.Print(sqlStmt)
+				rows, serr := self.db.Query(sqlStmt)
+				if serr != nil {
+					log.Fatal(serr)
+					self.no_map_handler(nil)
+					return nil
+				}
+				defer rows.Close()
+				found := false
+				for rows.Next() {
+					var id int
+					log.Print(id)
+					rows.Scan(&id)
+					found = true
+				}
+
+				hash, _ := data["chart_hash"].(string)
+
+				if hash == self.last_hash {
+					return nil
+				}
+
+				if found {
+					self.last_hash = hash
+					if !self.ready {
+						go func() {
+							time.Sleep(2 * time.Second)
+							log.Print(`found...`)
+							self.toggle_ready_handler(nil)
+						}()
+					}
+				} else {
+					log.Print("BOT no map")
+					self.ready = false
+					self.no_map_handler(nil)
+				}
+			}
+		}
+		if topic == "game.started" {
+			go func() {
+				time.Sleep(1 * time.Second)
+				fm := Make_fake_msg(self, Json{})
+				self.room.handle_sync_ready(fm)
+			}()
+		}
+		if topic == "game.sync.start" {
+			self.room.handle_game_score(Make_fake_msg(self, Json{
+				"score": int(0),
+				"time": int(500),
+			}))
+			self.last_time = 0
+		}
+		if topic == "game.scoreboard" {
+			t := self.room.host.Get_last_score_time()
+			fmt.Println("t = ", t, self.last_time)
+			if t == self.last_time {
+				return nil
+			}
+			self.last_time = t
+
+			s :=self.room.host.last_score + 132641
+			if s > 10000000 {
+				s = 10000000
+			}
+
+			self.room.handle_game_score(Make_fake_msg(self, Json{
+				"score": int(s),
+				"time": int(t+500),
+			}))
+		}
+
+
+		return nil
+	}
+
 	// Have to take lock until we finish writing
 	self.mtx.Lock()
 
@@ -356,7 +482,6 @@ func (self *User) Send_json(data Json) error {
 
 	self.mtx.Unlock()
 
-	topic, ok := data["topic"].(string)
 	if !ok {
 		fmt.Println("<--", data)
 		fmt.Println("Error: Topic missing")
@@ -440,10 +565,12 @@ func (self *User) simple_server_auth(msg *Message) error {
 	self.is_playback = is_playback
 
 	is_event, ok := msg.Json()["eventclient"].(bool)
-	if !ok {
-		is_event = false
+	if ok && is_event {
+		self.Send_json(Json{
+			"topic": "server.error",
+			"error": "Server does not support event clients",
+		})
 	}
-	self.is_event_user = is_event
 
 	self.Send_json(Json{
 		"topic":        "server.info",
@@ -486,15 +613,19 @@ func (self *User) toggle_ready_handler(msg *Message) error {
 }
 
 func (self *User) no_map_handler(msg *Message) error {
+	log.Print("no map")
 	if self.room == nil || self.playing {
+		log.Print("no room")
 		return nil
 	}
 	if self.missing_map {
+		log.Print("nomap already set")
 		return nil
 	}
 
 	self.missing_map = true
 
+	log.Print("sending lobby update")
 	self.room.Send_lobby_update()
 	return nil
 }

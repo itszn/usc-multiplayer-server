@@ -45,6 +45,8 @@ github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvW
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/lyft/protoc-gen-validate v0.1.0 h1:NytKd9K7UW7Szxn+9PYNsaJ/98TL/WsDq4ro4ZVuh5o=
 github.com/lyft/protoc-gen-validate v0.1.0/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
+github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJKjyR5WD3HYQSd+U=
+github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mwitkow/go-proto-validators v0.1.0 h1:2Org0/cGKUUUDzoLSRSsGJDqyLWrb5lG57o5+QdRr8M=
 github.com/mwitkow/go-proto-validators v0.1.0/go.mod h1:bA3eoTMLQkf/A7h7JOC3ddMBLXwS19KK7DEeSPL1O+4=

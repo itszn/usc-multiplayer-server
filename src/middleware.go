@@ -58,6 +58,19 @@ type Message struct {
 	*message.Message
 }
 
+func Make_fake_msg(user *User, data Json) *Message {
+	msg := &Message{message.NewMessage("asdf",[]byte{})}
+	ctx := context.WithValue(msg.Context(), user_key, user)
+	msg.SetContext(ctx)
+
+	ctx = context.WithValue(msg.Context(), json_key, data)
+	msg.SetContext(ctx)
+
+	fmt.Println("BOT -->", data)
+
+	return msg
+}
+
 type MessageHandler func(*Message) error
 
 func Message_wrapper(f MessageHandler) message.HandlerFunc {

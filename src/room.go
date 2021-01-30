@@ -51,6 +51,8 @@ type Room struct {
 	in_game    bool
 	is_synced  bool
 
+	last_time uint32
+
 	mtx Lock
 
 	join_token string
@@ -194,7 +196,14 @@ func (self *Room) add_routes() {
 
 func (self *Room) Add_user(user *User) bool {
 	self.mtx.Lock()
-	defer self.mtx.Unlock()
+	defer func() {
+		self.mtx.Unlock()
+		if len(self.users) == 1 {
+			bot, _ := New_user(nil, self.server)
+			self.server.Add_user(bot)
+			self.Add_user(bot);
+		}
+	}()
 
 	if !self.alive {
 		return false
@@ -251,6 +260,7 @@ func (self *Room) Add_user(user *User) bool {
 	if (self.is_event_room) {
 		self.Match_replay_user(user)
 	}
+
 	return true
 }
 
@@ -322,6 +332,20 @@ func (self *Room) Remove_user_by_id(id string) {
 	if self.owner == user && len(self.users) > 0 {
 		// TODO Do we want to change owner or just have none?
 		self.owner = self.users[0]
+	}
+
+	if len(self.users) == 1 {
+		us := self.users[0]
+		if (us.bot) {
+			us.room = nil
+			delete(self.user_map, us.id)
+			for i, u := range self.users {
+				if u == us {
+					self.users = append(self.users[:i], self.users[i+1:]...)
+					break
+				}
+			}
+		}
 	}
 
 	if len(self.users) == 0 {
@@ -825,8 +849,17 @@ func (self *Room) handle_final_score(msg *Message) error {
 
 		done = true
 		for _, u := range self.users {
-			if u.playing && !u.is_playback{
+			if u.playing && !u.is_playback && !u.bot {
 				done = false
+			}
+			if u.bot {
+				u.ready = false
+				u.playing = false
+				u.score = &Score{
+					score: u.last_score,
+					combo: uint32(0),
+					clear: uint32(2),
+				}
 			}
 		}
 	} else {
@@ -877,11 +910,20 @@ func (self *Room) handle_final_score(msg *Message) error {
 
 		done = true
 		for _, u := range self.users {
-			if u.playing && !u.is_playback{
+			if u.playing && !u.is_playback && !u.bot{
 				done = false
 			}
 			if has_stats && u.id != user.id && (u.playing || u.score != nil) {
 				u.Send_json(final_stats)
+			}
+			if u.bot {
+				u.playing = false
+				u.ready = false
+				u.score = &Score{
+					score: u.last_score,
+					combo: uint32(0),
+					clear: uint32(2),
+				}
 			}
 		}
 	}
