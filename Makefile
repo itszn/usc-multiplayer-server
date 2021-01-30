@@ -1,6 +1,9 @@
 .PHONY: build
 build: 
 	cd src && go build -o ../usc_multiplayer -v
+.PHONY: debug
+debug: 
+	cd src && go build -tags debug -o ../usc_multiplayer -v
 .PHONY: get
 get:
 	cd src && go get

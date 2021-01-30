@@ -289,8 +289,12 @@ func (self *Server) join_room_handler(msg *Message) error {
 			found_room = true
 		}
 	} else {
-		room_id := msg.Json()["id"].(string)
-		room, found_room = self.rooms[room_id]
+		room_id, ok := msg.Json()["id"].(string)
+		if ok {
+			room, found_room = self.rooms[room_id]
+		} else {
+			found_room = false
+		}
 	}
 
 	self.mtx.RUnlock()
